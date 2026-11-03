@@ -1,9 +1,5 @@
-.env
-/data/
-/logs/
 node_modules/
-/db_backups/
-/.redeploy_backup/
-*.db
-*.db-wal
-*.db-shm
+.env
+data/*.db
+data/*.db-*
+data/db_backups/

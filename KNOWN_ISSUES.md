@@ -39,7 +39,7 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 3. Nếu bot không lên: chụp toàn bộ Console từ dòng `Tiên Giới Bot v6-7` trở xuống.
 
 
-## v7.0
+## v9.0
 - Chưa kiểm chứng trên Discord thật (chỉ giả lập). Nếu tu luyện vẫn lỗi với người khác: gửi mã Exxx + logs/error.log.
 - Emoji pixel: Application Emoji bị giới hạn tốc độ khi tải lần đầu; phần thiếu dùng Unicode rồi tải nền.
 - Ký hiệu chức năng (✕ ✓ ＋ ↻ ⬆ ℹ ✎) và ô thanh bar còn là icon vẽ sẵn vì sprite không có.

@@ -1,11 +1,11 @@
-# Tiên Giới Bot v7.0 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v9.0 — Node.js + discord.js + SQLite
 
 Bot Discord game tu tiên, chuyển từ bản Python (`tuluyenv1_daolu_fixed_v10`) sang **Node.js**.
 Dữ liệu lưu trong **1 file SQLite** (`data/tutien.db`) đi kèm bot — không cần PostgreSQL hay dịch vụ database riêng.
 
 > ✅ **Đã chuyển toàn bộ** tính năng của bản Python (xem `MIGRATION_STATUS.md`). Bản `beta`: đã chạy thử logic trên DB thật nhưng chưa chạy với Discord thật — hãy thử trên server thử trước.
 
-> 📄 **v7.0**: xem `HUONG_DAN_V7.txt` (đổi emoji pixel theo sprite, sửa tu luyện, boss thế giới mới, UI đồng bộ).
+> 📄 **v9.0**: xem `HUONG_DAN_V9.txt` (đổi emoji pixel theo sprite, sửa tu luyện, boss thế giới mới, UI đồng bộ).
 
 ## Cài đặt
 1. Cài Node.js ≥ 18 (khuyên dùng 20+). `npm install`

@@ -91,7 +91,7 @@ function buildClient(withContent) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v7.0 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v9.0 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);

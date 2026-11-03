@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Hệ emoji PIXEL của Tiên Giới Bot v7.0.
+ * Hệ emoji PIXEL của Tiên Giới Bot v9.0.
  *
  *  - Nguồn duy nhất: assets/emoji/<key>.png (128x128, vẽ bởi scripts/make_pixel_emoji_v7.py).
  *  - Lúc khởi động bot tự tải lên thành "Application Emoji" tên `tg7_<key>` (nếu chưa có) rồi dùng <:tg7_key:id>.
@@ -48,7 +48,7 @@ async function api(method, p, token, payload) {
   for (let attempt = 0; attempt < 4; attempt++) {
     const res = await fetch(API + p, {
       method,
-      headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'DiscordBot (tiengioi-emoji-sync, 7.0)' },
+      headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'DiscordBot (tiengioi-emoji-sync, 9.0)' },
       body: payload ? JSON.stringify(payload) : undefined,
       signal: AbortSignal.timeout(15000),
     });

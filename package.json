@@ -1,6 +1,6 @@
 {
-  "name": "tien-gioi-bot-v7",
-  "version": "7.0.0",
+  "name": "tien-gioi-bot-v9",
+  "version": "9.0.0",
   "description": "Bot Discord Tu Tiên — Node.js + discord.js + SQLite (file data/tutien.db)",
   "main": "index.js",
   "scripts": {
