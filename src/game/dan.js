@@ -1,6 +1,7 @@
 'use strict';
 /** Đan Phương / Luyện Đan / Đan Dược / Đan Phá Giới / Tẩy Tủy / Luyện Khí / Linh Thú — port 1:1 */
 const K = require('./constants');
+const BAL = require('./balance');
 const CD = require('./cooldowns');
 const R = require('./realm');
 const Cu = require('./cultivator');
@@ -83,7 +84,7 @@ function doSudungdan(userId) {
   const row = Cu.getCultivator(userId);
   if (row.dan_phuong_quality <= 0) return `❌ Bạn chưa có **Đan Phương** nào nên chưa rành dược tính Đan Dược — hãy **Mua Đan Phương** trước (tối thiểu 10.000 ${E.linhthach} Linh Thạch).`;
   if (row.dan_duoc <= 0) return '❌ Bạn không có Đan Dược nào để dùng.';
-  const gained = randInt(60, 120);
+  const gained = int(randInt(60, 120) * BAL.paceFactor(row));
   Cu.updateCultivator(userId, { dan_duoc: row.dan_duoc - 1, tu_vi: row.tu_vi + gained });
   return `${E.danduoc} Sử dụng Đan Dược, nhận ngay **${gained}** tu vi.`;
 }
@@ -98,7 +99,7 @@ function doLuyenkhi(userId) {
     Cu.updateCultivator(userId, { nguyen_lieu: row.nguyen_lieu - K.LUYENKHI_COST, last_luyenkhi: t });
     return `💢 ${E.thiennhanngusuy} Đang chịu Thiên Nhân Ngũ Suy, tâm thần bất định — Luyện Khí THẤT BẠI, mất nguyên liệu.`;
   }
-  const a = randInt(2, 6); const d = randInt(2, 6);
+  const a = BAL.scaledFlat(randInt(2, 6), row.realm_index); const d = BAL.scaledFlat(randInt(2, 6), row.realm_index);
   Cu.updateCultivator(userId, { nguyen_lieu: row.nguyen_lieu - K.LUYENKHI_COST, atk: row.atk + a, def_: row.def_ + d, last_luyenkhi: t });
   return `⚒️ Luyện thành pháp bảo mới! Vĩnh viễn +${a} Công Kích, +${d} Phòng Ngự.`;
 }
@@ -108,8 +109,8 @@ function doNuoiduong(userId) {
   if (!row.linh_thu) return '❌ Bạn chưa có Linh Thú. Hãy khám phá Bí Cảnh để có cơ hội nhặt được trứng.';
   const cost = 30 * (row.linh_thu_level + 1);
   if (row.tu_vi < cost) return `❌ Cần ${cost} tu vi để nuôi dưỡng ${row.linh_thu} (hiện có ${row.tu_vi}).`;
-  Cu.updateCultivator(userId, { tu_vi: row.tu_vi - cost, linh_thu_level: row.linh_thu_level + 1, hp: row.hp + 5, atk: row.atk + 2 });
-  return `${E.dongthanh} ${row.linh_thu} đã lên cấp ${row.linh_thu_level + 1}! (+5 Sinh Mệnh, +2 Công Kích cho bạn)`;
+  Cu.updateCultivator(userId, { tu_vi: row.tu_vi - cost, linh_thu_level: row.linh_thu_level + 1, hp: row.hp + BAL.scaledFlat(5, row.realm_index), atk: row.atk + BAL.scaledFlat(2, row.realm_index) });
+  return `${E.dongthanh} ${row.linh_thu} đã lên cấp ${row.linh_thu_level + 1}! (+${BAL.scaledFlat(5, row.realm_index)} Sinh Mệnh, +${BAL.scaledFlat(2, row.realm_index)} Công Kích cho bạn)`;
 }
 
 // ---------- Đan Dược Phá Giới ----------

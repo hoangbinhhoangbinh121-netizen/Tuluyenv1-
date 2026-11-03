@@ -3,6 +3,7 @@
 const K = require('./constants');
 const CD = require('./cooldowns');
 const R = require('./realm');
+const BAL = require('./balance');
 const Cu = require('./cultivator');
 const F = require('./format');
 const { E } = require('./emoji');
@@ -46,9 +47,10 @@ function doBicanh(userId, tierIdx = 0) {
   if (remain > 0) return `⏳ Còn ${F.fmtTime(remain)} nữa mới khám phá bí cảnh tiếp được.`;
   const realmIdx = row.realm_index;
   const cpBonus = 1 + Cu.effectiveCongPhapBonus(row);
-  const tuViGain = int(rr(tier.tu_vi_range) * (1 + realmIdx * 0.25) * cpBonus);
+  const PF = BAL.paceFactor(row);
+  const tuViGain = int(rr(tier.tu_vi_range) * (1 + realmIdx * 0.25) * cpBonus * PF);
   const nlGain = rr(tier.nl_range);
-  const ltGain = int(tuViGain * 200);
+  const ltGain = int(tuViGain / PF * 200);   // linh thạch giữ công thức cũ (không lạm phát)
   const up = { tu_vi: row.tu_vi + tuViGain, nguyen_lieu: row.nguyen_lieu + nlGain, linh_thach: row.linh_thach + ltGain, last_bicanh: t };
   const cpNote = cpBonus > 1 ? ` (đã gồm +${int((cpBonus - 1) * 100)}% công pháp)` : '';
   const isVLC = !!tier.van_linh_coc; let isBoss = false; let enc = '';
@@ -113,8 +115,9 @@ function doBicanhDacBiet(userId, group) {
   const ri = row.realm_index;
   if (!(g.min_realm <= ri && ri <= g.max_realm)) return `🔒 **${g.label}** chỉ dành cho người tu luyện từ ${K.REALMS[g.min_realm].name} đến ${K.REALMS[g.max_realm].name}.`;
   const cpBonus = 1 + Cu.effectiveCongPhapBonus(row);
-  const tuVi = int(rr(g.base_tu_vi) * (1 + ri * 0.25) * cpBonus * K.BICANH_DACBIET_MULT);
-  const lt = int(tuVi * 200);
+  const PFD = group === 'linh_gioi' ? 1 : BAL.paceFactor(row);
+  const tuVi = int(rr(g.base_tu_vi) * (1 + ri * 0.25) * cpBonus * K.BICANH_DACBIET_MULT * PFD);
+  const lt = int(tuVi / PFD * 200);
   const up = { tu_vi: row.tu_vi + tuVi, linh_thach: row.linh_thach + lt, ve_bicanh_dac_biet: ve - 1 };
   const cpNote = cpBonus > 1 ? ` (đã gồm +${int((cpBonus - 1) * 100)}% công pháp)` : '';
   let msg = `${E.bicanh}✨ Khám phá **${g.label}**! Dùng hết 1 ${E.vebicanhdacbiet} Vé (còn ${ve - 1}). Nhận **${fmtNum(tuVi)}** tu vi, **${fmtNum(lt)}** ${E.linhthach} Linh Thạch.${cpNote}`;

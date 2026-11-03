@@ -8,15 +8,15 @@ const F = require('./format');
 const { E } = require('./emoji');
 const { getSectExpBuffMult } = require('./sectBase');
 const { daoLuBonusFromRow } = require('./daolu');
-const { now, int, randInt, random, fmtNum } = require('../util');
+const BAL = require('./balance');
+const { now, int, randInt, random, randUniform, fmtNum } = require('../util');
 
 const TULUYEN_BUFF_MULT = K.TULUYEN_BUFF_MULT;
 const tuluyenBuffMult = (userId) => (K.TULUYEN_BUFF_EXCLUDED_USER_IDS.includes(String(userId)) ? 1.0 : TULUYEN_BUFF_MULT);
 const COMPENSATION = 14;
 
-function talentMult(row) {
-  return Math.min(R.getMult(K.LINH_CAN, row.linh_can) * R.getMult(K.THE_CHAT, row.the_chat), K.TULUYEN_TALENT_MULT_CAP);
-}
+// v12.3: Linh Căn × Thể Chất (trần 9.0 — trước đây trần 3.0 khiến Thánh/Tiên/Hỗn Độn Linh Căn ngang nhau)
+const talentMult = (row) => BAL.talentMult(row);
 
 /** Tu luyện — trả dữ liệu có cấu trúc (UI v7 dựng Embed từ đây). */
 function tuluyenR(userId) {
@@ -29,8 +29,12 @@ function tuluyenR(userId) {
   const st = 1.0 + daoLuBonusFromRow(row);
   const sectBuff = getSectExpBuffMult(row);
   const buff = tuluyenBuffMult(userId);
-  const mult = R.realmSpeedMult(row.realm_index) * talentMult(row) * cpBonus * wt * st * sectBuff * buff;
-  const gained = int(randInt(8, 15) * COMPENSATION * mult);
+  const mult = talentMult(row) * cpBonus * wt * st * sectBuff * buff;
+  // v12.3: tu vi mỗi lần = tu vi cần cho tầng kế / số lần bấm chuẩn của tầng đó (xem balance.js), nhân tư chất & buff.
+  const need = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const oldBase = randInt(8, 15) * COMPENSATION * R.realmSpeedMult(row.realm_index);   // công thức cũ làm sàn (Phàm Nhân)
+  const base = Math.max(oldBase, BAL.tuluyenBase(need, row.realm_index, row.stage_index, CD.COOLDOWN_TULUYEN) * randUniform(0.85, 1.15));
+  const gained = Math.max(1, int(base * mult));
   Cu.updateCultivator(userId, { tu_vi: row.tu_vi + gained, last_tuluyen: t });
   return { ok: true, kind: 'tuluyen', gained, mult, sectBuff: sectBuff > 1, buff: buff > 1, before: row.tu_vi, after: row.tu_vi + gained, row: Cu.getCultivator(userId), cooldown: CD.COOLDOWN_TULUYEN };
 }
@@ -49,9 +53,13 @@ function dongquanR(userId) {
   if (remain > 0) return { ok: false, kind: 'dongquan', remain };
   const cpBonus = 1 + Cu.effectiveCongPhapBonus(row);
   const sectBuff = getSectExpBuffMult(row);
-  const mult = R.realmSpeedMult(row.realm_index) * talentMult(row) * cpBonus * R.worldMult(row.world_tier) * (1.0 + daoLuBonusFromRow(row)) * sectBuff;
-  const gained = int(randInt(80, 150) * mult);
-  const linhThachGain = gained * 500;
+  const worldDao = R.worldMult(row.world_tier) * (1.0 + daoLuBonusFromRow(row)) * sectBuff;
+  const mult = talentMult(row) * cpBonus * worldDao;
+  const need = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const oldGained = int(randInt(80, 150) * R.realmSpeedMult(row.realm_index) * mult);
+  // v12.3: 1 lần Bế Quan = 12% tu vi cần cho tầng kế (tư chất chuẩn) × tư chất; Linh Thạch GIỮ NGUYÊN công thức cũ để không lạm phát.
+  const gained = Math.max(oldGained, int(BAL.dongquanBase(need) * mult * randUniform(0.9, 1.1)));
+  const linhThachGain = oldGained * 500;
   Cu.updateCultivator(userId, { tu_vi: row.tu_vi + gained, linh_thach: row.linh_thach + linhThachGain, last_dongquan: t });
   return { ok: true, kind: 'dongquan', gained, linhThachGain, mult, sectBuff: sectBuff > 1, before: row.tu_vi, after: row.tu_vi + gained, row: Cu.getCultivator(userId), cooldown: CD.COOLDOWN_DONGQUAN };
 }

@@ -7,6 +7,7 @@ const R = require('./realm');
 const CD = require('./cooldowns');
 const Cu = require('./cultivator');
 const P = require('./pvpCore');
+const BAL = require('./balance');
 const F = require('./format');
 const { E } = require('./emoji');
 const { View, globalClickAllowed, EPHEMERAL } = require('../ui/kit');
@@ -22,10 +23,9 @@ function buildSession(guildId, channelId, aId, bId) {
   const a = Cu.getCultivator(aId); const b = Cu.getCultivator(bId);
   const atkA = Cu.effectiveAtk(a); const defA = Cu.effectiveDef(a); const spdA = Cu.effectiveSpd(a);
   const atkB = Cu.effectiveAtk(b); const defB = Cu.effectiveDef(b); const spdB = Cu.effectiveSpd(b);
-  let powerA = Cu.calcLucChien(a); let powerB = Cu.calcLucChien(b);
-  const selfBuff = Cu.pvpBuffPct(a); const enemyDebuff = Cu.pvpDebuffPct(a);
-  powerA = int(powerA * (1 + selfBuff)); powerB = int(powerB * (1 - enemyDebuff));
-  const buffNote = (selfBuff || enemyDebuff) ? `\n🌀 Công pháp phát động: Tự Buff +${int(selfBuff * 100)}%, Debuff đối thủ -${int(enemyDebuff * 100)}%.` : '';
+  const PW = BAL.pvpPowers(a, b, Cu); const powerA = PW.powerA; const powerB = PW.powerB;
+  const selfBuff = PW.buffA; const enemyDebuff = PW.debuffA;
+  const buffNote = (selfBuff || enemyDebuff || PW.buffB || PW.debuffB) ? `\n🌀 Công pháp phát động: 🅰️ +${int(PW.buffA * 100)}%/-${int(PW.debuffA * 100)}% · 🅱️ +${int(PW.buffB * 100)}%/-${int(PW.debuffB * 100)}% (buff / debuff đối thủ).` : '';
   const realmA = R.realmDisplay(a.realm_index, a.stage_index); const realmB = R.realmDisplay(b.realm_index, b.stage_index);
   const [mAtkA, mAtkB] = P.statArrow(atkA, atkB); const [mDefA, mDefB] = P.statArrow(defA, defB);
   const [mSpdA, mSpdB] = P.statArrow(spdA, spdB); const [mPowA, mPowB] = P.statArrow(powerA, powerB);
@@ -38,7 +38,7 @@ function buildSession(guildId, channelId, aId, bId) {
     tag: { A: `<@${aId}>`, B: `<@${bId}>` }, hp_max: hpMax, hp_pool: { A: hpMax, B: hpMax }, round: 1,
     actions: { A: null, B: null }, acted: { A: false, B: false }, resolving: false, round_token: 0, active_view: null,
     round_blocks: [], battle_data_rounds: [], header, realm_line: `🅰️ <@${aId}>: ${realmA}\n🅱️ <@${bId}>: ${realmB}`,
-    stake_cap: Math.max(10, int(Math.min(a.tu_vi, b.tu_vi) * 0.05)), cur_hp_a: a.cur_hp, cur_hp_b: b.cur_hp, message: null, settled: false, created_at: now(),
+    rowA: a, rowB: b, stake_cap: Math.max(10, int(Math.min(a.tu_vi, b.tu_vi) * 0.05)), cur_hp_a: a.cur_hp, cur_hp_b: b.cur_hp, message: null, settled: false, created_at: now(),
   };
   SESSIONS.set(s.id, s); BUSY.set(aId, s.id); BUSY.set(bId, s.id);
   return s;
@@ -165,7 +165,7 @@ async function finishSession(s) {
   if (hp.A !== hp.B) aWins = hp.A > hp.B; else if (pA !== pB) aWins = pA > pB; else aWins = random() < 0.5;
   const winnerId = aWins ? s.a_id : s.b_id;
   const loserNewHp = aWins ? Math.max(1, int((s.cur_hp_b || 0) * 0.85)) : Math.max(1, int((s.cur_hp_a || 0) * 0.85));
-  const real = P.settlePvpAtomic(s.a_id, s.b_id, winnerId, s.stake_cap, loserNewHp, s.round_blocks.length, now());
+  const real = P.settlePvpAtomic(s.a_id, s.b_id, winnerId, BAL.pvpStake(s.rowA, s.rowB, aWins), loserNewHp, s.round_blocks.length, now());
   cleanupSession(s);
   const m = s.message;
   if (real === null) {

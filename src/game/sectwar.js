@@ -6,6 +6,7 @@ const Cu = require('./cultivator');
 const D = require('../db');
 const { E } = require('./emoji');
 const { getSectName } = require('./sectBase');
+const BAL = require('./balance');
 const { now, int, random, randUniform, fmtNum } = require('../util');
 
 const NODES = {
@@ -81,13 +82,14 @@ function doAttack(warId, attackerId, targetId) {
   const target = D.get('SELECT * FROM sect_war_participants WHERE war_id = ? AND user_id = ? AND node_key = ? AND sect_id != ? AND (revive_at IS NULL OR revive_at <= ?)', warId, targetId, nodeKey, part.sect_id, t);
   if (!target) return '❌ Mục tiêu không còn ở cứ điểm này nữa (đã di chuyển/bị hạ) — hãy chọn lại.';
   const atkRow = Cu.getCultivator(attackerId); const defRow = Cu.getCultivator(target.user_id);
-  const atkStat = atkRow ? Cu.effectiveAtk(atkRow) : 1; const defStat = defRow ? Cu.effectiveDef(defRow) : 0;
   if (random() < DODGE_CHANCE) return `🌀 <@${target.user_id}> đã né tránh đòn tấn công của <@${attackerId}> tại **${NODES[nodeKey].name}**!`;
   const isCrit = random() < CRIT_CHANCE;
-  let damage = int(atkStat * randUniform(0.9, 1.3)) - defStat;
+  const maxHp = target.max_hp || Math.max(1, defRow ? Cu.effectiveMaxHp(defRow) : 1);
+  // v12.3: cùng mô hình % sinh mệnh với PvP (chênh cảnh giới/chỉ số quyết định có kiểm soát, không còn atk - def tuyệt đối)
+  const frac = (atkRow && defRow) ? BAL.warHitFrac(atkRow, defRow, Cu) : 0.1;
+  let damage = int(maxHp * frac * randUniform(0.6, 1.4));
   if (isCrit) damage = int(damage * CRIT_MULT);
   damage = Math.max(1, damage);
-  const maxHp = target.max_hp || Math.max(1, defRow ? Cu.effectiveMaxHp(defRow) : 1);
   const hp = (target.hp ? target.hp : maxHp) - damage;
   const critTxt = isCrit ? ' 💥 **Bạo Kích!**' : '';
   if (hp <= 0) {

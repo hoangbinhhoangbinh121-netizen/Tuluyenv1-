@@ -5,7 +5,8 @@ const Cu = require('./cultivator');
 const F = require('./format');
 const { E } = require('./emoji');
 const { geminiGenerate } = require('./ai');
-const { now, randInt, choice, fmtNum } = require('../util');
+const BAL = require('./balance');
+const { now, int, randInt, choice, fmtNum } = require('../util');
 const { Delta } = Cu;
 
 const randomFlavor = () => `Một ${choice(K.DONGPHU_DIA_HINH)}, bên trong có ${choice(K.DONGPHU_DAC_SAN)}, linh khí bàng bạc quanh năm.`;
@@ -32,7 +33,7 @@ function doThuhoach(userId) {
   if (row.dongphu_level <= 0) return '❌ Bạn chưa có động phủ. Hãy tạo một động phủ riêng trước.';
   const t = now(); const remain = CD.COOLDOWN_DONGPHU - (t - row.last_dongphu);
   if (remain > 0) return `⏳ Còn ${F.fmtTime(remain)} nữa động phủ mới sinh ra linh khí mới.`;
-  const lv = row.dongphu_level; const lt = randInt(200, 400) * lv; const tv = randInt(5, 12) * lv;
+  const lv = row.dongphu_level; const lt = randInt(200, 400) * lv; const tv = int(randInt(5, 12) * lv * BAL.paceFactor(row));
   Cu.updateCultivator(userId, { linh_thach: row.linh_thach + lt, tu_vi: row.tu_vi + tv, last_dongphu: t });
   return `${E.dongphu} Thu hoạch linh khí tại **${row.dongphu_ten}**, nhận **${fmtNum(lt)}** ${E.linhthach} Linh Thạch và **${tv}** ✨ tu vi.`;
 }

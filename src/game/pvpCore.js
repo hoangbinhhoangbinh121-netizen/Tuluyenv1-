@@ -13,6 +13,7 @@ const F = require('./format');
 const { E } = require('./emoji');
 const { geminiGenerate } = require('./ai');
 const { now, int, random, randUniform, randInt, choice } = require('../util');
+const BAL = require('./balance');
 
 const ATTACK_NORMAL = K.ATTACK_NORMAL;
 const PVP_ACTION_DEFEND = '🛡️ Phòng Thủ';
@@ -55,20 +56,23 @@ function roundAction(attackerTag, defenderTag, atkStat, defStat, powerAtk, power
   else if (action === PVP_ACTION_KILLMOVE) lines.push(`${attackerTag} tung ra đòn **${action}** quyết định!`);
   else lines.push(`${attackerTag} sử dụng **${action}**.`);
 
-  let ratio = powerAtk / Math.max(1.0, powerDef);
-  ratio = Math.min(2.2, Math.max(0.5, ratio));
-  let dodge = 0.08 + Math.max(0.0, ((powerDef - powerAtk) / Math.max(1.0, powerAtk)) * 0.15);
-  dodge = Math.min(0.35, dodge);
+  // ---- v12.3: sát thương tính theo % thanh sinh mệnh (100), không còn one-shot theo chỉ số tuyệt đối ----
+  const rp = Math.min(3, Math.max(0.33, powerAtk / Math.max(1.0, powerDef)));       // sức mạnh tổng (đã gồm chênh cảnh giới + công pháp)
+  let dodge = 0.07 + Math.min(0.18, Math.max(0.0, ((powerDef - powerAtk) / Math.max(1.0, powerAtk)) * 0.10));
+  dodge = Math.min(0.30, dodge);
   if (random() < dodge) {
     lines.push(`🌪️ ${defenderTag} né tránh thành công.`);
     record.dodge = true; record.hp_a = hpPool.A; record.hp_b = hpPool.B;
     return { lines, record };
   }
-  const base = Math.max(3, int(atkStat * randUniform(0.85, 1.15) - defStat * 0.35));
-  let damage = Math.max(1, int(base * ratio));
+  const armor = atkStat / (atkStat + defStat * 0.7 + 1);                              // 0..1 (ngang nhau ≈ 0.588)
+  let pct = BAL.B.PVP_BASE_HIT * ((armor / 0.588) ** BAL.B.PVP_ARMOR_EXP) * (rp ** BAL.B.PVP_POWER_EXP) * randUniform(1 - BAL.B.PVP_ROLL, 1 + BAL.B.PVP_ROLL);
+  if (action !== ATTACK_NORMAL && action !== PVP_ACTION_DEFEND) pct *= action === PVP_ACTION_KILLMOVE ? 1.5 : 1.15;
+  let damage = Math.max(1, Math.round(pct));
   if (isDefending) { damage = Math.max(1, int(damage * randUniform(0.5, 0.6))); record.defended = true; }
-  const isCrit = forceCrit ? true : random() < Math.min(0.35, 0.12 + Math.max(0.0, ratio - 1) * 0.15);
-  if (isCrit) damage = int(damage * 1.6);
+  const isCrit = forceCrit ? true : random() < Math.min(0.32, 0.10 + Math.max(0.0, rp - 1) * 0.10);
+  if (isCrit) damage = Math.max(1, Math.round(damage * 1.5));
+  damage = Math.min(damage, Math.ceil(hpPool[defenderKey]));
   hpPool[defenderKey] = Math.max(0, hpPool[defenderKey] - damage);
   lines.push(`💥 Gây ${damage} sát thương lên ${defenderTag}.`);
   if (isDefending) lines.push(`🛡️ ${defenderTag} đang phòng thủ, sát thương giảm đáng kể.`);
@@ -131,10 +135,9 @@ function doPvp(userId, targetId) {
   a = Cu.getCultivator(userId); b = Cu.getCultivator(targetId);
   const atkA = Cu.effectiveAtk(a); const defA = Cu.effectiveDef(a); const spdA = Cu.effectiveSpd(a);
   const atkB = Cu.effectiveAtk(b); const defB = Cu.effectiveDef(b); const spdB = Cu.effectiveSpd(b);
-  let powerA = Cu.calcLucChien(a); let powerB = Cu.calcLucChien(b);
-  const selfBuff = Cu.pvpBuffPct(a); const enemyDebuff = Cu.pvpDebuffPct(a);
-  powerA = int(powerA * (1 + selfBuff)); powerB = int(powerB * (1 - enemyDebuff));
-  const buffNote = (selfBuff || enemyDebuff) ? `\n🌀 Công pháp phát động: Tự Buff +${int(selfBuff * 100)}%, Debuff đối thủ -${int(enemyDebuff * 100)}%.` : '';
+  const PW = BAL.pvpPowers(a, b, Cu); const powerA = PW.powerA; const powerB = PW.powerB;
+  const selfBuff = PW.buffA; const enemyDebuff = PW.debuffA;
+  const buffNote = (selfBuff || enemyDebuff || PW.buffB || PW.debuffB) ? `\n🌀 Công pháp phát động: 🅰️ +${int(PW.buffA * 100)}%/-${int(PW.debuffA * 100)}% · 🅱️ +${int(PW.buffB * 100)}%/-${int(PW.debuffB * 100)}% (buff / debuff đối thủ).` : '';
   const realmA = R.realmDisplay(a.realm_index, a.stage_index); const realmB = R.realmDisplay(b.realm_index, b.stage_index);
   const [mAtkA, mAtkB] = statArrow(atkA, atkB); const [mDefA, mDefB] = statArrow(defA, defB); const [mSpdA, mSpdB] = statArrow(spdA, spdB); const [mPowA, mPowB] = statArrow(powerA, powerB);
   const header = `🅰️ <@${userId}> (${realmA}) — Công ${atkA}${mAtkA} | Thủ ${defA}${mDefA} | Tốc ${spdA}${mSpdA} | Lực Chiến ${powerA}${mPowA}\n🅱️ <@${targetId}> (${realmB}) — Công ${atkB}${mAtkB} | Thủ ${defB}${mDefB} | Tốc ${spdB}${mSpdB} | Lực Chiến ${powerB}${mPowB}${buffNote}`;
@@ -161,8 +164,8 @@ function doPvp(userId, targetId) {
   }
   let aWins;
   if (hp.A !== hp.B) aWins = hp.A > hp.B; else if (powerA !== powerB) aWins = powerA > powerB; else aWins = random() < 0.5;
-  const stakeCap = Math.max(10, int(Math.min(a.tu_vi, b.tu_vi) * 0.05));
   const winnerId = aWins ? userId : targetId;
+  const stakeCap = BAL.pvpStake(a, b, aWins);
   const loserNewHp = aWins ? Math.max(1, int(b.cur_hp * 0.85)) : Math.max(1, int(a.cur_hp * 0.85));
   const real = settlePvpAtomic(userId, targetId, winnerId, stakeCap, loserNewHp, blocks.length, t);
   if (real === null) return '⏳ Bạn vừa đấu pháp ở nơi khác trước đó rất gần đây, trận này không được tính. Vui lòng thử lại.';

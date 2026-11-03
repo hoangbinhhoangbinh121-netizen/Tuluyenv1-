@@ -1,6 +1,7 @@
 'use strict';
 /** do_dotpha + Cửu Lôi Kiếp — port 1:1 */
 const K = require('./constants');
+const BAL = require('./balance');
 const CD = require('./cooldowns');
 const R = require('./realm');
 const Cu = require('./cultivator');
@@ -63,11 +64,9 @@ function doDotpha(userId) {
       Cu.updateCultivator(userId, { tu_vi: row.tu_vi - required, realm_index: K.HOATHAN_REALM_IDX, stage_index: K.HOATHAN_VIENMAN_STAGE });
       return `🌀 ĐỘT PHÁ THÀNH CÔNG nhưng bị **ÁP CHẾ** đè trở lại **${R.realmDisplay(K.HOATHAN_REALM_IDX, K.HOATHAN_VIENMAN_STAGE)}**!\nCảnh giới trên Hóa Thần Viên Mãn chỉ dành cho người đã **Phi Thăng** thật sự — dùng \`/dieukienphithang\` để xem điều kiện rồi \`/phithang\` khi đã đủ.`;
     }
-    const statScale = row.world_tier <= 0 ? 1.0 : 0.4;
-    let hpGain = Math.max(1, int(20 * statScale));
-    let atkGain = Math.max(1, int(5 * statScale));
-    let defGain = Math.max(1, int(5 * statScale));
-    let spdGain = Math.max(1, int(3 * statScale));
+    // v12.3: mỗi tiểu cảnh giới cộng chỉ số THEO ĐẠI CẢNH GIỚI hiện tại và THỂ CHẤT — xem game/balance.js
+    const G = BAL.stageGain(realmIdx, row.world_tier, row);
+    let hpGain = G.hp; let atkGain = G.atk; let defGain = G.def; let spdGain = G.spd;
     let majorNote = ''; let kiepLog = '';
     if (newRealm > realmIdx) {
       const [passed, log, phuUsed] = resolveCuuLoiKiep(userId, row);

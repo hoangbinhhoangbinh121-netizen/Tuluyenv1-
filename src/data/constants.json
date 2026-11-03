@@ -476,7 +476,7 @@
   "9": 16.0
  },
  "_REALM_SPEED_EXTRAPOLATE_STEP": 1.35,
- "TULUYEN_TALENT_MULT_CAP": 3.0,
+ "TULUYEN_TALENT_MULT_CAP": 9.0,
  "LINH_CAN": [
   {
    "name": "Ngũ Linh Căn",

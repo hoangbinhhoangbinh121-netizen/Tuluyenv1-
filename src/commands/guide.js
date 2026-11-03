@@ -56,3 +56,18 @@ function prefixEmbed() {
   });
 }
 defineCommand({ name: 'lenhchu', description: 'Hướng dẫn dùng lệnh bằng tiền tố ! và ? (prefix)', run: (c) => c.send({ embeds: [prefixEmbed()] }) });
+
+// ---------------------------------------------------------------- Bảng hệ số Linh Căn / Thể Chất
+defineCommand({
+  name: 'tuchat',
+  description: 'Xem bảng hệ số tu luyện của Linh Căn và Thể Chất',
+  run: (c) => {
+    const BAL = require('../game/balance');
+    const T = BAL.talentTables();
+    const f = (arr) => arr.map((t) => `**${t.name}** — ×${t.mult} _(tỉ lệ ${t.pct.toFixed(1)}%)_`).join('\n');
+    const e = new EmbedBuilder().setTitle('🌿 Linh Căn & Thể Chất — Hệ số tu luyện').setColor(GOLD)
+      .setDescription(`Tốc độ tu luyện/bế quan nhân với **Linh Căn × Thể Chất** (trần ×${BAL.B.TALENT_CAP}).\nThể Chất còn tăng chỉ số chiến đấu khi đột phá.`)
+      .addFields({ name: 'Linh Căn', value: f(T.linhCan) }, { name: 'Thể Chất', value: f(T.theChat) });
+    return c.send({ embeds: [e] });
+  },
+});
