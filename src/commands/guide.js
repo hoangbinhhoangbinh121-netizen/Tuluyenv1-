@@ -37,3 +37,22 @@ function guideView() {
   return v;
 }
 defineCommand({ name: 'huongdan', description: 'Hướng dẫn chi tiết các lệnh, chia theo nhóm', run: (c) => c.send({ embeds: [overviewEmbed()], components: guideView().components() }) });
+
+// ---------------------------------------------------------------- Hướng dẫn lệnh chữ (tiền tố ! và ?)
+const { createEmbed } = require('../ui/components/baseEmbed');
+function prefixList() { return String(process.env.COMMAND_PREFIX || '?,!').split(/[,\s]+/).filter(Boolean); }
+function prefixEmbed() {
+  const p = prefixList(); const a = p[0] || '?'; const b = p[1] || a;
+  return createEmbed({
+    cat: 'thiendao', header: 'HƯỚNG DẪN LỆNH CHỮ', title: 'Dùng lệnh bằng tiền tố (prefix)',
+    description: `Ngoài lệnh gạch chéo \`/\`, mọi lệnh đều gõ được như tin nhắn thường với tiền tố **${p.map((x) => `\`${x}\``).join(' hoặc ')}**.\nTên lệnh giống hệt lệnh \`/\`, viết liền, không phân biệt hoa thường.`,
+    fields: [
+      { name: '1) Gõ lệnh', value: `\`${a}tuluyen\` · \`${b}dongquan\` · \`${a}dotpha\` · \`${b}danhboss\` · \`${a}huongdan\`\nBot trả lời ngay dưới tin nhắn của bạn.` },
+      { name: '2) Lệnh có tham số', value: `Gõ các giá trị **theo đúng thứ tự** của lệnh \`/\`, cách nhau bằng dấu cách.\nVí dụ: \`${a}usedb 1\` · \`${a}nhapdb\` (đính kèm file .db trong **cùng tin nhắn**).\nNgười được chọn: \`@tag\` hoặc dán ID. Số lớn viết được \`1.000.000\` hoặc \`1000000\`.` },
+      { name: '3) Lệnh nhập file', value: `\`${a}nhapdb\` / \`${a}restore_db\`: bấm dấu **+** để đính kèm file \`.db\`, ghi lệnh vào ô chat rồi gửi một lần. (Chỉ admin được chỉ định.)` },
+      { name: '4) Lệnh admin', value: 'Lệnh admin (`trieuhoiboss`, `huyboss`, `datkenhthegioi`, `backupdb`, `listdb`...) cũng gõ được bằng tiền tố nhưng chỉ admin dùng được. Admin gõ `!hoang` để nhận danh sách lệnh admin ẩn của Tông Môn Chiến (bot nhắn riêng).' },
+      { name: '5) Không thấy bot trả lời?', value: '• Bật **Message Content Intent** trong Discord Developer Portal → Bot.\n• Host phải đặt `ENABLE_PREFIX_COMMANDS=1` (mặc định bật) và `COMMAND_PREFIX` đúng.\n• Bot cần quyền **Xem kênh · Gửi tin nhắn · Nhúng liên kết** trong kênh đó.\n• Gõ sát tiền tố: `!tuluyen` (không phải `! tuluyen`).\nKhông chắc thì cứ dùng `/` — luôn hoạt động.' },
+    ],
+  });
+}
+defineCommand({ name: 'lenhchu', description: 'Hướng dẫn dùng lệnh bằng tiền tố ! và ? (prefix)', run: (c) => c.send({ embeds: [prefixEmbed()] }) });

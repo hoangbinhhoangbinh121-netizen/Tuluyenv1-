@@ -16,8 +16,11 @@ const stamp = () => { const n = new Date(); const p = (x) => String(x).padStart(
 
 /** Sao lưu NHẤT QUÁN (kể cả khi đang ở chế độ WAL) bằng VACUUM INTO — không cần dừng bot. */
 function makeBackup(destPath) {
+  const G = require('../db/diskguard');
   if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
-  D.db().exec(`VACUUM INTO '${destPath.replace(/'/g, "''")}'`);
+  if (!G.canBackup()) { G.pruneBackups(); if (!G.canBackup()) throw new Error(`Ổ đĩa sắp đầy, không đủ chỗ sao lưu (${G.report().text})`); }
+  try { D.db().exec(`VACUUM INTO '${destPath.replace(/'/g, "''")}'`); }
+  catch (e) { try { fs.unlinkSync(destPath); } catch (_) { /* file dở dang → xoá để khỏi chiếm chỗ */ } throw e; }
   return destPath;
 }
 function listBackups() {
@@ -47,9 +50,22 @@ defineCommand({
   name: 'backupdb', description: '[Admin] Sao lưu database hiện tại', admin: true,
   async run(ctx) {
     if (!fs.existsSync(D.DB_PATH)) return ctx.send('❌ Không tìm thấy file database.');
-    const p = makeBackup(path.join(backupDir(), `tutien_${stamp()}.db`));
+    let p;
+    try { p = makeBackup(path.join(backupDir(), `tutien_${stamp()}.db`)); require('../db/diskguard').pruneBackups(); }
+    catch (e) { return ctx.send(`❌ Không sao lưu được: ${e.message}`.slice(0, 1900)); }
     try { return await ctx.send({ content: `✅ Đã sao lưu database vào \`${p}\`.`, files: [new AttachmentBuilder(p)] }); }
     catch (_) { return ctx.send(`✅ Đã sao lưu database vào \`${p}\` (file quá lớn để đính kèm qua Discord).`); }
+  },
+});
+
+defineCommand({
+  name: 'dungluong', description: '[Admin] Xem dung lượng DB / bản sao lưu / ổ đĩa và dọn bản sao lưu thừa', admin: true,
+  async run(ctx) {
+    const G = require('../db/diskguard');
+    const before = G.report();
+    const freed = G.pruneBackups();
+    const note = before.free != null && before.free < 100 * 1048576 ? '\n⚠️ Ổ đĩa gần đầy — hãy xoá bớt file trong tab Files của host hoặc nâng gói.' : '';
+    return ctx.send(`${G.fullReport()}\n🧹 Đã dọn bản sao lưu thừa: giải phóng ${G.fmt(freed)}.${note}`.slice(0, 1990));
   },
 });
 

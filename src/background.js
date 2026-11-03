@@ -5,7 +5,6 @@ const path = require('node:path');
 const D = require('./db');
 
 const AUTO_BACKUP_HOURS = Number(process.env.AUTO_BACKUP_HOURS || 6);   // 0 = tắt
-const AUTO_BACKUP_KEEP = Number(process.env.AUTO_BACKUP_KEEP || 8);
 
 function startBackground(client) {
   // Một Ngày Đại Phú: kiểm tra mở/khoá event + cập nhật giá theo chu kỳ.
@@ -35,15 +34,18 @@ function startBackground(client) {
     const { makeBackup, listBackups } = require('./commands/admin');
     const run = () => {
       try {
+        const G = require('./db/diskguard');
+        G.pruneBackups();                       // dọn bản cũ TRƯỚC khi tạo bản mới
+        if (!G.canBackup()) { console.warn(`⚠️ Bỏ qua auto-backup vì ổ đĩa sắp đầy — ${G.report().text}`); return; }
         const dir = path.join(path.dirname(D.DB_PATH), 'db_backups'); fs.mkdirSync(dir, { recursive: true });
         const n = new Date(); const p = (x) => String(x).padStart(2, '0');
         makeBackup(path.join(dir, `tutien_auto_${n.getFullYear()}${p(n.getMonth() + 1)}${p(n.getDate())}_${p(n.getHours())}${p(n.getMinutes())}.db`));
-        const autos = listBackups().filter((f) => path.basename(f).startsWith('tutien_auto_'));
-        for (const old of autos.slice(AUTO_BACKUP_KEEP)) fs.unlinkSync(old);
+        G.pruneBackups();
       } catch (e) { console.error('⚠️ Auto-backup lỗi:', e.message); }
     };
     setInterval(run, AUTO_BACKUP_HOURS * 3600 * 1000).unref();
-    console.log(`💾 Tự sao lưu DB mỗi ${AUTO_BACKUP_HOURS}h (giữ ${AUTO_BACKUP_KEEP} bản gần nhất).`);
+    setTimeout(run, 60 * 1000).unref();   // có ngay 1 bản mới nhất sau khi bot khởi động (bản cũ tự bị xoá)
+    console.log(`💾 Tự sao lưu DB mỗi ${AUTO_BACKUP_HOURS}h — luôn chỉ giữ bản MỚI NHẤT, bản cũ tự động xoá.`);
   }
 }
 module.exports = { startBackground };

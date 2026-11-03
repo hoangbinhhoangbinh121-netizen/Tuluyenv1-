@@ -5,8 +5,10 @@ const { now } = require('../util');
 
 function getSectExpBuffMult(row) {
   if (!row || !row.sect_id) return 1.0;
-  const sect = D.get('SELECT exp_buff_until FROM sects WHERE sect_id = ?', row.sect_id);
-  if (sect && sect.exp_buff_until && sect.exp_buff_until > now()) return K.SECT_WAR_EXP_BUFF_MULT;
+  try { // lỗi DB phụ (vd cột chưa migrate) KHÔNG được chặn tu luyện — chỉ mất buff tông môn.
+    const sect = D.get('SELECT exp_buff_until FROM sects WHERE sect_id = ?', row.sect_id);
+    if (sect && sect.exp_buff_until && sect.exp_buff_until > now()) return K.SECT_WAR_EXP_BUFF_MULT;
+  } catch (e) { console.warn('⚠️ getSectExpBuffMult:', e.message); }
   return 1.0;
 }
 function getSectName(sectId) {

@@ -140,6 +140,9 @@ const ADD_COLUMNS = {
     "assists": "INTEGER DEFAULT 0"
   },
   "sects": {
+    "treasury": "INTEGER DEFAULT 0",
+    "title": "TEXT DEFAULT ''",
+    "exp_buff_until": "INTEGER DEFAULT 0",
     "rutkho_day": "TEXT DEFAULT ''",
     "rutkho_today": "INTEGER DEFAULT 0"
   }

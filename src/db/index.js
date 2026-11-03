@@ -111,12 +111,35 @@ function db() {
   return _db;
 }
 
+/**
+ * Tự cứu lỗi hạ tầng DB rồi thử lại ĐÚNG 1 lần:
+ *  - "no such column / no such table" → chạy lại migrate (thêm cột/bảng còn thiếu),
+ *  - SQLITE_FULL "database or disk is full" → dọn bản sao lưu/log thừa + thu gọn WAL.
+ */
+let _lastMigrate = 0;
+function withRescue(fn) {
+  try { return fn(); }
+  catch (e) {
+    const msg = String(e && e.message || e);
+    if (/no such (column|table)/i.test(msg) && Date.now() - _lastMigrate > 30000) {
+      _lastMigrate = Date.now();
+      console.warn(`🛠️ DB thiếu cột/bảng (${msg}) → tự migrate lại rồi thử lại.`);
+      try { migrate(); return fn(); } catch (e2) { throw e2; }
+    }
+    if (/database or disk is full|SQLITE_FULL/i.test(msg) || (e && e.code === 'SQLITE_FULL')) {
+      let did = false;
+      try { did = require('./diskguard').emergencyCleanup(); } catch (_) { /* bỏ qua */ }
+      if (did) return fn();
+    }
+    throw e;
+  }
+}
 /** Tương đương conn.execute(...).fetchone() — trả undefined nếu không có dòng. */
-const get = (sql, ...p) => db().prepare(sql).get(...p);
+const get = (sql, ...p) => withRescue(() => db().prepare(sql).get(...p));
 /** Tương đương conn.execute(...).fetchall() */
-const all = (sql, ...p) => db().prepare(sql).all(...p);
+const all = (sql, ...p) => withRescue(() => db().prepare(sql).all(...p));
 /** Tương đương conn.execute(...) + commit — trả {changes, lastInsertRowid} (changes ≈ cur.rowcount). */
-const run = (sql, ...p) => db().prepare(sql).run(...p);
+const run = (sql, ...p) => withRescue(() => db().prepare(sql).run(...p));
 
 /** Chạy fn trong 1 transaction (BEGIN IMMEDIATE ... COMMIT / ROLLBACK khi lỗi). */
 function transaction(fn) {
@@ -132,23 +155,46 @@ function transaction(fn) {
   }
 }
 
-function initDb() {
+/** Tạo bảng thiếu + thêm cột thiếu (an toàn chạy lại nhiều lần). */
+function migrate() {
   const d = db();
-  d.exec('PRAGMA journal_mode=WAL');
   for (const sql of CREATE_TABLES) d.exec(sql);
   for (const sql of CREATE_V7) d.exec(sql);
   for (const [table, cols] of Object.entries(ADD_COLUMNS)) {
-    const existing = new Set(all(`PRAGMA table_info(${table})`).map((r) => r.name));
+    const existing = new Set(d.prepare(`PRAGMA table_info(${table})`).all().map((r) => r.name));
     for (const [col, decl] of Object.entries(cols)) {
       if (existing.has(col)) continue;
       try {
         d.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${decl}`);
+        console.log(`🧩 Migration: đã thêm cột ${table}.${col}`);
       } catch (e) {
         if (!/duplicate column/i.test(String(e.message))) {
           console.error(`❌ Migration lỗi khi thêm cột '${table}.${col}':`, e.message);
         }
       }
     }
+  }
+}
+
+function initDb() {
+  const d = db();
+  d.exec('PRAGMA journal_mode=WAL');
+  // File WAL không được phình mãi: tự gộp về DB sau ~200 trang và cắt file về tối đa 16 MB.
+  try { d.exec('PRAGMA wal_autocheckpoint=200'); d.exec('PRAGMA journal_size_limit=16777216'); } catch (_) { /* bỏ qua */ }
+  // File tạm của SQLite (sắp xếp, VACUUM...) giữ trong RAM — tránh SQLITE_FULL khi /tmp của host nhỏ/đầy. Bỏ giới hạn số trang nếu bị đặt nhầm.
+  try { d.exec('PRAGMA temp_store=MEMORY'); d.exec('PRAGMA max_page_count=4294967294'); } catch (_) { /* bỏ qua */ }
+  // Dọn trước khi migrate: nếu ổ đĩa đang đầy thì migration (ALTER TABLE) mới có chỗ ghi.
+  try {
+    const G = require('./diskguard');
+    G.pruneBackups();
+    console.log(G.fullReport());
+  } catch (_) { /* bỏ qua */ }
+  try { migrate(); }
+  catch (e) {
+    if (/database or disk is full|SQLITE_FULL/i.test(String(e.message)) || e.code === 'SQLITE_FULL') {
+      try { require('./diskguard').emergencyCleanup(); } catch (_) { /* bỏ qua */ }
+      migrate();
+    } else throw e;
   }
   return _driver;
 }
@@ -157,4 +203,4 @@ function closeDb() {
   if (_db) { _db.close(); _db = null; }
 }
 
-module.exports = { DB_PATH, db, get, all, run, transaction, initDb, closeDb, driver: () => _driver };
+module.exports = { DB_PATH, db, get, all, run, transaction, initDb, migrate, closeDb, driver: () => _driver };

@@ -14,9 +14,8 @@ const { sleep, fmtNum, now } = require('../util');
 
 const ASSETS = path.join(__dirname, '..', '..', 'assets');
 const LOADING = path.join(ASSETS, 'war_loading.jpg'); const MOUNTAIN = path.join(ASSETS, 'war_mountain.png');
-const ADMIN_IDS = new Set(K.ADMIN_DISCORD_IDS.map(String));
 const eph = (i, c) => i.reply({ content: c, flags: EPHEMERAL });
-const isGuildAdmin = (i) => (i.memberPermissions && (i.memberPermissions.has('Administrator') || i.memberPermissions.has('ManageGuild'))) || ADMIN_IDS.has(String(i.user.id));
+const isGuildAdmin = (i) => (i.memberPermissions && (i.memberPermissions.has('Administrator') || i.memberPermissions.has('ManageGuild'))) || K.ADMIN_DISCORD_IDS.some((x) => String(x) === String(i.user.id));
 
 function buildKhotongEmbed(sectId) {
   const info = W.khotongInfo(sectId);

@@ -10,8 +10,7 @@ const { normalizePayload } = require('../ui/skin');
 const N = require('../ui/notifications');
 
 const registry = new Map();
-const ADMIN_IDS = new Set(require('../game/constants').ADMIN_CODE_APPROVER_IDS.map(String));
-const isAdminApprover = (id) => ADMIN_IDS.has(String(id));
+const isAdminApprover = (id) => require('../game/constants').ADMIN_CODE_APPROVER_IDS.some((x) => String(x) === String(id));
 
 /** type: 'string' | 'int' | 'user' | 'attachment' */
 function defineCommand(def) { registry.set(def.name, def); return def; }

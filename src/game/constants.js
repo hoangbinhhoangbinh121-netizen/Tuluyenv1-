@@ -34,10 +34,20 @@ const DOKIEP_VIENMAN_STAGE = totalStageCount(DOKIEP_REALM_IDX) - 1;
 const EXTRA_ADMINS = String(process.env.ADMIN_IDS || '').split(/[,\s]+/).filter((x) => /^\d{15,}$/.test(x));
 const mergeIds = (arr) => [...new Set([...(arr || []).map(String), ...EXTRA_ADMINS])];
 
+const ADMIN_CODE_APPROVER_IDS = mergeIds(C.ADMIN_CODE_APPROVER_IDS);
+const ADMIN_DISCORD_IDS = mergeIds(C.ADMIN_DISCORD_IDS);
+/** Thêm admin lúc đang chạy (vd chủ bot tự dò được sau khi đăng nhập). Hai mảng được dùng chung nên có hiệu lực ngay. */
+function addAdmin(id) {
+  const s = String(id || '');
+  if (!/^\d{15,}$/.test(s)) return false;
+  if (!ADMIN_CODE_APPROVER_IDS.includes(s)) ADMIN_CODE_APPROVER_IDS.push(s);
+  if (!ADMIN_DISCORD_IDS.includes(s)) ADMIN_DISCORD_IDS.push(s);
+  return true;
+}
+
 module.exports = {
   ...C,
-  ADMIN_CODE_APPROVER_IDS: mergeIds(C.ADMIN_CODE_APPROVER_IDS),
-  ADMIN_DISCORD_IDS: mergeIds(C.ADMIN_DISCORD_IDS), REALMS, TANG_20, TANG_23, totalStageCount,
+  ADMIN_CODE_APPROVER_IDS, ADMIN_DISCORD_IDS, addAdmin, REALMS, TANG_20, TANG_23, totalStageCount,
   HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE,
   _REALM_SPEED_MAX_KNOWN: Math.max(...Object.keys(C.REALM_SPEED_MULT).map(Number)),
 };

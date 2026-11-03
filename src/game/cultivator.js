@@ -139,6 +139,8 @@ function syncHpRegen(userId, row = null) {
   let curHp = row.cur_hp !== null && row.cur_hp !== undefined ? row.cur_hp : maxHp;
   if (curHp < maxHp && elapsedMin > 0) curHp = Math.min(maxHp, int(curHp + maxHp * HP_REGEN_PER_MINUTE * elapsedMin));
   if (curHp > maxHp) curHp = maxHp;
+  // Không ghi DB nếu HP không đổi và mốc hồi vừa mới cập nhật (xem Tổng Quan liên tục không còn ghi mỗi lần).
+  if (row.cur_hp === curHp && row.last_hp_regen && t - row.last_hp_regen < 30) return curHp;
   updateCultivator(userId, { cur_hp: curHp, last_hp_regen: t });
   return curHp;
 }

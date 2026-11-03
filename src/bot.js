@@ -1,5 +1,7 @@
 'use strict';
 require('dotenv').config();
+const AC = require('./autoconfig');
+AC.applyDefaults();   // điền mọi biến còn thiếu bằng mặc định — chỉ cần mỗi DISCORD_TOKEN
 const { Client, GatewayIntentBits, Partials, Events, REST, Routes } = require('discord.js');
 const D = require('./db');
 const { syncPixelEmoji, applyEmojiFallbacks, continuePixelSyncInBackground } = require('./game/emoji');
@@ -26,12 +28,22 @@ const PREFIXES = String(process.env.COMMAND_PREFIX || '?,!').split(/[,\s]+/).fil
 const GUILD_ID = process.env.GUILD_ID || '';
 const USE_PREFIX = (process.env.ENABLE_PREFIX_COMMANDS || '1') !== '0';
 
-async function registerSlash(clientId) {
+async function registerSlash(client) {
   const rest = new REST({ version: '10' }).setToken(TOKEN);
-  const body = F.buildSlashJson();
-  if (GUILD_ID) await rest.put(Routes.applicationGuildCommands(clientId, GUILD_ID), { body });
-  else await rest.put(Routes.applicationCommands(clientId), { body });
-  console.log(`✅ Đã đăng ký ${body.length} lệnh slash ${GUILD_ID ? `(server ${GUILD_ID})` : '(toàn cục — có thể mất tới 1 giờ để hiện)'}.`);
+  return AC.registerSlashAuto({
+    rest, Routes, clientId: client.user.id, body: F.buildSlashJson(),
+    guildIds: [...client.guilds.cache.keys()], onlyGuildId: GUILD_ID,
+  });
+}
+
+let OWNER_ID = null;
+/** Chủ bot (người tạo ứng dụng trên Developer Portal) tự động thành admin — không cần ADMIN_IDS. */
+async function detectOwner(client) {
+  try {
+    const app = await client.application.fetch();
+    OWNER_ID = AC.detectOwnerId(app);
+    if (OWNER_ID && require('./game/constants').addAdmin(OWNER_ID)) console.log(`👑 Chủ bot ${OWNER_ID} đã tự động là admin.`);
+  } catch (e) { console.warn('ℹ️ Không dò được chủ bot (dùng ADMIN_IDS nếu cần):', e.message); }
 }
 
 const BOT_VERSION = require('../package.json').version;
@@ -42,19 +54,19 @@ function installErrorReporter(client) {
   if (!chId && !dm) return;
   let last = 0;
   require('./errorlog').setReporter(async (code, where, msg) => {
-    if (Date.now() - last < 3000) return; last = Date.now();   // chống ngập tin
-    const text = `⚠️ **Lỗi \`${code}\`** tại \`${where}\`\n\`\`\`\n${String(msg).slice(0, 1500)}\n\`\`\``;
+    const gap = chId ? 3000 : 5 * 60 * 1000;      // kênh: 3 giây · nhắn riêng chủ bot: 5 phút (khỏi bị ngập tin)
+    if (Date.now() - last < gap) return; last = Date.now();
+    const text = `⚠️ **Lỗi \`${code}\`** tại \`${where}\`\n\`\`\`\n${String(msg).slice(0, 1500)}\n\`\`\`\nGõ \`/loigannhat\` để xem thêm. Nếu lỗi \`database or disk is full\`: gõ \`/dungluong\`.`;
     try {
       if (chId) { const ch = await client.channels.fetch(chId); await ch.send({ content: text }); }
-      else for (const id of require('./game/constants').ADMIN_CODE_APPROVER_IDS.slice(0, 3)) { const u = await client.users.fetch(id); await u.send({ content: text }); }
+      else if (OWNER_ID) { const u = await client.users.fetch(OWNER_ID); await u.send({ content: text }); }
     } catch (_) { /* không gửi được thì thôi */ }
   });
 }
 
-function buildClient(withContent) {
+function buildClient({ content: withContent, members: USE_MEMBERS }) {
   const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
   if (withContent) intents.push(GatewayIntentBits.MessageContent);
-  const USE_MEMBERS = (process.env.ENABLE_MEMBERS_INTENT || '0') === '1';
   if (USE_MEMBERS) intents.push(GatewayIntentBits.GuildMembers);
   const client = new Client({ intents, partials: [Partials.Channel] });
 
@@ -63,8 +75,15 @@ function buildClient(withContent) {
     await applyEmojiFallbacks(c);
     continuePixelSyncInBackground();
     installErrorReporter(c);
-    try { await registerSlash(c.user.id); } catch (e) { console.error('❌ Đăng ký slash lỗi:', e.message, '— kiểm tra bot đã được mời với quyền "applications.commands" và GUILD_ID đúng.'); }
+    await detectOwner(c);
+    try { await registerSlash(c); } catch (e) { console.error('❌ Đăng ký slash lỗi:', e.message, '— kiểm tra bot đã được mời với quyền "applications.commands" (và GUILD_ID nếu có đặt).'); }
     startBackground(client);
+  });
+  // Server mới mời bot vào → lệnh slash hiện ngay (chỉ khi không ghim GUILD_ID).
+  client.on(Events.GuildCreate, async (g) => {
+    if (GUILD_ID) return;
+    try { await new REST({ version: '10' }).setToken(TOKEN).put(Routes.applicationGuildCommands(client.user.id, g.id), { body: F.buildSlashJson() }); console.log(`✅ Đã đăng ký lệnh slash cho server mới ${g.id}.`); }
+    catch (e) { console.warn(`⚠️ Server mới ${g.id}: ${e.message}`); }
   });
   client.on(Events.InteractionCreate, async (i) => {
     try {
@@ -91,7 +110,7 @@ function buildClient(withContent) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v9.0 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v12.2 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);
@@ -105,25 +124,29 @@ async function main() {
   const shutdown = () => { try { D.closeDb(); } catch (_) { /* bỏ qua */ } process.exit(0); };
   process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);
 
-  let client = buildClient(USE_PREFIX);
+  const USE_MEMBERS = (process.env.ENABLE_MEMBERS_INTENT || '1') !== '0';
+  // Thử bộ intent đầy đủ nhất, bị từ chối thì tự hạ dần (không cần sửa biến gì).
+  const steps = [];
+  if (USE_PREFIX && USE_MEMBERS) steps.push({ content: true, members: true });
+  if (USE_PREFIX) steps.push({ content: true, members: false });
+  if (USE_MEMBERS) steps.push({ content: false, members: true });
+  steps.push({ content: false, members: false });
   try {
-    await client.login(TOKEN);
+    const { step } = await AC.loginCascade({
+      build: buildClient, steps, login: (c) => c.login(TOKEN),
+      isIntentError: (e) => /disallowed intents|used disallowed|4014/i.test(String(e && e.message || e)),
+      warn: (m) => console.warn(m),
+    });
+    if (USE_PREFIX && !step.content) {
+      console.warn('⚠️ Chưa bật "Message Content Intent" (Developer Portal → Bot → Privileged Gateway Intents) → bot chạy bằng lệnh SLASH (/); lệnh "?" và "!" tạm không dùng được.');
+    }
+    if (USE_MEMBERS && !step.members) console.warn('ℹ️ Chưa bật "Server Members Intent" → bỏ qua tính năng tự rút người rời server khỏi cứ điểm Tông Môn Chiến (không ảnh hưởng gì khác).');
   } catch (e) {
     const msg = String(e && e.message || e);
-    if (USE_PREFIX && /disallowed intents/i.test(msg)) {
-      console.warn('⚠️ Chưa bật "Message Content Intent" trong Discord Developer Portal → Bot → Privileged Gateway Intents.');
-      console.warn('   → Bot vẫn chạy bình thường bằng lệnh SLASH (/). Lệnh bắt đầu bằng "!" (vd !restore_db, !hoang) sẽ KHÔNG hoạt động cho tới khi bạn bật intent đó rồi khởi động lại.');
-      try { client.destroy(); } catch (_) { /* bỏ qua */ }
-      client = buildClient(false);
-      try { await client.login(TOKEN); }
-      catch (e2) { console.error('❌ Đăng nhập thất bại:', e2.message); process.exit(1); }
-    } else if (/invalid token|an invalid token/i.test(msg) || e.code === 'TokenInvalid') {
+    if (/invalid token|an invalid token/i.test(msg) || e.code === 'TokenInvalid') {
       console.error('❌ DISCORD_TOKEN sai hoặc đã bị reset. Vào Developer Portal → Bot → Reset Token → copy token mới dán vào DISCORD_TOKEN.');
-      process.exit(1);
-    } else {
-      console.error('❌ Đăng nhập thất bại:', msg);
-      process.exit(1);
-    }
+    } else console.error('❌ Đăng nhập thất bại:', msg);
+    process.exit(1);
   }
 }
 main().catch((e) => { console.error('❌ Lỗi khởi động:', e); process.exit(1); });

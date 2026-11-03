@@ -39,7 +39,19 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 3. Nếu bot không lên: chụp toàn bộ Console từ dòng `Tiên Giới Bot v6-7` trở xuống.
 
 
-## v9.0
+## v11.0
 - Chưa kiểm chứng trên Discord thật (chỉ giả lập). Nếu tu luyện vẫn lỗi với người khác: gửi mã Exxx + logs/error.log.
 - Emoji pixel: Application Emoji bị giới hạn tốc độ khi tải lần đầu; phần thiếu dùng Unicode rồi tải nền.
 - Ký hiệu chức năng (✕ ✓ ＋ ↻ ⬆ ℹ ✎) và ô thanh bar còn là icon vẽ sẵn vì sprite không có.
+
+- (đã sửa v9-v11) Bảng sects thiếu cột exp_buff_until/treasury/title gây lỗi tu luyện cho người đã vào tông môn.
+
+## v12.0 — chống đầy đĩa + tự cứu DB (gộp v11.1)
+- `SQLITE_FULL` ("database or disk is full"): thêm `src/db/diskguard.js` — dọn bản sao lưu thừa (theo số lượng + tổng dung lượng `BACKUP_MAX_MB`, mặc định 500), bỏ qua auto-backup khi ổ đĩa sắp đầy, xoá file backup dở dang, giới hạn file WAL (16 MB). Khi gặp SQLITE_FULL bot tự dọn khẩn cấp rồi thử ghi lại 1 lần.
+- `no such column/table`: mọi lệnh đọc/ghi DB tự chạy lại migrate 1 lần rồi thử lại.
+- Khởi động in 1 dòng báo cáo: DB / WAL / backup / log / ổ đĩa trống. Lệnh admin mới: `/dungluong`.
+- Biến môi trường mới (tuỳ chọn): `BACKUP_MAX_MB`, `BACKUP_KEEP_MANUAL` (5), `BACKUP_KEEP_PRE` (3).
+- v12: SQLite dùng `temp_store=MEMORY` (không phụ thuộc /tmp của host), bỏ giới hạn `max_page_count`, bớt ghi DB khi xem Tổng Quan liên tục.
+- v12: khi khởi động và khi gõ `/dungluong` bot in báo cáo: dung lượng DB/WAL/backup, thử GHI THẬT 1 MB vào thư mục DB + thư mục tạm, và 6 file lớn nhất — để biết chính xác cái gì làm đầy.
+- v12.1: sao lưu tự động CHỈ GIỮ BẢN MỚI NHẤT (mỗi loại: tự động / thủ công / trước-khôi-phục giữ 1 bản), bản cũ tự xoá; tạo bản mới ngay 1 phút sau khi bot khởi động rồi mỗi `AUTO_BACKUP_HOURS` giờ. Muốn giữ nhiều hơn: đặt `AUTO_BACKUP_KEEP`, `BACKUP_KEEP_MANUAL`, `BACKUP_KEEP_PRE`.
+- v12.2: **cấu hình tự động** (`src/autoconfig.js`) — chỉ cần `DISCORD_TOKEN`. Biến thiếu tự lấy mặc định; chủ bot tự là admin; slash tự đăng ký ngay cho mọi server (và server mới); intent bị từ chối thì tự hạ cấu hình (content+members → content → members → không); nhóm biến sao lưu cố định ở mức "giữ bản mới nhất" (bỏ qua biến trên host trừ khi `CONFIG_FROM_ENV=1`); lỗi tự nhắn riêng cho chủ bot (5 phút/lần).
