@@ -61,3 +61,12 @@ TIÊN GIỚI BOT v7.0 — HƯỚNG DẪN & GHI CHÚ THAY ĐỔI
      xem /listdb, hoàn tác bằng /usedb). Chỉ nhập cột có ở cả hai bên; bảng boss v7 không bị đụng.
    - Muốn thay hẳn toàn bộ DB thì dùng /restore_db (ghi đè, nên khởi động lại bot sau đó).
    - Dùng ngoài Discord:  node scripts/import-old-db.js duong/dan/tutien_cu.db
+
+9. CẬP NHẬT BẢN MỚI, GIỮ TOKEN CŨ (unzip + deploy lại)
+   Trong thư mục bot đang chạy (có .env và data/):
+       bash scripts/redeploy.sh tien-gioi-bot-v7.zip      (hoặc: npm run redeploy -- tien-gioi-bot-v7.zip)
+   - Giải nén đè mã nguồn, GIỮ NGUYÊN .env (token), data/ (DB), logs/, node_modules/.
+   - Tự sao lưu .env + data vào .redeploy_backup/<thời gian>, chạy npm install, rồi restart PM2 nếu có
+     (không có PM2 thì tự khởi động lại bằng cách bạn đang dùng). NO_RESTART=1 để bỏ qua bước restart.
+   - Lần đầu từ bản cũ chưa có script: giải nén zip ra thư mục tạm, chép scripts/redeploy.sh vào bot rồi chạy như trên,
+     hoặc đơn giản: giải nén đè thủ công và KHÔNG xoá .env + data/.

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "import-db": "node scripts/import-old-db.js",
-    "check": "node scripts/selfcheck.js"
+    "check": "node scripts/selfcheck.js",
+    "redeploy": "bash scripts/redeploy.sh"
   },
   "engines": {
     "node": ">=22.5"

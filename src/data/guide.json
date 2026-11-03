@@ -1,0 +1,266 @@
+[
+ {
+  "key": "batdau",
+  "label": "🌱 Bắt Đầu & Tu Luyện",
+  "desc": "Tạo nhân vật, tu luyện tăng tu vi, đột phá cảnh giới.",
+  "commands": [
+   [
+    "batdau",
+    "Bắt đầu con đường tu tiên — tạo nhân vật, roll Linh Căn + Thể Chất."
+   ],
+   [
+    "tutien",
+    "Mở menu chính: xem trạng thái và bấm nút tu luyện nhanh."
+   ],
+   [
+    "tuluyen",
+    "Tu luyện nhanh, nhận ít tu vi, cooldown ngắn."
+   ],
+   [
+    "dongquan",
+    "Bế quan tu luyện, nhận nhiều tu vi hơn nhưng cooldown dài hơn."
+   ],
+   [
+    "dotpha",
+    "Đột phá lên cảnh giới kế tiếp khi đã đủ tu vi."
+   ],
+   [
+    "canngo",
+    "Cảm ngộ đạo pháp, có cơ hội nhận thêm tu vi/buff."
+   ],
+   [
+    "linhmach",
+    "Hấp thụ linh khí từ linh mạch để nhận thêm tu vi."
+   ]
+  ]
+ },
+ {
+  "key": "tongmon",
+  "label": "🏯 Tông Môn",
+  "desc": "Lập/gia nhập tông môn, quản lý thành viên, Kho Tông và Tông Môn Chiến.",
+  "commands": [
+   [
+    "laptongmon",
+    "Lập một tông môn mới."
+   ],
+   [
+    "giatongmon",
+    "Gia nhập một tông môn đang có."
+   ],
+   [
+    "roitongmon",
+    "Rời khỏi tông môn hiện tại."
+   ],
+   [
+    "conghientongmon",
+    "Cống hiến tu vi cho tông môn."
+   ],
+   [
+    "doitentongmon",
+    "[Tông Chủ] Đổi tên tông môn."
+   ],
+   [
+    "thanhvientongmon",
+    "Xem danh sách thành viên theo chức vụ."
+   ],
+   [
+    "bonhiemtongmon",
+    "[Tông Chủ] Bổ nhiệm chức vụ cho thành viên."
+   ],
+   [
+    "bxhtongmon",
+    "Xem Bảng Xếp Hạng các tông môn."
+   ],
+   [
+    "khotong",
+    "Xem Kho Tông: Linh Thạch, thu nhập tuần, Tông Chủ."
+   ],
+   [
+    "nopkho",
+    "Đóng góp Linh Thạch vào Kho Tông."
+   ],
+   [
+    "rutkho",
+    "[Tông Chủ] Rút Linh Thạch từ Kho Tông."
+   ],
+   [
+    "tongmonchien",
+    "Tham gia Tông Môn Chiến, tranh 5 cứ điểm với tông môn khác."
+   ],
+   [
+    "tongmonchien_bando",
+    "Xem lại bản đồ Tông Môn Chiến hiện tại."
+   ]
+  ]
+ },
+ {
+  "key": "chiendau",
+  "label": "⚔️ Đấu Pháp & Phiêu Lưu",
+  "desc": "PvP, khám phá Bí Cảnh, đánh Boss và xếp hạng.",
+  "commands": [
+   [
+    "dauphap",
+    "Đấu pháp (PvP) với người chơi khác."
+   ],
+   [
+    "bicanh",
+    "Khám phá Bí Cảnh thường và Bí Cảnh Linh Giới."
+   ],
+   [
+    "bicanhlinhgioi",
+    "Khám phá Bí Cảnh Linh Giới (đã gộp chung với /bicanh)."
+   ],
+   [
+    "danhboss",
+    "Tấn công Boss Thế Giới."
+   ],
+   [
+    "bangxephang",
+    "Xem Thiên Kiêu Bảng (bảng xếp hạng người chơi)."
+   ]
+  ]
+ },
+ {
+  "key": "luyendan",
+  "label": "🧪 Luyện Đan, Luyện Khí & Chợ",
+  "desc": "Luyện đan dược, pháp bảo và đổi Linh Thạch/quay Công Pháp.",
+  "commands": [
+   [
+    "muadanphuong",
+    "Mua Đan Phương — bắt buộc trước khi Luyện Đan."
+   ],
+   [
+    "luyendan",
+    "Luyện đan dược từ nguyên liệu."
+   ],
+   [
+    "danduoc",
+    "Mở menu Dùng Đan Dược — chọn đúng viên đang sở hữu để cắn (tăng tu vi / bỏ 5p chờ Đột Phá). (= /dungdan)"
+   ],
+   [
+    "luyenkhi",
+    "Luyện pháp bảo từ nguyên liệu."
+   ],
+   [
+    "quaycongphap",
+    "Quay ngẫu nhiên 1 Công Pháp (không chọn tầng, giá cố định)."
+   ],
+   [
+    "doilinhtinh",
+    "Đổi Linh Thạch lấy Linh Tinh."
+   ]
+  ]
+ },
+ {
+  "key": "dongnghiep",
+  "label": "🐾 Linh Thú, Song Tu & Giao Dịch",
+  "desc": "Nuôi linh thú, kết đôi song tu và trao đổi vật phẩm với người khác.",
+  "commands": [
+   [
+    "linhthu",
+    "Nuôi dưỡng linh thú của bạn."
+   ],
+   [
+    "songtu",
+    "Mời một người chơi song tu."
+   ],
+   [
+    "chapnhansongtu",
+    "Chấp nhận lời mời song tu."
+   ],
+   [
+    "chiataysongtu",
+    "Kết thúc quan hệ song tu."
+   ],
+   [
+    "daolu",
+    "Xem đạo lữ, cấp đạo duyên và buff song tu."
+   ],
+   [
+    "dao_lu_tangthan",
+    "Mỗi ngày vun đắp đạo duyên."
+   ],
+   [
+    "giaodich",
+    "Đề xuất giao dịch 2 chiều (Linh Thạch/Đan Dược/Linh Căn/Thể Chất)."
+   ]
+  ]
+ },
+ {
+  "key": "phithang",
+  "label": "🌌 Phi Thăng",
+  "desc": "Vượt Thiên Kiếp, thử thách và phi thăng lên thế giới cao hơn.",
+  "commands": [
+   [
+    "dieukienphithang",
+    "Xem checklist điều kiện Phi Thăng (Linh Giới hoặc Tiên Giới)."
+   ],
+   [
+    "vuotthienkiep",
+    "Thử vượt qua Thiên Kiếp (Linh Giới hoặc Tiên Giới)."
+   ],
+   [
+    "danhphithangsugia",
+    "Khiêu chiến Sứ Giả để nhận Lệnh Phi Thăng."
+   ],
+   [
+    "danhthuongcothuho",
+    "Khiêu chiến Thượng Cổ Thủ Hộ (điều kiện Phi Thăng Tiên Giới)."
+   ],
+   [
+    "thiennhanngusuy",
+    "Đối mặt Thiên Nhân Ngũ Suy — 5 giai đoạn, chỉ mở ở Độ Kiếp Viên Mãn."
+   ],
+   [
+    "taytuydan",
+    "Luyện Đan Tẩy Tuỷ Trọng Sinh để roll lại Linh Căn + Thể Chất."
+   ],
+   [
+    "chephithanglenh",
+    "Chế 1 Linh Giới Lệnh từ 100 mảnh ghép nhặt được ở Bí Cảnh."
+   ],
+   [
+    "phithang",
+    "Phi thăng sang thế giới cao hơn."
+   ],
+   [
+    "dongphu",
+    "Xem/khai phá/thu hoạch động phủ riêng."
+   ]
+  ]
+ },
+ {
+  "key": "khodo",
+  "label": "🎁 Kho Đồ & Code",
+  "desc": "Xem vật phẩm, nhập code và mở rương.",
+  "commands": [
+   [
+    "khodo",
+    "Mở Kho Đồ — xem vật phẩm, nhập code, mở Rương Thần Bí."
+   ],
+   [
+    "nhapcode",
+    "Nhập mã code để nhận thưởng."
+   ],
+   [
+    "moruong",
+    "Mở 1 Rương Thần Bí."
+   ]
+  ]
+ },
+ {
+  "key": "admin",
+  "label": "🛡️ Admin",
+  "desc": "Lệnh quản trị viên, chỉ dùng khi cần xử lý sự cố.",
+  "commands": [
+   [
+    "mokhoacode",
+    "[Admin] Gỡ khoá nhập code cho 1 thành viên bị khoá."
+   ],
+   [
+    "thuhoilinhthach",
+    "[Admin] Thu hồi bớt Linh Thạch của 1 thành viên về đúng 1 mốc cố định."
+   ]
+  ]
+ }
+]

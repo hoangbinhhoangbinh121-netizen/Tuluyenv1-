@@ -1,0 +1,1711 @@
+{
+ "CUSTOM_EMOJI": {
+  "tuluyen": "<:tuluyen:1533727210832396298>",
+  "dotpha": "<:dotpha:1534171289324097608>",
+  "bequan": "🧘",
+  "kiem": "<:kiem:1533731897933299753>",
+  "dongmenu": "<:dongmenu:1533730083745824899>",
+  "caidat": "<:caidat:1533733632022155274>",
+  "shop": "<:shop:1533729338741227540>",
+  "congkich": "<:congkich:1533725731962622083>",
+  "luyendan": "<:luyendan:1533727972480122951>",
+  "khivan": "<:khivan:1533736109136150569>",
+  "phongngu": "<:phongngu:1533738194128867389>",
+  "linhcan": "<:linhcan:1533736947586171001>",
+  "linhgioilenh": "<:linhgioilenh:1533730081451806800>",
+  "nguyenlieu": "<:nguyenlieu:1533770579016945747>",
+  "congphap": "<:congphap:1533772568539037780>",
+  "phapbao": "<:phapbao:1534441777426333797>",
+  "phithangdau": "<:phithangdau:1533734164723929119>",
+  "phithang": "<:phithang:1533783946469310616>",
+  "cup": "<:cup:1533775090192220290>",
+  "thegioi": "<:thegioi:1534108616049823814>",
+  "linhtinh": "<:linhtinh:1534499005290119219>",
+  "linhthach": "<:linhthach:1533735089203187782>",
+  "linhmach": "<:linhmach:1534137712997695508>",
+  "thechat": "<:thechat:1534119855395962991>",
+  "danduoc": "<:danduoc:1534137321601896539>",
+  "linhluc": "<:linhluc:1534115877258137641>",
+  "dongphu": "<:dongphu:1534108600115396639>",
+  "dongthanh": "<:dongthanh:1534148052934197390>",
+  "tongmon": "<:tongmon:1534166373175922822>",
+  "linhngo": "<:linhngo:1534135205852479589>",
+  "giaodich": "<:giaodich:1535602916302397441>",
+  "thanphap": "<:thanphap:1535602965971214407>",
+  "vebicanhdacbiet": "<:vebicanhdacbiet:1535604557957038191>",
+  "linhphu": "<:linhphu:1535606447084142612>",
+  "daolu": "<:daolu:1545301646580387960>",
+  "daolu_ketdoi": "<a:emoji_3:1545299081985789983>",
+  "daolu_chiatay": "<a:emoji_4:1545299106526666822>",
+  "bicanh": "<:bicanh:1534135190224371732>",
+  "bicanhlinhgioi": "<:bicanh:1534135190224371732>",
+  "linhngothiendao": "<:linhngothiendao:1534216082959892691>",
+  "tienkim": "🪨",
+  "tienngoc": "💎",
+  "thienhoatinh": "🔥",
+  "hukhongkettinh": "🌌",
+  "thiendaothach": "⚡",
+  "manhtiengioilenh": "📜",
+  "daonguyentinh": "🌟",
+  "thiendaoan": "👑",
+  "thienkiepchiluc": "<:thienkiep:1534216008254881923>",
+  "thienkiep": "<:thienkiep:1534216008254881923>",
+  "thuongcothuho": "🛡️",
+  "thiennhanngusuy": "🌪️",
+  "thiennhan": "<:thiennhan:1534732876342493234>",
+  "taytuydan": "<:danduoc:1534137321601896539>",
+  "khodo": "<:khodo:1534743263037096218>",
+  "ruong": "<:khodo:1534743263037096218>",
+  "phagioidan": "⏱️",
+  "linhduocdacbiet": "🌿",
+  "warbar_empty": "<:warbar_empty:1533771957705773066>",
+  "warbar_fill": "<:warbar_fill:1531587970350583889>",
+  "sukiendaiphu": "<:sukiendaiphu:1536670777632620674>",
+  "sk_coin": "<:sk_coin:1536694915151560794>",
+  "sk_tien": "<:sk_tien:1536696183685251092>",
+  "sk_thitruong": "<:sk_thitruong:1536697458309201951>",
+  "sk_tang": "<:sk_tang:1536701099036246056>",
+  "sk_giam": "<:sk_giam:1536701113636626552>",
+  "sk_mua": "<:sk_mua:1536705853493739560>",
+  "sk_taisan": "<:sk_taisan:1536707943582404769>",
+  "sk_nganKho": "🏦",
+  "sk_thienco": "<:sk_thienco:1536709390906691714>",
+  "sk_ngaunhien": "<:sk_ngaunhien:1536709745187229816>",
+  "sk_nhiemvu": "<:sk_nhiemvu:1536709401669279814>",
+  "sk_thuongvu": "<:sk_thuongvu:1536709413463662723>",
+  "sk_baohiem": "<:sk_baohiem:1536718817231900802>",
+  "sk_xephang": "<:sk_xephang:1533775090192220290>",
+  "sk_danhhieu": "<:sk_danhhieu:1536718829441384469>",
+  "sk_phanthuong": "<:sk_phanthuong:1536718840950423652>",
+  "sk_canhbao": "<:sk_canhbao:1536718852769976330>",
+  "sk_camkhoa": "<:sk_camkhoa:1536718864816021546>",
+  "sk_thoigian": "<:sk_thoigian:1536720775892181022>",
+  "sk_luat": "📜",
+  "nghenghiep": "🛠️",
+  "khac": "📦",
+  "hoihp": "💚",
+  "vundap": "🌹",
+  "bosstg": "🐉",
+  "nhapcode": "🔑",
+  "bando": "🗺️",
+  "tientinh": "🪙",
+  "yeuhach": "🩸",
+  "hukhongtinhhoa": "🌀",
+  "huyenthiet": "⛓️",
+  "manhphapbao": "🧿",
+  "xacnhan": "✅",
+  "tuchoi": "❌",
+  "lammoi": "🔄",
+  "kenhrieng": "🔑",
+  "thuhoach": "🌫️",
+  "nangcap": "🔧",
+  "gianhap": "🚪",
+  "conghien": "🎁",
+  "thanhvien": "👥",
+  "roitongmon": "🚩",
+  "doiten": "✏️",
+  "bonhiem": "🎖️",
+  "nhapid": "⌨️",
+  "dieukien": "📋",
+  "satchieu": "💢",
+  "nhangioi": "🌿",
+  "thamgia": "🙋",
+  "batdautran": "▶️",
+  "roicudiem": "🏳️"
+ },
+ "PIXEL_EMOJI_KEYS": [
+  "bequan",
+  "tienkim",
+  "tienngoc",
+  "thienhoatinh",
+  "hukhongkettinh",
+  "thiendaothach",
+  "manhtiengioilenh",
+  "daonguyentinh",
+  "thiendaoan",
+  "thuongcothuho",
+  "thiennhanngusuy",
+  "phagioidan",
+  "linhduocdacbiet",
+  "ruong",
+  "sk_nganKho",
+  "sk_luat",
+  "nghenghiep",
+  "khac",
+  "hoihp",
+  "vundap",
+  "bosstg",
+  "nhapcode",
+  "bando",
+  "tientinh",
+  "yeuhach",
+  "hukhongtinhhoa",
+  "huyenthiet",
+  "manhphapbao",
+  "xacnhan",
+  "tuchoi",
+  "lammoi",
+  "kenhrieng",
+  "thuhoach",
+  "nangcap",
+  "gianhap",
+  "conghien",
+  "thanhvien",
+  "roitongmon",
+  "doiten",
+  "bonhiem",
+  "nhapid",
+  "dieukien",
+  "satchieu",
+  "nhangioi",
+  "thamgia",
+  "batdautran",
+  "roicudiem"
+ ],
+ "PIXEL_EMOJI_REPLACE_REUSED": [
+  "ruong"
+ ],
+ "GEMINI_MODEL": "gemini-2.0-flash",
+ "SUB_4": [
+  "Sơ Kỳ",
+  "Trung Kỳ",
+  "Hậu Kỳ",
+  "Viên Mãn"
+ ],
+ "REALM_STAGE_EXP_OVERRIDE": {
+  "1": [
+   60000,
+   65000,
+   71000,
+   77000,
+   84000,
+   91000,
+   99000,
+   108000,
+   118000,
+   128000,
+   139000,
+   152000,
+   165000,
+   180000,
+   195000,
+   212000,
+   231000,
+   251000,
+   274000,
+   300000,
+   328000,
+   360000,
+   394000,
+   431000,
+   472000,
+   517000,
+   566000,
+   620000,
+   678000,
+   743000
+  ],
+  "2": [
+   140000,
+   152000,
+   166000,
+   180000,
+   196000,
+   213000,
+   232000,
+   253000,
+   275000,
+   299000,
+   325000,
+   354000,
+   385000,
+   419000,
+   456000,
+   496000,
+   539000,
+   587000,
+   638000,
+   695000,
+   757000,
+   825000,
+   898000,
+   979000,
+   1070000,
+   1160000,
+   1270000,
+   1380000,
+   1500000,
+   1640000
+  ],
+  "3": [
+   300000,
+   326000,
+   355000,
+   386000,
+   420000,
+   457000,
+   497000,
+   541000,
+   589000,
+   641000,
+   697000,
+   758000,
+   825000,
+   898000,
+   976000,
+   1060000,
+   1160000,
+   1260000,
+   1370000,
+   1484000,
+   1610000,
+   1740000,
+   1890000,
+   2040000,
+   2210000,
+   2400000,
+   2600000,
+   2810000,
+   3050000,
+   3300000
+  ],
+  "4": [
+   600000,
+   653000,
+   710000,
+   773000,
+   841000,
+   915000,
+   995000,
+   1080000,
+   1180000,
+   1280000,
+   1390000,
+   1520000,
+   1650000,
+   1800000,
+   1950000,
+   2120000,
+   2310000,
+   2510000,
+   2740000,
+   2983000,
+   3250000,
+   3540000,
+   3850000,
+   4190000,
+   4560000,
+   4970000,
+   5410000,
+   5890000,
+   6410000,
+   6980000
+  ],
+  "5": [
+   1000000,
+   1090000,
+   1180000,
+   1290000,
+   1400000,
+   1520000,
+   1660000,
+   1800000,
+   1960000,
+   2140000,
+   2320000,
+   2530000,
+   2750000,
+   2990000,
+   3250000,
+   3540000,
+   3850000,
+   4190000,
+   4560000,
+   4980000,
+   5440000,
+   5940000,
+   6490000,
+   7080000,
+   7740000,
+   8450000,
+   9230000,
+   10100000,
+   11000000,
+   12000000
+  ],
+  "6": [
+   1390000,
+   1500000,
+   1610000,
+   1730000,
+   1860000,
+   2000000,
+   2150000,
+   2320000,
+   2490000,
+   2680000,
+   2880000,
+   3100000,
+   3340000,
+   3590000,
+   3860000,
+   4150000,
+   4470000,
+   4810000,
+   5170000,
+   5560000,
+   5980000,
+   6430000,
+   6930000,
+   7470000,
+   8050000,
+   8680000,
+   9350000,
+   10100000,
+   10900000,
+   11700000
+  ],
+  "7": [
+   2090000,
+   2240000,
+   2410000,
+   2600000,
+   2790000,
+   3000000,
+   3230000,
+   3480000,
+   3740000,
+   4020000,
+   4330000,
+   4650000,
+   5010000,
+   5380000,
+   5790000,
+   6230000,
+   6700000,
+   7210000,
+   7750000,
+   8340000,
+   8970000,
+   9650000,
+   10390000,
+   11200000,
+   12000000,
+   13000000,
+   14000000,
+   15000000,
+   16200000,
+   17400000
+  ],
+  "8": [
+   2960000,
+   3180000,
+   3420000,
+   3680000,
+   3960000,
+   4260000,
+   4580000,
+   4930000,
+   5300000,
+   5700000,
+   6130000,
+   6590000,
+   7090000,
+   7630000,
+   8200000,
+   8830000,
+   9490000,
+   10200000,
+   11000000,
+   11800000,
+   12700000,
+   13700000,
+   14670000,
+   15700000,
+   16800000,
+   18000000,
+   19300000,
+   20700000,
+   22100000,
+   23700000
+  ],
+  "9": [
+   5220000,
+   5610000,
+   6040000,
+   6490000,
+   6980000,
+   7510000,
+   8080000,
+   8690000,
+   9350000,
+   10100000,
+   10800000,
+   11600000,
+   12500000,
+   13500000,
+   14500000,
+   15600000,
+   16800000,
+   18000000,
+   19400000,
+   20800000,
+   22400000,
+   24100000,
+   25930000,
+   27900000,
+   30000000,
+   32300000,
+   34700000,
+   37400000,
+   40200000,
+   43300000
+  ]
+ },
+ "REALM_STAGE_EXP_REDUCTION_MULT": 0.35,
+ "REALM_SPEED_MULT": {
+  "0": 1.0,
+  "1": 1.0,
+  "2": 1.5,
+  "3": 2.2,
+  "4": 3.2,
+  "5": 4.5,
+  "6": 6.5,
+  "7": 9.0,
+  "8": 12.0,
+  "9": 16.0
+ },
+ "_REALM_SPEED_EXTRAPOLATE_STEP": 1.35,
+ "TULUYEN_TALENT_MULT_CAP": 3.0,
+ "LINH_CAN": [
+  {
+   "name": "Ngũ Linh Căn",
+   "weight": 35,
+   "mult": 1.0
+  },
+  {
+   "name": "Tứ Linh Căn",
+   "weight": 25,
+   "mult": 1.1
+  },
+  {
+   "name": "Tam Linh Căn",
+   "weight": 18,
+   "mult": 1.25
+  },
+  {
+   "name": "Song Linh Căn",
+   "weight": 10,
+   "mult": 1.5
+  },
+  {
+   "name": "Thiên Linh Căn",
+   "weight": 6,
+   "mult": 2.0
+  },
+  {
+   "name": "Dị Linh Căn",
+   "weight": 3,
+   "mult": 2.5
+  },
+  {
+   "name": "Thánh Linh Căn",
+   "weight": 1.5,
+   "mult": 3.0
+  },
+  {
+   "name": "Tiên Linh Căn",
+   "weight": 0.4,
+   "mult": 4.0
+  },
+  {
+   "name": "Hỗn Độn Linh Căn",
+   "weight": 0.1,
+   "mult": 6.0
+  }
+ ],
+ "THE_CHAT": [
+  {
+   "name": "Phàm Thể",
+   "weight": 40,
+   "mult": 1.0
+  },
+  {
+   "name": "Linh Thể",
+   "weight": 25,
+   "mult": 1.015
+  },
+  {
+   "name": "Huyền Thể",
+   "weight": 16,
+   "mult": 1.035
+  },
+  {
+   "name": "Hoang Cổ Thánh Thể",
+   "weight": 9,
+   "mult": 1.07
+  },
+  {
+   "name": "Tiên Thiên Đạo Thể",
+   "weight": 5,
+   "mult": 1.12
+  },
+  {
+   "name": "Hồng Mông Đạo Thể",
+   "weight": 2.5,
+   "mult": 1.2
+  },
+  {
+   "name": "Hỗn Độn Thần Thể",
+   "weight": 1.2,
+   "mult": 1.3
+  },
+  {
+   "name": "Vô Cực Đạo Thể",
+   "weight": 0.3,
+   "mult": 1.5
+  }
+ ],
+ "CONG_PHAP_TIER_DEF": [
+  {
+   "tier": 1,
+   "require_realm": 0,
+   "require_world": 0,
+   "bonus": 0.1,
+   "cost": 50000,
+   "pvp_buff": 0.05,
+   "pvp_debuff": 0.03
+  },
+  {
+   "tier": 2,
+   "require_realm": 2,
+   "require_world": 0,
+   "bonus": 0.2,
+   "cost": 120000,
+   "pvp_buff": 0.08,
+   "pvp_debuff": 0.05
+  },
+  {
+   "tier": 3,
+   "require_realm": 3,
+   "require_world": 0,
+   "bonus": 0.35,
+   "cost": 250000,
+   "pvp_buff": 0.12,
+   "pvp_debuff": 0.08
+  },
+  {
+   "tier": 4,
+   "require_realm": 4,
+   "require_world": 0,
+   "bonus": 0.5,
+   "cost": 500000,
+   "pvp_buff": 0.16,
+   "pvp_debuff": 0.11
+  },
+  {
+   "tier": 5,
+   "require_realm": 6,
+   "require_world": 0,
+   "bonus": 0.65,
+   "cost": 1000000,
+   "pvp_buff": 0.2,
+   "pvp_debuff": 0.14
+  },
+  {
+   "tier": 6,
+   "require_realm": 0,
+   "require_world": 1,
+   "bonus": 0.85,
+   "cost": 2500000,
+   "pvp_buff": 0.26,
+   "pvp_debuff": 0.18
+  },
+  {
+   "tier": 7,
+   "require_realm": 2,
+   "require_world": 1,
+   "bonus": 1.1,
+   "cost": 5000000,
+   "pvp_buff": 0.35,
+   "pvp_debuff": 0.25
+  },
+  {
+   "tier": 101,
+   "require_realm": 6,
+   "require_world": 0,
+   "bonus": 1.3,
+   "cost": 10,
+   "pvp_buff": 0.4,
+   "pvp_debuff": 0.3,
+   "currency": "linh_tinh",
+   "upgrade_cost": 2,
+   "upgrade_currency": "linh_tinh"
+  },
+  {
+   "tier": 102,
+   "require_realm": 6,
+   "require_world": 0,
+   "bonus": 1.55,
+   "cost": 20,
+   "pvp_buff": 0.46,
+   "pvp_debuff": 0.34,
+   "currency": "linh_tinh",
+   "upgrade_cost": 3,
+   "upgrade_currency": "linh_tinh"
+  },
+  {
+   "tier": 201,
+   "require_realm": 0,
+   "require_world": 0,
+   "bonus": 2.0,
+   "cost": 0,
+   "pvp_buff": 0.55,
+   "pvp_debuff": 0.42,
+   "currency": "linh_thach",
+   "upgrade_cost": 200000,
+   "upgrade_currency": "linh_thach",
+   "boss_drop_only": true
+  }
+ ],
+ "BOSS_CONGPHAP_DROP_CHANCE": 0.005,
+ "BOSS_CONGPHAP_DROP_TIER": 201,
+ "BOSS_SPECIAL_DROP_CHANCE": 0.1,
+ "PHAP_BAO_TIER_DEF": [
+  {
+   "tier": 1,
+   "name": "Phá Quân Kiếm",
+   "require_realm": 1,
+   "cost": 80000,
+   "bonus": 0.08
+  },
+  {
+   "tier": 2,
+   "name": "Huyền Thiên Bảo Tháp",
+   "require_realm": 3,
+   "cost": 300000,
+   "bonus": 0.16
+  },
+  {
+   "tier": 3,
+   "name": "Cửu U Minh Đăng",
+   "require_realm": 5,
+   "cost": 1200000,
+   "bonus": 0.28
+  },
+  {
+   "tier": 4,
+   "name": "Hỗn Độn Chung",
+   "require_realm": 7,
+   "cost": 5000000,
+   "bonus": 0.45
+  },
+  {
+   "tier": 5,
+   "name": "Bàn Cổ Phủ",
+   "require_realm": 9,
+   "cost": 20000000,
+   "bonus": 0.7
+  }
+ ],
+ "CONGPHAP_SPECIAL_CHAIN": [
+  {
+   "tier": 1,
+   "name": "Hồng Mông Tử Khí Quyết — Sơ Giai",
+   "move": "Nhất Khí Hoá Hồng Mông",
+   "bonus": 0.2,
+   "desc": "Công Pháp Đặc Quyền độc nhất từ Rương Thần Bí — dẫn động Tử Khí Hồng Mông sơ khai."
+  },
+  {
+   "tier": 2,
+   "name": "Hồng Mông Tử Khí Quyết — Trung Giai",
+   "move": "Song Khí Phá Hư Không",
+   "bonus": 0.45,
+   "desc": "Tử Khí ngưng thành song trụ, xé toạc hư không — uy lực vượt xa Sơ Giai."
+  },
+  {
+   "tier": 3,
+   "name": "Hồng Mông Tử Khí Quyết — Đại Thành",
+   "move": "Hồng Mông Tam Khí Diệt Thế",
+   "bonus": 0.8,
+   "desc": "Tam Khí hợp nhất, tái hiện cảnh tượng Hồng Mông sơ khai — Công Pháp Đặc Quyền tối thượng."
+  }
+ ],
+ "RUONG_JACKPOT_CHANCE": 0.01,
+ "RUONG_STAR_GAIN": 2,
+ "RUONG_LUCCHIEN_GAIN": 10000,
+ "RUONG_HP_GAIN": 2000,
+ "RUONG_STAT_GAIN": 50,
+ "RUONG_CONSOLATION_LINHTHACH": 200000,
+ "CODE_DEFINITIONS": {
+  "BOOSTERTT71": {
+   "label": "🎁 Quà Tri Ân Server Booster",
+   "booster_only": true,
+   "max_uses": 5,
+   "linh_thach": 500000,
+   "dan_taytuy_trongsinh": 1
+  },
+  "TYSVTOP1": {
+   "label": "🎁 Quà Tặng Toàn Server",
+   "booster_only": false,
+   "max_uses": null,
+   "linh_thach": 100000,
+   "ruong_than_bi": 1
+  },
+  "THIENDAO9XQ7M": {
+   "label": "🧪 Quà Đan Tẩy Tủy Trọng Sinh 1000 Tỷ",
+   "booster_only": false,
+   "max_uses": 2,
+   "linh_thach": 1000000000000,
+   "dan_taytuy_trongsinh": 1,
+   "requires_admin_approval": true
+  },
+  "TAYTUYNUABAN100TY": {
+   "label": "🧪 Quà Đan Tẩy Tủy Nửa Tác Dụng 100 Tỷ",
+   "booster_only": false,
+   "max_uses": 3,
+   "linh_thach": 100000000000,
+   "dan_taytuy_nuaban": 1,
+   "requires_admin_approval": true
+  },
+  "TAYTUY100MEMBERS": {
+   "label": "🎁 Phần thưởng 100 Member — Đan Tẩy Tủy Nửa Tác Dụng",
+   "booster_only": false,
+   "max_uses": 100,
+   "dan_taytuy_nuaban": 1,
+   "requires_admin_approval": true
+  },
+  "THIENTONGCHAOMUNG": {
+   "label": "🌱 Quà Tân Thủ — Chào Mừng Nhập Môn",
+   "booster_only": false,
+   "max_uses": null,
+   "linh_thach": 20000
+  },
+  "THIENTONGDANDUOC": {
+   "label": "🌱 Quà Tân Thủ — Túi Đan Dược",
+   "booster_only": false,
+   "max_uses": null,
+   "dan_duoc": 3
+  },
+  "THIENTONGPHAGIOI": {
+   "label": "🌱 Quà Tân Thủ — Đan Phá Giới Hộ Thân",
+   "booster_only": false,
+   "max_uses": null,
+   "dan_pha_gioi": 2
+  },
+  "THIENTONGRUONG": {
+   "label": "🌱 Quà Tân Thủ — Rương Thần Bí Đầu Tiên",
+   "booster_only": false,
+   "max_uses": null,
+   "ruong_than_bi": 1
+  },
+  "THIENTONGTAYTUY": {
+   "label": "🌱 Quà Tân Thủ — Đan Tẩy Tủy Nửa Tác Dụng",
+   "booster_only": false,
+   "max_uses": null,
+   "linh_thach": 5000,
+   "dan_taytuy_nuaban": 1
+  },
+  "THIENTONGVIP": {
+   "label": "🌱 Quà Tân Thủ — Hành Trang Nhập Môn",
+   "booster_only": false,
+   "max_uses": null,
+   "linh_thach": 50000,
+   "dan_duoc": 2
+  }
+ },
+ "ADMIN_CODE_APPROVER_IDS": [
+  "1530490044098285711"
+ ],
+ "ATTACK_NORMAL": "⚔️ Đánh Thường",
+ "PVP_ACTION_DEFEND": "🛡️ Phòng Thủ",
+ "PVP_ACTION_KILLMOVE": "💢 Sát Chiêu",
+ "PVP_EFFECT_LIST": [
+  "Trúng Độc",
+  "Choáng Váng",
+  "Xuất Huyết",
+  "Băng Phong",
+  "Thiêu Đốt",
+  "Suy Nhược"
+ ],
+ "_SKILL_NAME_PREFIX": [
+  "Liệt Diễm",
+  "Cuồng Lôi",
+  "Băng Tinh",
+  "Huyết Nhận",
+  "Ảnh Sát",
+  "Kim Cang",
+  "Thiên Sơn",
+  "Toái Cốt",
+  "Huyền Vũ",
+  "Cửu U",
+  "Hắc Ám",
+  "Thần Lôi",
+  "Vô Ảnh",
+  "Hỗn Độn",
+  "Diệt Thế",
+  "Hồng Mông",
+  "Đại La",
+  "Vô Cực",
+  "Phá Phong",
+  "Liệt Nhật"
+ ],
+ "_SKILL_NAME_SUFFIX": [
+  "Quyền",
+  "Cước",
+  "Chưởng",
+  "Kiếm Ý",
+  "Trảm",
+  "Sát Thức",
+  "Chỉ",
+  "Bộ Pháp",
+  "Luân Hồi Chưởng",
+  "Ma Công",
+  "Phá Thiên",
+  "Chân Quyết"
+ ],
+ "CONGPHAP_UPGRADE_COST": 50000,
+ "CONGPHAP_UPGRADE_BONUS_STEP": 0.03,
+ "CONGPHAP_UPGRADE_PVP_STEP": 0.01,
+ "CONGPHAP_MAX_UPGRADE_LEVEL": 100,
+ "CONGPHAP_GACHA_COST_LINHTHACH": 300000,
+ "CONGPHAP_GACHA_COST_LINHTINH": 5,
+ "CONGPHAP_MAX_EQUIP_SLOTS": 3,
+ "CONGPHAP_UPGRADE_COST_BRACKET": 10,
+ "CONGPHAP_LINHGIOI_UPGRADE_BASE_COST": 1,
+ "CONGPHAP_LINHGIOI_UPGRADE_COST_MULT": 5,
+ "CONGPHAP_LINHGIOI_UPGRADE_BONUS_STEP": 0.0036,
+ "_CONGPHAP_NAME_PREFIX": [
+  "Trường Xuân",
+  "Huyền Vũ",
+  "Cửu Chuyển",
+  "Thái Cực",
+  "Vạn Kiếp",
+  "Linh Giới",
+  "Cửu Thiên",
+  "Hồng Mông",
+  "Thái Sơ",
+  "Diệt Thế",
+  "Bàn Long",
+  "Tử Hà",
+  "Thanh Vân"
+ ],
+ "_CONGPHAP_NAME_SUFFIX": [
+  "Công",
+  "Quyết",
+  "Chân Kinh",
+  "Huyền Công",
+  "Đại Pháp",
+  "Chân Quyết",
+  "Bí Lục"
+ ],
+ "LINHTINH_EXCHANGE_RATE": 45000000,
+ "DAN_PHA_GIOI_COST_LINH_THACH": 20000000,
+ "DAN_PHA_GIOI_CRAFT_COST": 5,
+ "SHOP_ITEMS": [
+  {
+   "name": "Đan Tăng Tu Vi (Nhỏ)",
+   "cost": 10,
+   "desc": "+50 tu vi ngay lập tức"
+  },
+  {
+   "name": "Đan Tăng Tu Vi (Vừa)",
+   "cost": 25,
+   "desc": "+150 tu vi ngay lập tức"
+  },
+  {
+   "name": "Đan Tốc Luyện",
+   "cost": 15,
+   "desc": "Xóa cooldown Tu Luyện ngay lập tức"
+  },
+  {
+   "name": "Đan Hồi Khí",
+   "cost": 20,
+   "desc": "Xóa cooldown Bế Quan ngay lập tức"
+  },
+  {
+   "name": "Nhẫn Cầu Hôn",
+   "cost": 40,
+   "desc": "Cần có để gửi lời mời Song Tu — tốn 1 chiếc/lần mời"
+  }
+ ],
+ "WORLD_TIERS": [
+  "Phàm Giới",
+  "Linh Giới",
+  "Tiên Giới",
+  "Thần Giới",
+  "Hồng Mông",
+  "Vô Thượng Giới"
+ ],
+ "WORLD_TIER_FLAVOR": {
+  "1": "🌫️ **Thiên Địa Suy Giảm · Chư Thiên Suy Tàn** — linh khí Linh Giới loãng hơn Phàm Giới rất nhiều, tu luyện thường chậm lại hẳn, nhưng Bí Cảnh Linh Giới lại ẩn chứa cơ duyên và tài nguyên vượt trội.",
+  "2": "🌫️ **Thiên Địa Suy Giảm · Chư Thiên Suy Tàn** — càng lên cao linh khí càng loãng, tu luyện thường ngày một chậm, chỉ Bí Cảnh và kỳ ngộ mới bù lại được."
+ },
+ "DONGPHU_DIA_HINH": [
+  "vách núi phủ mây",
+  "hang động dưới đáy hồ linh",
+  "thung lũng ngàn năm băng phong",
+  "khu rừng cổ thụ linh khí dày đặc",
+  "đảo nhỏ giữa biển mây",
+  "hẻm núi đá ngũ sắc"
+ ],
+ "DONGPHU_DAC_SAN": [
+  "một mạch linh tuyền tự nhiên",
+  "vườn linh dược hoang sơ",
+  "trận pháp cổ xưa còn sót lại",
+  "đàn linh thú nhỏ trú ngụ",
+  "thác nước linh khí chảy ngược",
+  "khối linh thạch phát sáng"
+ ],
+ "_MSG_BALANCE_CHANGED": "⚠️ Số dư của bạn vừa thay đổi nên giao dịch **không được thực hiện** (chưa bị trừ gì). Hãy xem lại số dư rồi thử lại.",
+ "BALANCE_LABELS": {
+  "linh_thach": [
+   "linhthach",
+   "Linh Thạch"
+  ],
+  "linh_tinh": [
+   "linhtinh",
+   "Linh Tinh"
+  ],
+  "khi_van": [
+   "khivan",
+   "Khí Vận"
+  ]
+ },
+ "COOLDOWN_TULUYEN": 10,
+ "EMOJI_BAR_TUVI": "<:tuvi:1531585698619199629>",
+ "EMOJI_BAR_HP": "<:hp:1531452864646484150>",
+ "EMOJI_BAR_LUCCHIEN": "<:lucchien:1531586398484697148>",
+ "EMOJI_BAR_GREEN": "<:green:1531587970350583889>",
+ "BAR_EMPTY": "<:barempty:1533771957705773066>",
+ "BAR_LENGTH": 10,
+ "HP_REGEN_PER_MINUTE": 0.005,
+ "EVENT_DAIPHU_CLICK_COOLDOWN": 0.8,
+ "GLOBAL_CLICK_COOLDOWN": 0.6,
+ "TULUYEN_BUFF_MULT": 1.15,
+ "TULUYEN_BUFF_EXCLUDED_USER_IDS": [
+  "1521336159240716363"
+ ],
+ "TULUYEN_ANIM_STEPS": 5,
+ "TULUYEN_ANIM_DELAY": 0.4,
+ "DONGPHU_CATEGORY_NAME": "🏞️ ĐỘNG PHỦ TU TIÊN",
+ "BASE_BREAKTHROUGH_RATE": 0.72,
+ "MAJOR_REALM_BREAKTHROUGH_LUC_CHIEN_PCT": 0.15,
+ "MAJOR_REALM_BREAKTHROUGH_LUC_CHIEN_MIN_PCT": 0.05,
+ "CUULOIKIEP_SO_DAO": 9,
+ "CUULOIKIEP_DODGE_BASE": 0.55,
+ "CUULOIKIEP_DMG_PCT_MIN": 0.06,
+ "CUULOIKIEP_DMG_PCT_MAX": 0.14,
+ "SECT_WAR_EXP_BUFF_MULT": 1.05,
+ "SECT_ROLES": {
+  "tongchu": {
+   "label": "Tông Chủ",
+   "emoji": "👑",
+   "order": 0
+  },
+  "pho_tongchu": {
+   "label": "Phó Tông Chủ",
+   "emoji": "🔱",
+   "order": 1
+  },
+  "truong_lao": {
+   "label": "Trưởng Lão",
+   "emoji": "📜",
+   "order": 2
+  },
+  "tinh_anh": {
+   "label": "Tinh Anh",
+   "emoji": "⭐",
+   "order": 3
+  },
+  "detu": {
+   "label": "Đệ Tử",
+   "emoji": "🔹",
+   "order": 4
+  }
+ },
+ "SECT_ROLE_ORDER": [
+  "tongchu",
+  "pho_tongchu",
+  "truong_lao",
+  "tinh_anh",
+  "detu"
+ ],
+ "SECT_ASSIGNABLE_ROLES": [
+  "pho_tongchu",
+  "truong_lao",
+  "tinh_anh",
+  "detu"
+ ],
+ "COOLDOWN_PVP": 60,
+ "PVP_LOCK_MESSAGE": "🔒 PvP đang tạm khoá để bảo trì/cân bằng lại, sẽ mở lại sau. Hẹn gặp lại các đạo hữu trên chiến trường sớm!",
+ "PVP_ROUNDS": 5,
+ "PVP_CHALLENGE_TIMEOUT": 120,
+ "PVP_ROUND_TIMEOUT": 60,
+ "PVP_SECT_EXP_REWARD": 20,
+ "COOLDOWN_BICANH": 60,
+ "MANHGHEP_PHITHANG_CAN": 100,
+ "BICANH_TIERS": [
+  {
+   "name": "Bí Cảnh Sơ Cấp",
+   "require_realm": 0,
+   "tu_vi_range": [
+    40,
+    90
+   ],
+   "nl_range": [
+    2,
+    6
+   ],
+   "manhghep_chance": 0.0
+  },
+  {
+   "name": "Bí Cảnh Trung Cấp",
+   "require_realm": 3,
+   "tu_vi_range": [
+    90,
+    180
+   ],
+   "nl_range": [
+    5,
+    12
+   ],
+   "manhghep_chance": 0.12
+  },
+  {
+   "name": "Bí Cảnh Cao Cấp",
+   "require_realm": 5,
+   "tu_vi_range": [
+    180,
+    320
+   ],
+   "nl_range": [
+    10,
+    20
+   ],
+   "manhghep_chance": 0.22
+  },
+  {
+   "name": "Bí Cảnh: Vạn Linh Cốc",
+   "require_realm": 6,
+   "tu_vi_range": [
+    320,
+    600
+   ],
+   "nl_range": [
+    18,
+    32
+   ],
+   "manhghep_chance": 0.28,
+   "van_linh_coc": true
+  }
+ ],
+ "LINHDUOC_DACBIET_DROP_CHANCE": [
+  0.08,
+  0.12,
+  0.16,
+  0.22
+ ],
+ "VANLINHCOC_QUAI": [
+  "Linh Mộc Yêu",
+  "Huyền Thạch Khôi Lỗi",
+  "Thanh Phong Linh Lang",
+  "Huyết Đằng Yêu"
+ ],
+ "VANLINHCOC_BOSS": "Vạn Linh Cổ Thụ",
+ "VANLINHCOC_BOSS_CHANCE": 0.15,
+ "VANLINHCOC_CONGPHAP_CHANCE": 0.03,
+ "BICANH_DACBIET_MULT": 3.0,
+ "BICANH_DACBIET_CONGPHAP_CHANCE": 0.15,
+ "COOLDOWN_BICANH_LINHGIOI": 90,
+ "DIEM_LINH_NGO_MAX": 100,
+ "BICANH_LINHGIOI_SCALE": [
+  1.0,
+  1.6,
+  2.4
+ ],
+ "_ITEM_FIELD_TO_EMOJI": {
+  "tienkim": "tienkim",
+  "tienngoc": "tienngoc",
+  "thienhoatinh": "thienhoatinh",
+  "hukhongkettinh": "hukhongkettinh",
+  "thiendaothach": "thiendaothach",
+  "manhtiengioilenh": "manhtiengioilenh",
+  "daonguyentinh": "daonguyentinh",
+  "thiendaoan": "thiendaoan",
+  "thienkiepchiluc": "thienkiepchiluc"
+ },
+ "_ITEM_FIELD_TO_COLUMN": {
+  "tienkim": "tien_kim",
+  "tienngoc": "tien_ngoc",
+  "thienhoatinh": "thien_hoa_tinh",
+  "hukhongkettinh": "hu_khong_ket_tinh",
+  "thiendaothach": "thien_dao_thach",
+  "manhtiengioilenh": "manh_tien_gioi_lenh",
+  "daonguyentinh": "dao_nguyen_tinh",
+  "thiendaoan": "thien_dao_an",
+  "thienkiepchiluc": "thien_kiep_chi_luc"
+ },
+ "_ITEM_FIELD_TO_LABEL": {
+  "tienkim": "Tiên Kim",
+  "tienngoc": "Tiên Ngọc",
+  "thienhoatinh": "Thiên Hỏa Tinh",
+  "hukhongkettinh": "Hư Không Kết Tinh",
+  "thiendaothach": "Thiên Đạo Thạch",
+  "manhtiengioilenh": "Mảnh Tiên Giới Lệnh",
+  "daonguyentinh": "Đạo Nguyên Tinh",
+  "thiendaoan": "Thiên Đạo Ấn",
+  "thienkiepchiluc": "Thiên Kiếp Chi Lực"
+ },
+ "LUYENDAN_COST": 5,
+ "LUYENKHI_COST": 8,
+ "DAN_PHUONG": [
+  {
+   "name": "Đan Phương Nhất Phẩm",
+   "cost": 10000,
+   "quality": 1,
+   "success_rate": 0.6
+  },
+  {
+   "name": "Đan Phương Nhị Phẩm",
+   "cost": 25000,
+   "quality": 2,
+   "success_rate": 0.65
+  },
+  {
+   "name": "Đan Phương Tam Phẩm",
+   "cost": 60000,
+   "quality": 3,
+   "success_rate": 0.7
+  },
+  {
+   "name": "Đan Phương Tứ Phẩm",
+   "cost": 120000,
+   "quality": 4,
+   "success_rate": 0.75
+  },
+  {
+   "name": "Đan Phương Ngũ Phẩm",
+   "cost": 250000,
+   "quality": 5,
+   "success_rate": 0.8
+  },
+  {
+   "name": "Đan Phương Lục Phẩm",
+   "cost": 500000,
+   "quality": 6,
+   "success_rate": 0.85
+  },
+  {
+   "name": "Đan Phương Thất Phẩm",
+   "cost": 1000000,
+   "quality": 7,
+   "success_rate": 0.9
+  },
+  {
+   "name": "Đan Phương Bát Phẩm",
+   "cost": 2000000,
+   "quality": 8,
+   "success_rate": 0.93
+  },
+  {
+   "name": "Đan Phương Cửu Phẩm",
+   "cost": 4000000,
+   "quality": 9,
+   "success_rate": 0.95
+  }
+ ],
+ "_DANDUOC_NAME_PREFIX": [
+  "Hồi Xuân",
+  "Tụ Linh",
+  "Cửu Chuyển",
+  "Đoạt Mệnh",
+  "Tẩy Tủy",
+  "Phá Cảnh",
+  "Ngưng Thần",
+  "Hộ Thể",
+  "Trường Sinh",
+  "Hoán Cốt",
+  "Tịnh Hồn",
+  "Bổ Nguyên"
+ ],
+ "_DANDUOC_NAME_SUFFIX": [
+  "Đan",
+  "Hoàn",
+  "Tán",
+  "Linh Đan",
+  "Thánh Đan",
+  "Thần Đan"
+ ],
+ "DAO_LU_INTIMACY_PER_DAILY": 5,
+ "DAO_LU_LEVEL_THRESHOLDS": {
+  "1": 0,
+  "2": 20,
+  "3": 60,
+  "4": 120,
+  "5": 220,
+  "6": 360,
+  "7": 550,
+  "8": 800,
+  "9": 1100,
+  "10": 1500
+ },
+ "DAO_LU_MAX_LEVEL": 10,
+ "HOATHAN_REALM_IDX": 5,
+ "DOKIEP_REALM_IDX": 9,
+ "PHITHANG_LINH_THACH_COST": 10000000,
+ "PHITHANG_LINH_PHU_CAN": 3,
+ "THIENKIEP_LINH_THACH_COST": 500000,
+ "SUGIA_LUC_CHIEN_MOC": 16000,
+ "THIENKIEP_MIN_LUC_CHIEN": 8000,
+ "THIENKIEP_RATE_KHONG_DU_LUC_CHIEN": 0.1,
+ "THIENKIEP_TIENGIOI_LINH_THACH_COST": 20000000,
+ "SUGIA_TIENGIOI_LUC_CHIEN_MOC": 50000000,
+ "THIENKIEP_TIENGIOI_MIN_LUC_CHIEN": 200000000,
+ "TIENGIOI_LUC_CHIEN_CAN": 10000000000,
+ "DOKIEP_BREAKTHROUGH_LUC_CHIEN_BONUS": 5000000000,
+ "TIENGIOI_LINH_THACH_CAN": 1000000000,
+ "BICANH_THUONGCO_CAN": 10,
+ "NGUSUY_STAGES": [
+  {
+   "key": "tho_suy",
+   "name": "Thọ Suy",
+   "icon": "⏳",
+   "flavor": "Tuổi thọ suy giảm nhanh, sinh cơ liên tục mất đi, khí huyết khô cạn — không vượt qua sẽ tọa hóa.",
+   "fail_flavor": "khí huyết khô cạn, suýt tọa hóa",
+   "stat_mult": 0.9,
+   "base_rate": 0.55,
+   "fail_tu_vi_pct": 0.1,
+   "fail_hp_pct": 0.6
+  },
+  {
+   "key": "than_suy",
+   "name": "Thân Suy",
+   "icon": "🦴",
+   "flavor": "Thân thể bắt đầu mục nát, kinh mạch đứt gãy, linh lực vận chuyển chậm, sức chiến đấu giảm mạnh.",
+   "fail_flavor": "kinh mạch đứt gãy thêm, thân thể suy kiệt",
+   "stat_mult": 0.75,
+   "base_rate": 0.48,
+   "fail_tu_vi_pct": 0.15,
+   "fail_hp_pct": 0.55
+  },
+  {
+   "key": "hon_suy",
+   "name": "Hồn Suy",
+   "icon": "👻",
+   "flavor": "Thần hồn xuất hiện vết nứt, dễ sinh tâm ma/ảo giác, ký ức hỗn loạn — nguyên thần có nguy cơ tan rã.",
+   "fail_flavor": "tâm ma thừa cơ xâm nhập, nguyên thần suýt tan rã",
+   "stat_mult": 0.6,
+   "base_rate": 0.42,
+   "fail_tu_vi_pct": 0.2,
+   "fail_hp_pct": 0.5
+  },
+  {
+   "key": "dao_suy",
+   "name": "Đạo Suy",
+   "icon": "📉",
+   "flavor": "Đạo tâm dao động, pháp tắc lĩnh ngộ bắt đầu tan biến, cảnh giới không ổn định — có thể rơi xuống cảnh giới thấp hơn.",
+   "fail_flavor": "đạo tâm lung lay dữ dội, suýt rớt cảnh giới",
+   "stat_mult": 0.45,
+   "base_rate": 0.35,
+   "fail_tu_vi_pct": 0.25,
+   "fail_hp_pct": 0.45
+  },
+  {
+   "key": "thien_suy",
+   "name": "Thiên Suy",
+   "icon": "🌩️",
+   "flavor": "Thiên đạo giáng kiếp, khí vận tiêu tán, thiên kiếp liên tục giáng xuống — vượt qua sẽ bước vào Tiên Cảnh, thất bại thì hình thần câu diệt.",
+   "fail_flavor": "thiên kiếp liên tục giáng xuống, suýt hình thần câu diệt",
+   "stat_mult": 0.3,
+   "base_rate": 0.25,
+   "fail_tu_vi_pct": 0.3,
+   "fail_hp_pct": 0.4
+  }
+ ],
+ "NGUSUY_PASS_BONUS_STAT_PCT": 0.3,
+ "NGUSUY_LUYENDAN_FAIL_MULT": 0.7,
+ "NGUSUY_LUYENKHI_FAIL_CHANCE": 0.3,
+ "THIENKIEP_BACKLASH_TUVI": 50000,
+ "TAYTUY_LINH_THACH_COST": 1000000000000,
+ "TAYTUY_NUABAN_LINH_THACH_COST": 100000000000,
+ "GUIDE_CATEGORIES": [
+  {
+   "key": "batdau",
+   "label": "🌱 Bắt Đầu & Tu Luyện",
+   "desc": "Tạo nhân vật, tu luyện tăng tu vi, đột phá cảnh giới.",
+   "commands": [
+    [
+     "batdau",
+     "Bắt đầu con đường tu tiên — tạo nhân vật, roll Linh Căn + Thể Chất."
+    ],
+    [
+     "tutien",
+     "Mở menu chính: xem trạng thái và bấm nút tu luyện nhanh."
+    ],
+    [
+     "tuluyen",
+     "Tu luyện nhanh, nhận ít tu vi, cooldown ngắn."
+    ],
+    [
+     "dongquan",
+     "Bế quan tu luyện, nhận nhiều tu vi hơn nhưng cooldown dài hơn."
+    ],
+    [
+     "dotpha",
+     "Đột phá lên cảnh giới kế tiếp khi đã đủ tu vi."
+    ],
+    [
+     "canngo",
+     "Cảm ngộ đạo pháp, có cơ hội nhận thêm tu vi/buff."
+    ],
+    [
+     "linhmach",
+     "Hấp thụ linh khí từ linh mạch để nhận thêm tu vi."
+    ]
+   ]
+  },
+  {
+   "key": "tongmon",
+   "label": "🏯 Tông Môn",
+   "desc": "Lập/gia nhập tông môn, quản lý thành viên, Kho Tông và Tông Môn Chiến.",
+   "commands": [
+    [
+     "laptongmon",
+     "Lập một tông môn mới."
+    ],
+    [
+     "giatongmon",
+     "Gia nhập một tông môn đang có."
+    ],
+    [
+     "roitongmon",
+     "Rời khỏi tông môn hiện tại."
+    ],
+    [
+     "conghientongmon",
+     "Cống hiến tu vi cho tông môn."
+    ],
+    [
+     "doitentongmon",
+     "[Tông Chủ] Đổi tên tông môn."
+    ],
+    [
+     "thanhvientongmon",
+     "Xem danh sách thành viên theo chức vụ."
+    ],
+    [
+     "bonhiemtongmon",
+     "[Tông Chủ] Bổ nhiệm chức vụ cho thành viên."
+    ],
+    [
+     "bxhtongmon",
+     "Xem Bảng Xếp Hạng các tông môn."
+    ],
+    [
+     "khotong",
+     "Xem Kho Tông: Linh Thạch, thu nhập tuần, Tông Chủ."
+    ],
+    [
+     "nopkho",
+     "Đóng góp Linh Thạch vào Kho Tông."
+    ],
+    [
+     "rutkho",
+     "[Tông Chủ] Rút Linh Thạch từ Kho Tông."
+    ],
+    [
+     "tongmonchien",
+     "Tham gia Tông Môn Chiến, tranh 5 cứ điểm với tông môn khác."
+    ],
+    [
+     "tongmonchien_bando",
+     "Xem lại bản đồ Tông Môn Chiến hiện tại."
+    ]
+   ]
+  },
+  {
+   "key": "chiendau",
+   "label": "⚔️ Đấu Pháp & Phiêu Lưu",
+   "desc": "PvP, khám phá Bí Cảnh, đánh Boss và xếp hạng.",
+   "commands": [
+    [
+     "dauphap",
+     "Đấu pháp (PvP) với người chơi khác."
+    ],
+    [
+     "bicanh",
+     "Khám phá Bí Cảnh thường và Bí Cảnh Linh Giới."
+    ],
+    [
+     "bicanhlinhgioi",
+     "Khám phá Bí Cảnh Linh Giới (đã gộp chung với /bicanh)."
+    ],
+    [
+     "danhboss",
+     "Tấn công Boss Thế Giới."
+    ],
+    [
+     "bangxephang",
+     "Xem Thiên Kiêu Bảng (bảng xếp hạng người chơi)."
+    ]
+   ]
+  },
+  {
+   "key": "luyendan",
+   "label": "🧪 Luyện Đan, Luyện Khí & Chợ",
+   "desc": "Luyện đan dược, pháp bảo và đổi Linh Thạch/quay Công Pháp.",
+   "commands": [
+    [
+     "muadanphuong",
+     "Mua Đan Phương — bắt buộc trước khi Luyện Đan."
+    ],
+    [
+     "luyendan",
+     "Luyện đan dược từ nguyên liệu."
+    ],
+    [
+     "danduoc",
+     "Mở menu Dùng Đan Dược — chọn đúng viên đang sở hữu để cắn (tăng tu vi / bỏ 5p chờ Đột Phá). (= /dungdan)"
+    ],
+    [
+     "luyenkhi",
+     "Luyện pháp bảo từ nguyên liệu."
+    ],
+    [
+     "quaycongphap",
+     "Quay ngẫu nhiên 1 Công Pháp (không chọn tầng, giá cố định)."
+    ],
+    [
+     "doilinhtinh",
+     "Đổi Linh Thạch lấy Linh Tinh."
+    ]
+   ]
+  },
+  {
+   "key": "dongnghiep",
+   "label": "🐾 Linh Thú, Song Tu & Giao Dịch",
+   "desc": "Nuôi linh thú, kết đôi song tu và trao đổi vật phẩm với người khác.",
+   "commands": [
+    [
+     "linhthu",
+     "Nuôi dưỡng linh thú của bạn."
+    ],
+    [
+     "songtu",
+     "Mời một người chơi song tu."
+    ],
+    [
+     "chapnhansongtu",
+     "Chấp nhận lời mời song tu."
+    ],
+    [
+     "chiataysongtu",
+     "Kết thúc quan hệ song tu."
+    ],
+    [
+     "daolu",
+     "Xem đạo lữ, cấp đạo duyên và buff song tu."
+    ],
+    [
+     "dao_lu_tangthan",
+     "Mỗi ngày vun đắp đạo duyên."
+    ],
+    [
+     "giaodich",
+     "Đề xuất giao dịch 2 chiều (Linh Thạch/Đan Dược/Linh Căn/Thể Chất)."
+    ]
+   ]
+  },
+  {
+   "key": "phithang",
+   "label": "🌌 Phi Thăng",
+   "desc": "Vượt Thiên Kiếp, thử thách và phi thăng lên thế giới cao hơn.",
+   "commands": [
+    [
+     "dieukienphithang",
+     "Xem checklist điều kiện Phi Thăng (Linh Giới hoặc Tiên Giới)."
+    ],
+    [
+     "vuotthienkiep",
+     "Thử vượt qua Thiên Kiếp (Linh Giới hoặc Tiên Giới)."
+    ],
+    [
+     "danhphithangsugia",
+     "Khiêu chiến Sứ Giả để nhận Lệnh Phi Thăng."
+    ],
+    [
+     "danhthuongcothuho",
+     "Khiêu chiến Thượng Cổ Thủ Hộ (điều kiện Phi Thăng Tiên Giới)."
+    ],
+    [
+     "thiennhanngusuy",
+     "Đối mặt Thiên Nhân Ngũ Suy — 5 giai đoạn, chỉ mở ở Độ Kiếp Viên Mãn."
+    ],
+    [
+     "taytuydan",
+     "Luyện Đan Tẩy Tuỷ Trọng Sinh để roll lại Linh Căn + Thể Chất."
+    ],
+    [
+     "chephithanglenh",
+     "Chế 1 Linh Giới Lệnh từ 100 mảnh ghép nhặt được ở Bí Cảnh."
+    ],
+    [
+     "phithang",
+     "Phi thăng sang thế giới cao hơn."
+    ],
+    [
+     "dongphu",
+     "Xem/khai phá/thu hoạch động phủ riêng."
+    ]
+   ]
+  },
+  {
+   "key": "khodo",
+   "label": "🎁 Kho Đồ & Code",
+   "desc": "Xem vật phẩm, nhập code và mở rương.",
+   "commands": [
+    [
+     "khodo",
+     "Mở Kho Đồ — xem vật phẩm, nhập code, mở Rương Thần Bí."
+    ],
+    [
+     "nhapcode",
+     "Nhập mã code để nhận thưởng."
+    ],
+    [
+     "moruong",
+     "Mở 1 Rương Thần Bí."
+    ]
+   ]
+  },
+  {
+   "key": "admin",
+   "label": "🛡️ Admin",
+   "desc": "Lệnh quản trị viên, chỉ dùng khi cần xử lý sự cố.",
+   "commands": [
+    [
+     "mokhoacode",
+     "[Admin] Gỡ khoá nhập code cho 1 thành viên bị khoá."
+    ],
+    [
+     "thuhoilinhthach",
+     "[Admin] Thu hồi bớt Linh Thạch của 1 thành viên về đúng 1 mốc cố định."
+    ]
+   ]
+  }
+ ],
+ "EVENT_DAIPHU_STARTING_CASH": 10000000,
+ "EVENT_DAIPHU_MARKET_CYCLE_SECONDS": 600,
+ "EVENT_DAIPHU_STATE_CHECK_SECONDS": 20,
+ "EVENT_DAIPHU_MARKET_HISTORY_KEEP": 50,
+ "EVENT_DAIPHU_TOP_REWARDS": {
+  "1": 5000000,
+  "2": 3000000,
+  "3": 2000000
+ },
+ "EVENT_DAIPHU_REWARD_4_10": 500000,
+ "EVENT_DAIPHU_BANK_INTEREST_PCT": 0.05,
+ "EVENT_DAIPHU_BANK_MIN_DEPOSIT": 100000,
+ "EVENT_DAIPHU_BANK_MAX_ACTIVE": 3,
+ "EVENT_DAIPHU_ORACLE_MAX_USES": 3,
+ "EVENT_DAIPHU_ORACLE_ACCURACY": 0.7,
+ "EVENT_DAIPHU_MISSIONS": {
+  "mua_5don": {
+   "desc": "Mua tổng cộng ít nhất 5 đơn vị tài sản bất kỳ",
+   "reward": 300000
+  },
+  "ban_1lan": {
+   "desc": "Thực hiện ít nhất 1 lần Bán",
+   "reward": 200000
+  },
+  "tongtaisan_15tr": {
+   "desc": "Đạt Tổng tài sản từ 15.000.000 trở lên",
+   "reward": 500000
+  }
+ },
+ "EVENT_DAIPHU_RISK_MIN_STAKE": 500000,
+ "EVENT_DAIPHU_RISK_MAX_STAKE_PCT": 0.3,
+ "EVENT_DAIPHU_RISK_COOLDOWN_SECONDS": 1800,
+ "EVENT_DAIPHU_RISK_OUTCOMES": [
+  [
+   -0.5,
+   0.45
+  ],
+  [
+   0.0,
+   0.25
+  ],
+  [
+   0.5,
+   0.2
+  ],
+  [
+   1.0,
+   0.1
+  ]
+ ],
+ "EVENT_DAIPHU_INSURANCE_PREMIUM_PCT": 0.05,
+ "EVENT_DAIPHU_INSURANCE_COVERAGE_PCT": 0.7,
+ "EVENT_DAIPHU_RUONG_REWARDS": [
+  100000,
+  200000,
+  300000,
+  500000,
+  800000
+ ],
+ "NODES": {
+  "trungtam": {
+   "name": "Trung Tâm",
+   "emoji": "🏛️",
+   "points": 30
+  },
+  "bac": {
+   "name": "Bắc Thành",
+   "emoji": "🟥",
+   "points": 15
+  },
+  "dong": {
+   "name": "Đông Thành",
+   "emoji": "🟦",
+   "points": 15
+  },
+  "nam": {
+   "name": "Nam Thành",
+   "emoji": "🟨",
+   "points": 15
+  },
+  "tay": {
+   "name": "Tây Thành",
+   "emoji": "🟩",
+   "points": 15
+  }
+ },
+ "NODE_ORDER": [
+  "bac",
+  "tay",
+  "trungtam",
+  "dong",
+  "nam"
+ ],
+ "TICK_SECONDS": 10,
+ "NODE_CAPTURE_SECONDS": 30,
+ "WIN_SCORE": 5000,
+ "KILL_POINTS": 10,
+ "REWARD_WIN_CONGHIEN": 10000,
+ "REWARD_WIN_LINHTHACH": 5000000,
+ "REWARD_LOSE_CONGHIEN": 5000,
+ "REWARD_LOSE_LINHTHACH": 2000000,
+ "REWARD_WIN_TITLE": "Bá Chủ Bát Hoang",
+ "CRIT_CHANCE": 0.15,
+ "CRIT_MULT": 1.5,
+ "DODGE_CHANCE": 0.1,
+ "REVIVE_SECONDS": 20,
+ "ATTACK_COOLDOWN_SECONDS": 2,
+ "RUTKHO_DAILY_LIMIT": 5000000,
+ "WARBAR_LENGTH": 10,
+ "ADMIN_DISCORD_IDS": [
+  "1530490044098285711"
+ ],
+ "HOANG_HELP_TEXT": "🕵️ **Lệnh Admin Ẩn — Tông Môn Chiến**\n(chỉ hoạt động khi gõ đúng tiền tố `!`, không phải slash command, không ai khác thấy được)\n\n`!tongmonchien_start` — Ép khởi động/kích hoạt ngay trận đang \"launching\" ở server này (hoặc tạo trận mới và active luôn nếu chưa có trận nào), bỏ qua màn chờ.\n`!tongmonchien_stop` — Ép kết thúc trận đang diễn ra ở server này (huỷ, KHÔNG trả thưởng).\n`!tongmonchien_reset` — Xoá sạch trận hiện tại (nodes/participants/scores) ở server này để bắt đầu lại từ đầu.\n`!tongmonchien_addpoint <tên tông môn> <số điểm>` — Cộng thẳng điểm cho 1 tông môn trong trận đang diễn ra.\n`!tongmonchien_debug` — Xem trạng thái đầy đủ của trận hiện tại (debug).\n`!restore_db` — Đính kèm 1 file .db trong CÙNG tin nhắn để GHI ĐÈ toàn bộ database hiện tại của bot (dùng khi chuyển host / khôi phục data cũ). Tự động sao lưu bản đang chạy trước khi ghi đè. NGUY HIỂM — mất hết data hiện tại nếu làm sai file, hãy chắc chắn trước khi dùng.\n`!listdb` / `!usedb <số thứ tự>` — Xem & khôi phục từ danh sách bản sao lưu. Cũng có sẵn dạng slash command `/listdb` và `/usedb` (chỉ admin) bên `tuluyenbot.py` — dùng cách nào cũng ra kết quả giống nhau, dùng chung 1 nguồn logic."
+}
