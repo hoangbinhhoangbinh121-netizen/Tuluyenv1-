@@ -1,0 +1,43 @@
+'use strict';
+/**
+ * Hằng số & dữ liệu game.
+ * Phần lớn được TỰ TRÍCH từ tuluyenbot.py sang src/data/constants.json (không gõ lại tay → không sai số liệu).
+ * Ở đây chỉ bổ sung các hằng số mà bản Python tính bằng biểu thức (REALMS, mốc Hóa Thần...).
+ */
+const C = require('../data/constants.json');
+
+const TANG_20 = Array.from({ length: 20 }, (_, i) => `Tầng ${i + 1}`);
+const TANG_23 = Array.from({ length: 23 }, (_, i) => `Tầng ${i + 1}`);
+const SUB_4 = C.SUB_4;
+const mkRealm = (name, stages) => ({ name, emoji: '', stages }); // emoji cảnh giới: lấy động từ game/emoji.js (realmEmoji)
+
+const REALMS = [
+  mkRealm('Phàm Nhân', null),
+  mkRealm('Luyện Khí', TANG_20), mkRealm('Trúc Cơ', TANG_20), mkRealm('Kết Đan', TANG_20),
+  mkRealm('Nguyên Anh', TANG_20), mkRealm('Hóa Thần', TANG_20),
+  mkRealm('Luyện Hư', TANG_23), mkRealm('Hợp Thể', TANG_23), mkRealm('Đại Thừa', TANG_23), mkRealm('Độ Kiếp', TANG_23),
+  mkRealm('Chân Tiên', SUB_4), mkRealm('Kim Tiên', SUB_4), mkRealm('Thái Ất Kim Tiên', SUB_4),
+  mkRealm('Đại La Kim Tiên', SUB_4), mkRealm('Tiên Đế', null),
+];
+
+const totalStageCount = (realmIdx) => {
+  const st = REALMS[realmIdx].stages;
+  return st ? st.length : 1;
+};
+
+const HOATHAN_REALM_IDX = 5;
+const HOATHAN_VIENMAN_STAGE = totalStageCount(HOATHAN_REALM_IDX) - 1;
+const DOKIEP_REALM_IDX = 9;
+const DOKIEP_VIENMAN_STAGE = totalStageCount(DOKIEP_REALM_IDX) - 1;
+
+// Admin: ID mặc định lấy từ bản Python + thêm bằng biến môi trường ADMIN_IDS="id1,id2" (trong .env / Startup của host).
+const EXTRA_ADMINS = String(process.env.ADMIN_IDS || '').split(/[,\s]+/).filter((x) => /^\d{15,}$/.test(x));
+const mergeIds = (arr) => [...new Set([...(arr || []).map(String), ...EXTRA_ADMINS])];
+
+module.exports = {
+  ...C,
+  ADMIN_CODE_APPROVER_IDS: mergeIds(C.ADMIN_CODE_APPROVER_IDS),
+  ADMIN_DISCORD_IDS: mergeIds(C.ADMIN_DISCORD_IDS), REALMS, TANG_20, TANG_23, totalStageCount,
+  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE,
+  _REALM_SPEED_MAX_KNOWN: Math.max(...Object.keys(C.REALM_SPEED_MULT).map(Number)),
+};

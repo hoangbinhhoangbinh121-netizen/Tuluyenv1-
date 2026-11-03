@@ -1,0 +1,18 @@
+{
+  "name": "tien-gioi-bot-v7",
+  "version": "7.0.0",
+  "description": "Bot Discord Tu Tiên — Node.js + discord.js + SQLite (file data/tutien.db)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "import-db": "node scripts/import-old-db.js",
+    "check": "node scripts/selfcheck.js"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  }
+}

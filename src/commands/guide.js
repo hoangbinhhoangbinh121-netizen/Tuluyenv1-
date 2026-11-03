@@ -1,0 +1,39 @@
+'use strict';
+const { EmbedBuilder } = require('discord.js');
+const { defineCommand } = require('./framework');
+const { View } = require('../ui/kit');
+const CATS = require('../data/guide.json');
+
+const GOLD = 0xf1c40f;
+function overviewEmbed() {
+  const total = CATS.reduce((s, c) => s + c.commands.length, 0);
+  const e = new EmbedBuilder().setTitle('📖 Hướng Dẫn Tu Tiên').setColor(GOLD)
+    .setDescription(`Tổng cộng **${total}** lệnh, chia làm **${CATS.length}** nhóm bên dưới.\nChọn 1 nhóm trong dropdown để xem hướng dẫn chi tiết từng lệnh.`);
+  for (const c of CATS) {
+    let preview = c.commands.slice(0, 4).map(([n]) => `\`/${n}\``).join(', ');
+    if (c.commands.length > 4) preview += ', ...';
+    e.addFields({ name: `${c.label} (${c.commands.length} lệnh)`, value: preview, inline: false });
+  }
+  return e.setFooter({ text: 'Gõ /huongdan bất cứ lúc nào để mở lại menu này.' });
+}
+function categoryEmbed(cat) {
+  const e = new EmbedBuilder().setTitle(cat.label).setDescription(cat.desc).setColor(GOLD);
+  const lines = cat.commands.map(([n, d]) => `**/${n}** — ${d}`); const joined = lines.join('\n');
+  if (joined.length <= 1024) e.addFields({ name: 'Danh sách lệnh', value: joined, inline: false });
+  else { const mid = Math.floor(lines.length / 2); e.addFields({ name: 'Danh sách lệnh (1/2)', value: lines.slice(0, mid).join('\n'), inline: false }, { name: 'Danh sách lệnh (2/2)', value: lines.slice(mid).join('\n'), inline: false }); }
+  return e.setFooter({ text: 'Chọn nhóm khác trong dropdown bên dưới, hoặc gõ /huongdan để mở lại từ đầu.' });
+}
+function guideView() {
+  const v = new View({ ownerId: null, checkOwner: false, timeout: 180 });
+  v.select({
+    key: 'g', placeholder: '📚 Chọn nhóm lệnh để xem chi tiết...',
+    options: CATS.map((c) => ({ label: c.label, description: `${c.commands.length} lệnh — ${c.desc}`.slice(0, 100), value: c.key })),
+  }, (i, values) => {
+    const cat = CATS.find((c) => c.key === values[0]);
+    if (!cat) return i.reply({ content: '❌ Không tìm thấy nhóm lệnh này.', flags: 64 });
+    return i.update({ embeds: [categoryEmbed(cat)], components: v.components() });
+  });
+  v.onTimeout = () => v.disableAll();
+  return v;
+}
+defineCommand({ name: 'huongdan', description: 'Hướng dẫn chi tiết các lệnh, chia theo nhóm', run: (c) => c.send({ embeds: [overviewEmbed()], components: guideView().components() }) });

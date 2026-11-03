@@ -1,0 +1,63 @@
+TIÊN GIỚI BOT v7.0 — HƯỚNG DẪN & GHI CHÚ THAY ĐỔI
+==================================================
+
+1. CÀI ĐẶT NHANH
+   - Node.js >= 22.5 (dùng node:sqlite) hoặc có better-sqlite3.  npm install
+   - Sao chép .env.example -> .env, điền DISCORD_TOKEN (+ GUILD_ID để lệnh slash hiện ngay).
+   - npm start
+   - Lần chạy đầu bot tự tải ~127 emoji pixel lên "Application Emoji" của bot (tên tg7_<key>).
+     Nếu bị giới hạn tốc độ, phần còn lại tải nền; trong lúc đó dùng emoji Unicode dự phòng.
+   - Lệnh /datkenhthegioi (admin) chọn kênh để bot đăng thông báo thế giới (boss, thiên kiếp...).
+
+2. EMOJI PIXEL (MỚI — dùng bộ sprite do bạn gửi)
+   - Nguồn: assets/source/sprite_sheet.png (+ sprite_boxes.json = toạ độ từng ô "hàng.cột").
+   - Cắt tự động:  python3 scripts/build_emoji_from_sheet.py [--preview]
+     (cần Pillow, numpy, scipy). Bảng ánh xạ key -> ô nằm ở đầu file script (biến MAP) — muốn
+     đổi icon nào chỉ cần sửa số ô rồi chạy lại.
+   - Mỗi icon: 128x128, nền trong suốt, vừa khung 112px => cỡ đồng đều.
+   - Giữ nguyên icon vẽ sẵn cho: thanh bar_* / warbar_* (ô thanh tiến trình) và 7 ký hiệu chức năng
+     (dongmenu ✕, tuchoi ✕, xacnhan ✓, thamgia ＋, lammoi ↻, nangcap ⬆, thongtin ℹ, doiten ✎) vì sprite không có.
+   - 15 cảnh giới dùng canhgioi_0..14 (Phàm Nhân -> Tiên Đế); phẩm chất rar_* dùng cờ hiệu 5 màu.
+   - Đổi bộ icon xong: xoá emoji tg7_* cũ trong Developer Portal (Application > Emojis) HOẶC
+     đổi PREFIX trong src/game/emoji.js (vd tg8_) để bot tải bộ mới; xoá data/emoji_ids_v7.json.
+     (Discord không cho ghi đè ảnh của emoji đã tồn tại.)
+
+3. SỬA LỖI TU LUYỆN CHO NGƯỜI KHÁC
+   - Menu /tutien là menu "tĩnh": nút tg|… bền vững; ai bấm cũng nhận bảng riêng (ephemeral) của chính họ.
+   - Mọi phản hồi đi qua lớp ack an toàn (defer trong 2,2s, reply/editReply/followUp không văng lỗi
+     "Unknown interaction"/"already acknowledged").
+   - Lỗi bất ngờ -> embed có mã lỗi Exxx cho người chơi; chi tiết vào logs/error.log, có thể gửi vào
+     kênh ERROR_LOG_CHANNEL_ID hoặc DM admin (ERROR_DM_ADMINS=1).
+   - NẾU VẪN LỖI: gửi mình mã Exxx + vài dòng cuối logs/error.log.
+   LƯU Ý: đã kiểm thử bằng giả lập (discord.js giả + SQLite thật, 143 luồng, 0 lỗi), CHƯA chạy trên Discord thật.
+
+4. BOSS THẾ GIỚI v7 (viết lại)
+   - Admin triệu hồi: /trieuhoiboss (cấp độ, máu, thời gian). Không tự sinh (theo quyết định đã chốt).
+   - Người chơi: nút "Đánh Boss" / /danhboss — đòn thường, kỹ năng (tốn 25 linh lực), cooldown 8s/người
+     (BOSS_ACTION_COOLDOWN). Boss phản đòn, máu tự cân theo số người tham gia.
+   - Bảng sát thương trực tiếp (cập nhật có tiết lưu), bảng xếp hạng công trạng, đòn kết liễu.
+   - Hết hạn -> boss bỏ trốn; /huyboss huỷ, /trangthaiboss xem. Dữ liệu: bảng wb7_boss, wb7_damage.
+
+5. BIẾN MÔI TRƯỜNG MỚI
+   ERROR_LOG_CHANNEL_ID, ERROR_DM_ADMINS, WORLD_CHANNEL_ID, WORLD_ANNOUNCE_MIN_REALM,
+   BOSS_ACTION_COOLDOWN, BOSS_DEFAULT_MINUTES, TULUYEN_EMOJI_AUTOSYNC (0 = tắt tải emoji).
+
+6. ĐỒNG BỘ GIAO DIỆN (UI Design System v7.0)
+   - src/ui/index.js là cửa ngõ duy nhất: màu, phẩm chất, emoji, embed, thanh tiến trình, mẫu (tu luyện,
+     đột phá, bí cảnh, chiến đấu, sự kiện thế giới, nhân vật).
+   - src/ui/skin.js chuẩn hoá MỌI tin nhắn gửi đi (cả tính năng cũ): màu, footer, định dạng số/thời gian
+     kiểu Việt (1.250.000 · 75,5% · 02 giờ 30 phút), giới hạn Discord, đổi emoji cũ -> pixel/Unicode.
+   - Chưa làm (không có tính năng nền): mẫu Đấu giá, Nhiệm vụ.
+
+7. KHÁC
+   - Lệnh admin: /huyboss, /datkenhthegioi, /trieuhoiboss. Lệnh người chơi giữ nguyên tên cũ.
+   - Dữ liệu cũ tương thích: bảng mới v7_settings, wb7_boss, wb7_damage tự tạo khi khởi động.
+
+8. NHẬP DỮ LIỆU CŨ BẰNG LỆNH (MỚI)
+   /nhapdb file:<đính kèm .db cũ> chedo:<ghep|bosung>      (chỉ admin)
+   - ghep (mặc định): dữ liệu cũ ĐÈ lên dòng cùng khoá; dòng chỉ có ở bot hiện tại được giữ.
+   - bosung: chỉ thêm dòng chưa có, không đụng dữ liệu đang chạy.
+   - Chạy ngay trên bot đang hoạt động, không cần khởi động lại. Tự sao lưu trước (tutien_PRE_IMPORT_*.db,
+     xem /listdb, hoàn tác bằng /usedb). Chỉ nhập cột có ở cả hai bên; bảng boss v7 không bị đụng.
+   - Muốn thay hẳn toàn bộ DB thì dùng /restore_db (ghi đè, nên khởi động lại bot sau đó).
+   - Dùng ngoài Discord:  node scripts/import-old-db.js duong/dan/tutien_cu.db

@@ -1,0 +1,49 @@
+'use strict';
+/** Các vòng lặp nền (random công pháp/đan dược, event, tông môn chiến...) — sẽ gắn dần khi port xong từng module. */
+const fs = require('node:fs');
+const path = require('node:path');
+const D = require('./db');
+
+const AUTO_BACKUP_HOURS = Number(process.env.AUTO_BACKUP_HOURS || 6);   // 0 = tắt
+const AUTO_BACKUP_KEEP = Number(process.env.AUTO_BACKUP_KEEP || 8);
+
+function startBackground(client) {
+  // Một Ngày Đại Phú: kiểm tra mở/khoá event + cập nhật giá theo chu kỳ.
+  const DP = require('./game/daiphu');
+  const guard = (name, fn) => () => { try { fn(); } catch (e) { console.error(`⚠️ ${name} lỗi:`, e.message); } };
+  setInterval(guard('daiphu_state', DP.stateTick), DP.STATE_CHECK * 1000).unref();
+  setInterval(guard('daiphu_market', DP.marketTick), DP.MARKET_CYCLE * 1000).unref();
+  // Vòng chấm điểm Tông Môn Chiến — mỗi 10 giây cho mọi trận đang active.
+  const W = require('./game/sectwar'); const SV = require('./ui/sectWarViews');
+  setInterval(async () => {
+    try { for (const f of W.runTick()) await SV.announceFinished(client, f); }
+    catch (e) { console.error('⚠️ sect_war_tick lỗi:', e.message); }
+  }, W.TICK_SECONDS * 1000).unref();
+  // Boss Thế Giới v7: hết hạn → trốn thoát + làm mới bảng đếm lùi.
+  const BV = require('./ui/bossViews');
+  setInterval(() => BV.tick(client).catch((e) => console.error('⚠️ boss_tick lỗi:', e.message)), 15000).unref();
+  // Xoay vòng tên/mô tả Công Pháp + Đan Dược mỗi 5 phút (Gemini, có fallback local).
+  const CP = require('./game/congphap'); const Dan = require('./game/dan'); const CDn = require('./game/cooldowns');
+  const loop = (name, fn, sec) => {
+    const tick = async () => { try { await fn(); } catch (e) { console.error(`⚠️ ${name} lỗi:`, e.message); } };
+    tick(); setInterval(tick, sec * 1000).unref();
+  };
+  loop('congphap_rotate', CP.refreshRotatingCongphap, CDn.CONGPHAP_ROTATE_SECONDS);
+  loop('danduoc_rotate', Dan.refreshRotatingDanduoc, CDn.DANDUOC_ROTATE_SECONDS);
+
+  if (AUTO_BACKUP_HOURS > 0) {
+    const { makeBackup, listBackups } = require('./commands/admin');
+    const run = () => {
+      try {
+        const dir = path.join(path.dirname(D.DB_PATH), 'db_backups'); fs.mkdirSync(dir, { recursive: true });
+        const n = new Date(); const p = (x) => String(x).padStart(2, '0');
+        makeBackup(path.join(dir, `tutien_auto_${n.getFullYear()}${p(n.getMonth() + 1)}${p(n.getDate())}_${p(n.getHours())}${p(n.getMinutes())}.db`));
+        const autos = listBackups().filter((f) => path.basename(f).startsWith('tutien_auto_'));
+        for (const old of autos.slice(AUTO_BACKUP_KEEP)) fs.unlinkSync(old);
+      } catch (e) { console.error('⚠️ Auto-backup lỗi:', e.message); }
+    };
+    setInterval(run, AUTO_BACKUP_HOURS * 3600 * 1000).unref();
+    console.log(`💾 Tự sao lưu DB mỗi ${AUTO_BACKUP_HOURS}h (giữ ${AUTO_BACKUP_KEEP} bản gần nhất).`);
+  }
+}
+module.exports = { startBackground };
