@@ -84,6 +84,7 @@ function buildSettingsEmbed(user, row) {
   const f = (n, v, inline = true) => emb.addFields({ name: n, value: String(v), inline });
   f(`${E.tuluyen} Tu Luyện`, status(row.last_tuluyen, CD.COOLDOWN_TULUYEN));
   f(`${E.bequan} Bế Quan`, status(row.last_dongquan, CD.COOLDOWN_DONGQUAN));
+  f(`${E.bequan} Bế Quan Treo`, row.treo_start > 0 ? `🧘 Đang treo ${F.fmtTime(Math.max(0, t - row.treo_start))} — \`/treoquan\` để xem / xuất quan` : '💤 Chưa treo — `/treoquan` để bắt đầu');
   f(`${E.linhngo} Cảm Ngộ`, status(row.last_canngo, CD.COOLDOWN_CANNGO));
   f(`${E.linhmach} Linh Mạch`, status(row.last_linhmach, CD.COOLDOWN_LINHMACH));
   const brewing = row.luyendan_start || 0;

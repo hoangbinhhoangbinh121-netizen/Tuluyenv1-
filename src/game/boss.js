@@ -132,7 +132,7 @@ function finish(bossId, reason, killerId = null) {
       if (!crow) continue;
       const share = total > 0 ? c.damage / total : 0;
       const weight = (0.35 + 0.65 * Math.min(1, share * 5)) * factor;
-      const required = R.tuViRequired(crow.realm_index, crow.stage_index, crow.world_tier);
+      const required = R.tuViRequiredBase(crow.realm_index, crow.stage_index, crow.world_tier); // mốc GỐC: thưởng giữ nguyên khi tăng exp đột phá
       let tuVi = int(required * 0.5 * tierMult * weight * getSectExpBuffMult(crow));
       const thach = int(required * 0.2 * tierMult * weight);
       if (idx === 0 && reason === 'killed') tuVi = int(tuVi * 1.1); // MVP sát thương cao nhất

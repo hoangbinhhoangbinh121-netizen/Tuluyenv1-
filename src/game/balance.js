@@ -30,6 +30,10 @@ const B = {
   PACE_PER_REALM_MIN: 2.4,       // mỗi đại cảnh giới cao hơn: +2,4 phút / tầng
   PACE_PER_STAGE_MIN: 0.2,       // mỗi tầng cao hơn trong cùng cảnh giới: +0,2 phút
   DONGQUAN_PCT: 0.12,            // một lần Bế Quan = 12% tu vi cần cho tầng kế (tư chất chuẩn)
+  // ---- Bế Quan Treo Máy (v12.4.2) ----
+  TREO_EFFICIENCY: 0.10,         // treo máy chỉ bằng 10% tốc độ Tu Luyện bấm tay (cùng tư chất & buff) → lên cảnh giới lâu hơn hẳn
+  TREO_MAX_HOURS: 0,             // 0 = KHÔNG giới hạn giờ treo. Đặt số > 0 (vd 8) để giới hạn: quá hạn không tích thêm, phải xuất quan nhận rồi treo lại
+  TREO_MIN_SECONDS: 60,          // treo tối thiểu 1 phút mới xuất quan được
   TALENT_CAP: 9.0,               // trần Linh Căn × Thể Chất (Hỗn Độn 6.0 × Vô Cực 1.5)
 };
 
@@ -96,7 +100,7 @@ const dongquanBase = (need) => need * B.DONGQUAN_PCT;
  */
 function paceFactor(row) {
   const R = require('./realm');
-  const need = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const need = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier); // mốc GỐC: tăng exp đột phá không làm tăng phần thưởng
   const oldBase = 11.5 * 14 * R.realmSpeedMult(row.realm_index);
   return Math.max(1, tuluyenBase(need, row.realm_index, row.stage_index, K.COOLDOWN_TULUYEN || 10) / oldBase);
 }

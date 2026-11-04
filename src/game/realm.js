@@ -17,8 +17,11 @@ const realmDisplay = (realmIdx, stageIdx, plain = false) => {
   return `${ico}${r.name} · ${r.stages[stageIdx]}`;
 };
 
-/** Tu vi cần để đột phá lên tiểu cảnh giới kế tiếp. */
-function tuViRequired(realmIdx, stageIdx, worldTier = 0) {
+/**
+ * Tu vi GỐC (chưa nhân hệ số tăng exp) để lên tiểu cảnh giới kế tiếp.
+ * CHỈ dùng để TÍNH TỐC ĐỘ / PHẦN THƯỞNG tu vi (Tu Luyện, Bế Quan, hệ số đồng bộ, Boss...) → các nguồn này giữ nguyên như trước.
+ */
+function tuViRequiredBase(realmIdx, stageIdx, worldTier = 0) {
   const override = K.REALM_STAGE_EXP_OVERRIDE[realmIdx];
   if (override !== undefined && override !== null) {
     const base = override[Math.min(stageIdx, override.length - 1)];
@@ -30,6 +33,12 @@ function tuViRequired(realmIdx, stageIdx, worldTier = 0) {
   const worldScale = 50 ** worldTier;
   return int(base * (1 + stageIdx * 0.4) * worldScale);
 }
+
+/**
+ * Tu vi cần để đột phá lên tiểu cảnh giới kế tiếp = mốc gốc × K.EXP_REQUIRED_MULT.
+ * Dùng cho: điều kiện/trừ tu vi khi đột phá, thanh tiến độ & mọi chỗ hiển thị, trần Hóa Thần, mốc lực chiến Thiên Kiếp.
+ */
+const tuViRequired = (realmIdx, stageIdx, worldTier = 0) => int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT);
 
 /** [realmIdx, stageIdx] kế tiếp, hoặc null nếu đã ở Tiên Đế. */
 function nextStage(realmIdx, stageIdx) {
@@ -55,6 +64,6 @@ const linhgioilenhLabel = (row) => (row.world_tier > 0 ? 'Tiên Lệnh' : 'Linh 
 const linhphuLabel = (row) => (row.world_tier > 0 ? 'Tiên Phù' : 'Linh Phù');
 
 module.exports = {
-  realmSpeedMult, realmDisplay, tuViRequired, nextStage, rollWeighted, getMult,
+  realmSpeedMult, realmDisplay, tuViRequired, tuViRequiredBase, nextStage, rollWeighted, getMult,
   worldTierName, worldMult, worldTierFlavor, lenhCol, phuCol, linhgioilenhLabel, linhphuLabel,
 };

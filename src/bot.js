@@ -9,6 +9,7 @@ const { wrapInteraction } = require('./ui/skin');
 const kit = require('./ui/kit');
 const F = require('./commands/framework');
 require('./commands/basic');
+require('./commands/treoquan');
 require('./commands/admin');
 require('./commands/dan');
 require('./commands/kho');

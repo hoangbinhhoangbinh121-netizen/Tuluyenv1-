@@ -83,7 +83,7 @@ defineCommand({
       const buf = Buffer.from(await res.arrayBuffer());
       if (buf.subarray(0, 16).toString('latin1') !== 'SQLite format 3\u0000') return ctx.send('❌ File đính kèm không phải file SQLite hợp lệ (sai header). Đã huỷ, KHÔNG ghi đè gì cả.');
       fs.writeFileSync(tmp, buf);
-      try { replaceDb(tmp); } finally { try { fs.unlinkSync(tmp); } catch (_) {} }
+      try { replaceDb(tmp); } finally { try { fs.unlinkSync(tmp); } catch (_) { /* initDb→pruneBackups đã xoá file tạm */ } }
       desc = `file đính kèm \`${att.name}\``;
     } else {
       const cands = listBackups().filter((p) => !p.includes('PRE_RESTORE'));

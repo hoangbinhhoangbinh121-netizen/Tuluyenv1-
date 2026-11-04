@@ -18,20 +18,25 @@ const COMPENSATION = 14;
 // v12.3: Linh Căn × Thể Chất (trần 9.0 — trước đây trần 3.0 khiến Thánh/Tiên/Hỗn Độn Linh Căn ngang nhau)
 const talentMult = (row) => BAL.talentMult(row);
 
+/** Hệ số nhân tu vi của Tu Luyện thường: tư chất × công pháp × thế giới × đạo lữ × buff Tông Môn × buff Tu Luyện. Bế Quan Treo dùng chung. */
+function tuluyenMultFor(userId, row) {
+  const cpBonus = 1 + Cu.effectiveCongPhapBonus(row);
+  const wt = R.worldMult(row.world_tier);
+  const st = 1.0 + daoLuBonusFromRow(row);
+  const sectBuff = getSectExpBuffMult(row);
+  const buff = tuluyenBuffMult(userId);
+  return { mult: talentMult(row) * cpBonus * wt * st * sectBuff * buff, sectBuff, buff };
+}
+
 /** Tu luyện — trả dữ liệu có cấu trúc (UI v7 dựng Embed từ đây). */
 function tuluyenR(userId) {
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_TULUYEN - (t - row.last_tuluyen);
   if (remain > 0) return { ok: false, kind: 'tuluyen', remain };
-  const cpBonus = 1 + Cu.effectiveCongPhapBonus(row);
-  const wt = R.worldMult(row.world_tier);
-  const st = 1.0 + daoLuBonusFromRow(row);
-  const sectBuff = getSectExpBuffMult(row);
-  const buff = tuluyenBuffMult(userId);
-  const mult = talentMult(row) * cpBonus * wt * st * sectBuff * buff;
+  const { mult, sectBuff, buff } = tuluyenMultFor(userId, row);
   // v12.3: tu vi mỗi lần = tu vi cần cho tầng kế / số lần bấm chuẩn của tầng đó (xem balance.js), nhân tư chất & buff.
-  const need = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const need = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier); // mốc GỐC: tốc độ không đổi khi tăng exp đột phá
   const oldBase = randInt(8, 15) * COMPENSATION * R.realmSpeedMult(row.realm_index);   // công thức cũ làm sàn (Phàm Nhân)
   const base = Math.max(oldBase, BAL.tuluyenBase(need, row.realm_index, row.stage_index, CD.COOLDOWN_TULUYEN) * randUniform(0.85, 1.15));
   const gained = Math.max(1, int(base * mult));
@@ -55,7 +60,7 @@ function dongquanR(userId) {
   const sectBuff = getSectExpBuffMult(row);
   const worldDao = R.worldMult(row.world_tier) * (1.0 + daoLuBonusFromRow(row)) * sectBuff;
   const mult = talentMult(row) * cpBonus * worldDao;
-  const need = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const need = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier); // mốc GỐC: tốc độ không đổi khi tăng exp đột phá
   const oldGained = int(randInt(80, 150) * R.realmSpeedMult(row.realm_index) * mult);
   // v12.3: 1 lần Bế Quan = 12% tu vi cần cho tầng kế (tư chất chuẩn) × tư chất; Linh Thạch GIỮ NGUYÊN công thức cũ để không lạm phát.
   const gained = Math.max(oldGained, int(BAL.dongquanBase(need) * mult * randUniform(0.9, 1.1)));
@@ -108,4 +113,4 @@ function doHoiHp(userId) {
   return `💚 **Hồi HP** — đang hồi phục dần theo thời gian (0.5% Sinh Mệnh tối đa/phút), không cần làm gì thêm, chỉ cần chờ:\n${bar}\n${fmtNum(curHp)}/${fmtNum(maxHp)}\n⏳ Còn khoảng **${F.fmtTime(minutesLeft * 60)}** nữa là hồi ĐẦY 100%.`;
 }
 
-module.exports = { tuluyenR, dongquanR, doTuluyen, doDongquan, doCanngo, doLinhmach, doHoiHp, tuluyenBuffMult };
+module.exports = { tuluyenR, dongquanR, doTuluyen, doDongquan, doCanngo, doLinhmach, doHoiHp, tuluyenBuffMult, tuluyenMultFor };

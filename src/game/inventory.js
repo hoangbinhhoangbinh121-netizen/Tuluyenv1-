@@ -101,8 +101,8 @@ function redeemCode(userId, member, rawCode) {
   const c = CODES[code];
   if (!c) return [`❌ Mã **${code}** không tồn tại hoặc đã hết hạn.`, null];
   if (redeemed.has(code)) {
-    Cu.updateCultivator(userId, { code_locked: 1 });
-    return [`🚫 Mã **${code}** bạn ĐÃ đổi rồi! Vì cố tình nhập lại, tài khoản của bạn đã bị **KHOÁ nhập code**. Vui lòng liên hệ admin server để được mở khoá.`, null];
+    // Nhập lại mã đã dùng: chỉ báo "nhập sai / đã sử dụng", KHÔNG khoá tài khoản nữa.
+    return [`❌ Nhập sai! Mã **${code}** đã được sử dụng rồi, không thể nhập lại.`, null];
   }
   if (c.booster_only && !(member && member.premiumSince)) return [`🔒 Mã **${code}** chỉ dành cho **Server Booster**.`, null];
   if (c.max_uses !== null && c.max_uses !== undefined) {

@@ -111,7 +111,8 @@ const ADD_COLUMNS = {
     "ve_bicanh_dac_biet": "INTEGER DEFAULT 0",
     "pvp_wins": "INTEGER DEFAULT 0",
     "pvp_losses": "INTEGER DEFAULT 0",
-    "nhan_cau_hon": "INTEGER DEFAULT 0"
+    "nhan_cau_hon": "INTEGER DEFAULT 0",
+    "treo_start": "REAL DEFAULT 0"
   },
   "trade_pending": {
     "dan_duoc": "INTEGER DEFAULT 0",

@@ -25,6 +25,13 @@ const totalStageCount = (realmIdx) => {
   return st ? st.length : 1;
 };
 
+// v12.4.1: hệ số nhân MỐC TU VI cần để đột phá (mọi cảnh giới/tầng/thế giới) — chỉ cần đổi con số này (hoặc đặt biến môi trường
+// EXP_REQUIRED_MULT trong .env / Startup của host). TỐC ĐỘ tu luyện & phần thưởng tu vi KHÔNG đổi: chúng được tính từ mốc GỐC
+// (R.tuViRequiredBase), còn mốc đã nhân hệ số (R.tuViRequired) chỉ dùng để đột phá / hiển thị / trần. Xem game/realm.js.
+const EXP_REQUIRED_MULT_DEFAULT = 2;
+const _envMult = Number(process.env.EXP_REQUIRED_MULT);
+const EXP_REQUIRED_MULT = Number.isFinite(_envMult) && _envMult > 0 ? _envMult : EXP_REQUIRED_MULT_DEFAULT;
+
 const HOATHAN_REALM_IDX = 5;
 const HOATHAN_VIENMAN_STAGE = totalStageCount(HOATHAN_REALM_IDX) - 1;
 const DOKIEP_REALM_IDX = 9;
@@ -48,6 +55,6 @@ function addAdmin(id) {
 module.exports = {
   ...C,
   ADMIN_CODE_APPROVER_IDS, ADMIN_DISCORD_IDS, addAdmin, REALMS, TANG_20, TANG_23, totalStageCount,
-  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE,
+  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE, EXP_REQUIRED_MULT,
   _REALM_SPEED_MAX_KNOWN: Math.max(...Object.keys(C.REALM_SPEED_MULT).map(Number)),
 };
