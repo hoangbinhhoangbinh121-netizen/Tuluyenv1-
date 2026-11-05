@@ -12,6 +12,10 @@ function startBackground(client) {
   const guard = (name, fn) => () => { try { fn(); } catch (e) { console.error(`⚠️ ${name} lỗi:`, e.message); } };
   setInterval(guard('daiphu_state', DP.stateTick), DP.STATE_CHECK * 1000).unref();
   setInterval(guard('daiphu_market', DP.marketTick), DP.MARKET_CYCLE * 1000).unref();
+  // Bế Quan Treo: đủ hạn (TREO_MAX_HOURS) thì xuất quan cưỡng chế, tự cộng tu vi — quét mỗi phút.
+  const TQ = require('./game/treoquan');
+  setInterval(guard('treo_sweep', () => TQ.sweepExpired()), 60 * 1000).unref();
+  guard('treo_sweep', () => TQ.sweepExpired())();
   // Vòng chấm điểm Tông Môn Chiến — mỗi 10 giây cho mọi trận đang active.
   const W = require('./game/sectwar'); const SV = require('./ui/sectWarViews');
   setInterval(async () => {

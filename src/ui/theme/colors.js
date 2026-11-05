@@ -28,6 +28,8 @@ const CATEGORY = {
   nhiemvu: { color: COLORS.PRIMARY, emoji: 'linhphu', mark: '📜', name: 'NHIỆM VỤ' },
   hethong: { color: COLORS.SYSTEM, emoji: 'caidat', mark: '⚙', name: 'HỆ THỐNG' },
   boss: { color: COLORS.DANGER, emoji: 'bosstg', mark: '🐉', name: 'THẾ GIỚI' },
+  treoquan: { color: COLORS.CULTIVATION, emoji: 'treoquan', mark: '⏳', name: 'BẾ QUAN TREO' },
+  chuoi: { color: COLORS.CULTIVATION, emoji: 'chuoi', mark: '🔥', name: 'CHUỖI ĐỒNG TU' },
 };
 
 /** Màu cũ (v6) → màu mới gần nhất, để mọi Embed cũ tự đồng bộ bảng màu. */

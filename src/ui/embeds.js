@@ -10,6 +10,7 @@ const F = require('../game/format');
 const { E } = require('../game/emoji');
 const { getSectName } = require('../game/sectBase');
 const { daoLuTitle, daoLuBonus } = require('../game/daolu');
+const BALN = require('../game/balance');
 const { now, fmtNum } = require('../util');
 
 const ASSETS = path.join(__dirname, '..', '..', 'assets');
@@ -84,7 +85,20 @@ function buildSettingsEmbed(user, row) {
   const f = (n, v, inline = true) => emb.addFields({ name: n, value: String(v), inline });
   f(`${E.tuluyen} Tu Luyện`, status(row.last_tuluyen, CD.COOLDOWN_TULUYEN));
   f(`${E.bequan} Bế Quan`, status(row.last_dongquan, CD.COOLDOWN_DONGQUAN));
-  f(`${E.bequan} Bế Quan Treo`, row.treo_start > 0 ? `🧘 Đang treo ${F.fmtTime(Math.max(0, t - row.treo_start))} — \`/treoquan\` để xem / xuất quan` : '💤 Chưa treo — `/treoquan` để bắt đầu');
+  {
+    const maxS = (BALN.B.TREO_MAX_HOURS > 0) ? BALN.B.TREO_MAX_HOURS * 3600 : Infinity;
+    const el = row.treo_start > 0 ? Math.max(0, t - row.treo_start) : 0;
+    let tv;
+    if (row.treo_start > 0 && el >= maxS) tv = '⛔ Đã đủ hạn — sắp xuất quan cưỡng chế, `/treoquan` để nhận & làm mới';
+    else if (row.treo_start > 0) tv = `🧘 Đang treo ${F.fmtTime(el)}${Number.isFinite(maxS) ? ` (còn ${F.fmtTime(maxS - el)} thì xuất quan cưỡng chế)` : ''} — \`/treoquan\``;
+    else if (row.treo_forced) tv = '⛔ Phiên trước đã xuất quan cưỡng chế — `/treoquan` để làm mới & treo tiếp';
+    else tv = '💤 Chưa treo — `/treoquan` để bắt đầu';
+    f(`${E.treoquan || E.bequan} Bế Quan Treo`, tv);
+  }
+  {
+    const top = require('../game/chuoi').topOf(row.user_id);
+    f(`${E.chuoi || '🔥'} Chuỗi Đồng Tu`, top ? `${E.chuoi || '🔥'} **${top.streak}** ngày với <@${top.other}> — \`/chuoi\`` : 'Chưa có chuỗi — `/chuoi` để kết chuỗi với đạo hữu');
+  }
   f(`${E.linhngo} Cảm Ngộ`, status(row.last_canngo, CD.COOLDOWN_CANNGO));
   f(`${E.linhmach} Linh Mạch`, status(row.last_linhmach, CD.COOLDOWN_LINHMACH));
   const brewing = row.luyendan_start || 0;

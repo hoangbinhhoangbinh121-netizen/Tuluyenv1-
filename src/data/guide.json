@@ -35,6 +35,14 @@
       [
         "tuchat",
         "Xem bảng hệ số tu luyện của Linh Căn và Thể Chất (tỉ lệ roll, hệ số)."
+      ],
+      [
+        "treoquan",
+        "Bế quan treo máy — tu luyện tự động tối đa 4 giờ/phiên, đủ hạn tự xuất quan cưỡng chế, gõ lại để làm mới."
+      ],
+      [
+        "chuoi",
+        "Chuỗi Đồng Tu — cùng một đạo hữu đồng tu mỗi ngày để giữ chuỗi (streak), nhận tu vi và thưởng mốc."
       ]
     ]
   },
