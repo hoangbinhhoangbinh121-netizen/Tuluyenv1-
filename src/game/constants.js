@@ -28,7 +28,7 @@ const totalStageCount = (realmIdx) => {
 // v12.4.1: hệ số nhân MỐC TU VI cần để đột phá (mọi cảnh giới/tầng/thế giới) — chỉ cần đổi con số này (hoặc đặt biến môi trường
 // EXP_REQUIRED_MULT trong .env / Startup của host). TỐC ĐỘ tu luyện & phần thưởng tu vi KHÔNG đổi: chúng được tính từ mốc GỐC
 // (R.tuViRequiredBase), còn mốc đã nhân hệ số (R.tuViRequired) chỉ dùng để đột phá / hiển thị / trần. Xem game/realm.js.
-const EXP_REQUIRED_MULT_DEFAULT = 2;
+const EXP_REQUIRED_MULT_DEFAULT = 240;   // v13.4: giảm từ 1200 xuống 240 (÷5); gốc ban đầu x1
 const _envMult = Number(process.env.EXP_REQUIRED_MULT);
 const EXP_REQUIRED_MULT = Number.isFinite(_envMult) && _envMult > 0 ? _envMult : EXP_REQUIRED_MULT_DEFAULT;
 

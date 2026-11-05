@@ -1,0 +1,145 @@
+CÂN BẰNG V13.4 — PvP, CHỈ SỐ, TỐC ĐỘ TU LUYỆN
+(Chỉ đổi: PvP, chỉ số theo cảnh giới, tốc độ tu luyện/bế quan. Không sửa gì khác.)
+
+1) LINH CĂN (nhân tốc độ tu luyện / bế quan)
+  Ngũ x1.0 (35.4%) | Tứ x1.1 (25.3%) | Tam x1.25 (18.2%) | Song x1.5 (10.1%)
+  Thiên x2.0 (6.1%) | Dị x2.5 (3.0%) | Thánh x3.0 (1.5%) | Tiên x4.0 (0.4%) | Hỗn Độn x6.0 (0.1%)
+
+2) THỂ CHẤT (nhân tốc độ + tăng chỉ số khi đột phá)
+  Phàm x1.0 (40.4%) | Linh x1.015 (25.3%) | Huyền x1.035 (16.2%) | Hoang Cổ Thánh x1.07 (9.1%)
+  Tiên Thiên Đạo x1.12 (5.1%) | Hồng Mông Đạo x1.2 (2.5%) | Hỗn Độn Thần x1.3 (1.2%) | Vô Cực Đạo x1.5 (0.3%)
+  Hệ số tổng = Linh Căn x Thể Chất, trần 9.0 (trước đây trần 3.0 làm Thánh/Tiên/Hỗn Độn bằng nhau).
+  Gõ /tuchat để xem bảng này trong game.
+
+3) TỐC ĐỘ TU LUYỆN (đã tăng)
+  Thời gian chuẩn 1 tầng (Ngũ Linh Căn + Phàm Thể, spam /tuluyen mỗi 10s):
+    ~5 phút ở Luyện Khí tầng 1, tăng ~2.4 phút mỗi đại cảnh giới, +0.2 phút mỗi tầng.
+  Tới Hóa Thần (ước tính): Ngũ+Phàm ~17h | Tam+Linh ~13h | Song+Huyền ~11h | Thiên+Huyền ~8h
+    Thánh+Hoang Cổ ~5h | Tiên+Tiên Thiên ~4h | Hỗn Độn+Vô Cực ~2h
+  Bế quan: ~12% tu vi cần (mốc GỐC, xem mục 7) của tầng hiện tại (x hệ số tài năng), linh thạch giữ nguyên công thức cũ.
+  Không bao giờ chậm hơn công thức cũ.
+
+4) CHỈ SỐ THEO CẢNH GIỚI
+  Mỗi lần đột phá, chỉ số cộng thêm x(1 + 0.3 x chỉ số cảnh giới) x hệ số Thể Chất.
+  Người chơi đang có giữ nguyên chỉ số đã tích; chỉ ảnh hưởng các lần đột phá sau.
+
+5) PVP (tự động và theo hiệp) — mô hình % máu, 5 hiệp
+  Tỉ lệ thắng của bên mạnh hơn: cùng cảnh giới 50% | hơn 1 tầng ~54% | hơn 5 tầng ~61%
+  hơn 1 đại cảnh giới ~89% | hơn 2 ~98% | hơn 3 ~100%.
+  Cân bằng lối chơi: thủ/tank 56% vs chuẩn, công/glass 51% vs chuẩn, glass vs tank 47%.
+  Cược linh thạch 5%: thắng kẻ mạnh hơn được nhiều hơn, thắng kẻ yếu hơn bị giảm.
+
+6) ĐỒNG BỘ TOÀN TUYẾN (v12.4) — mọi tính năng dùng chung một hệ cân bằng (src/game/balance.js)
+  - Chiến Tông Môn: sát thương mỗi đòn = ~10% sinh mệnh tối đa của mục tiêu x (giáp/công) x (sức mạnh tương đối),
+    cùng mô hình với PvP; không còn công thức atk - def tuyệt đối (trước đây lệch hẳn khi chỉ số tăng theo cảnh giới).
+  - Bí Cảnh thường, Bí Cảnh Đặc Biệt Nhân Giới, Động Phủ (thu hoạch), Dùng Đan Dược: phần thưởng TU VI nhân "hệ số đồng bộ"
+    (tu luyện mới nhanh hơn cũ bao nhiêu lần ở đúng cảnh giới/tầng, khoảng x4-x11), để tỉ lệ giữa các nguồn tu vi
+    giữ y như thiết kế cũ. Linh thạch của các nguồn này giữ nguyên công thức cũ (không lạm phát).
+  - Bí Cảnh Linh Giới và Boss Thế Giới vốn đã tính theo tu vi cần/chỉ số hiện tại nên giữ nguyên.
+  - PvP tự động, PvP theo hiệp, bảng xếp hạng/lực chiến, đột phá, Thiên Kiếp đều dùng chung chỉ số và hệ số ở trên.
+
+7) TĂNG EXP ĐỘT PHÁ (v12.4.1) — exp cần tăng, TỐC ĐỘ tu luyện giữ nguyên
+  - Mốc tu vi cần để đột phá của MỌI cảnh giới / tầng / thế giới nhân thêm x24 (mặc định từ v12.8; v12.7 là x12, v12.6 là x6, v12.5 là x2).
+    Chỉnh ở một chỗ: hằng số EXP_REQUIRED_MULT trong src/game/constants.js, hoặc đặt biến môi trường EXP_REQUIRED_MULT
+    (.env / Startup của host, vd EXP_REQUIRED_MULT=3). Khởi động lại bot để có hiệu lực.
+  - Hai hàm trong src/game/realm.js:
+      tuViRequiredBase = mốc GỐC (như v12.4 cũ)       → chỉ dùng để TÍNH tốc độ / phần thưởng tu vi
+      tuViRequired     = mốc gốc x EXP_REQUIRED_MULT   → dùng cho đột phá, thanh tiến độ, hiển thị, trần Hóa Thần
+  - Giữ nguyên lượng tu vi nhận mỗi lần (tính từ mốc gốc): Tu Luyện, Bế Quan, hệ số đồng bộ (Bí Cảnh, Động Phủ, Đan Dược),
+    thưởng tu vi + linh thạch của Boss Thế Giới. Linh thạch không lạm phát.
+    => Thời gian lên 1 tầng dài gấp EXP_REQUIRED_MULT lần (x24), số lần bấm tăng tương ứng.
+  - Mốc lực chiến Thiên Kiếp tính theo TỈ LỆ (mốc / mốc Hóa Thần) nên không đổi.
+  - Người chơi đang có: tu vi giữ nguyên, thanh tiến độ tụt tương ứng (chưa đủ thì phải tu thêm).
+  - Thêm nguồn tu vi mới mà tính theo "tu vi cần": dùng tuViRequiredBase, KHÔNG dùng tuViRequired, để không tự tăng theo hệ số.
+
+8) BẾ QUAN TREO MÁY (v12.4.2) — tu luyện tự động, lên cảnh giới chậm hơn bấm tay
+  - Lệnh: /treoquan (hoặc !treoquan). Bỏ trống: đang rảnh → bắt đầu treo; đang treo → xem trạng thái.
+    Chọn hành động: Bắt đầu (batdau) | Xuất quan — nhận tu vi (xuatquan) | Xem trạng thái (xem).
+  - Tu vi nhận = tốc độ Tu Luyện bấm tay x 10% x thời gian treo, nhân cùng hệ số tư chất & buff như Tu Luyện thường.
+    KHÔNG giới hạn giờ treo (treo bao lâu cũng được, càng lâu tích càng nhiều); treo tối thiểu 1 phút mới xuất quan được.
+    Không cộng Linh Thạch. Tu vi tích lũy có thể vượt mốc đột phá — cứ /dotpha lần lượt từng tầng.
+  - Tốc độ tính từ mốc GỐC (mục 7) nên không đổi khi chỉnh EXP_REQUIRED_MULT; exp để đột phá vẫn theo mốc đã nhân hệ số
+    => lên tầng bằng treo máy lâu hơn hẳn spam tay (ví dụ Ngũ Linh Căn + Phàm Thể, chưa tính buff: Luyện Khí ~1,7 giờ/tầng, Hóa Thần ~4,9 giờ, Độ Kiếp ~8 giờ).
+  - Mốc treo lưu trong DB (cột cultivators.treo_start, tự thêm khi khởi động) nên còn nguyên sau khi bot khởi động lại / khôi phục DB cũ.
+  - Chỉnh: src/game/balance.js -> TREO_EFFICIENCY (10%), TREO_MAX_HOURS (v12.5: 4; 0 = không giới hạn), TREO_MIN_SECONDS (60). Khởi động lại bot để có hiệu lực.
+  - Màn hình Trạng Thái hiển thị thêm dòng "Bế Quan Treo".
+
+9) v12.5 — GIỚI HẠN BẾ QUAN TREO + CHUỖI ĐỒNG TU + 2 EMOJI PIXEL MỚI
+  A. Bế Quan Treo có giới hạn 4 giờ / phiên (balance.js -> TREO_MAX_HOURS = 4)
+    - Đủ 4 giờ: XUẤT QUAN CƯỠNG CHẾ — tự cộng tu vi của 4 giờ và kết thúc phiên, kể cả khi người chơi đang vắng mặt
+      (vòng nền quét mỗi phút; ngoài ra xử lý ngay khi người chơi mở /treoquan hoặc Trạng Thái).
+    - Làm mới: gõ /treoquan lần nữa là treo tiếp phiên mới (đồng hồ 4 giờ tính lại từ đầu). Lần mở đầu tiên sau khi bị cưỡng chế
+      sẽ hiện thông báo "đã xuất quan cưỡng chế, nhận +X tu vi" một lần.
+    - Xuất quan thủ công trước 4 giờ vẫn như cũ. Tốc độ/hiệu suất treo không đổi.
+  B. Chuỗi Đồng Tu (streak giữa hai người chơi) — lệnh /chuoi (hoặc !chuoi)
+    - /chuoi hanh_dong:Đồng tu dao_huu:@ai-đó  (hoặc !chuoi @ai-đó): đồng tu hôm nay với đạo hữu.
+      Mỗi ngày (giờ Việt Nam, đổi ngày lúc 00:00) CẢ HAI cùng gõ lệnh với nhau thì chuỗi +1.
+    - Bỏ lỡ trọn 1 ngày (không đủ cả hai) → chuỗi đứt, lần hoàn thành kế tiếp bắt đầu lại từ 1 (kỷ lục vẫn được lưu).
+    - /chuoi hanh_dong:Xem: các chuỗi của bạn + trạng thái (chờ đối phương / đến lượt bạn / sắp đứt / đã đứt).
+      /chuoi hanh_dong:Bảng xếp hạng: top 10 chuỗi đang sống dài nhất.
+    - Thưởng mỗi lần hoàn thành (cho CẢ HAI): tu vi = 4% tu vi gốc của tầng hiện tại x (1 + min(chuỗi,30)/15), tối đa 12%.
+      Thưởng mốc thêm (x tu vi gốc của tầng): 3 ngày 0.10 · 7 ngày 0.20 · 14 ngày 0.40 · 30 ngày 0.80 · 60 ngày 1.20 · 100 ngày 2.0 · 200 ngày 3.0 · 365 ngày 5.0.
+    - Chống cày nick phụ: mỗi người chỉ nhận thưởng từ tối đa 3 chuỗi mỗi ngày (chuỗi thừa vẫn tăng, không thưởng). Không cộng Linh Thạch.
+    - Chỉnh: balance.js -> CHUOI_DAILY_PCT, CHUOI_MAX_REWARD_PAIRS, CHUOI_MILESTONES. Dữ liệu lưu ở bảng chuoi_pairs (tự tạo khi khởi động).
+    - Màn hình Trạng Thái hiển thị thêm dòng "Chuỗi Đồng Tu" (chuỗi dài nhất đang sống).
+  C. Emoji pixel mới (chỉ 2 icon, mọi emoji khác giữ nguyên): assets/emoji/treoquan.png (đồng hồ cát) và assets/emoji/chuoi.png (chuỗi lửa).
+    Bot tự tải lên thành tg7_treoquan / tg7_chuoi khi khởi động. Vẽ lại bằng: python3 scripts/make_pixel_emoji_v12_streak.py
+  D. Lệnh /tuchat: bảng hệ số Linh Căn / Thể Chất. Lệnh /treoquan và /chuoi đã có trong /huongdan.
+
+10) v12.6 — TĂNG EXP ĐỘT PHÁ x3 (tốc độ tu luyện giữ nguyên)
+  - EXP_REQUIRED_MULT mặc định 2 -> 6 (gấp 3 lần v12.5) cho MỌI cảnh giới / tầng / thế giới. Chỉ đổi ở src/game/constants.js.
+  - Tu vi mỗi lần Tu Luyện / Bế Quan / Treo / Bí Cảnh / Động Phủ / Đan Dược / Boss / Chuỗi KHÔNG đổi (tính từ mốc gốc) => thời gian lên mỗi tầng dài gấp 3.
+    Ví dụ (Ngũ Linh Căn + Phàm Thể, bấm tay): Luyện Khí tầng 11 ~12 -> ~36 phút | Kết Đan tầng 11 ~21 -> ~62 phút | Hóa Thần tầng 21 ~35 -> ~104 phút.
+  - Người chơi đang có: tu vi giữ nguyên, thanh tiến độ tụt tương ứng (cần tu thêm mới đột phá được).
+  - Host có đặt biến EXP_REQUIRED_MULT thì giá trị đó được ưu tiên: hãy ĐỂ TRỐNG hoặc XOÁ dòng này để dùng mặc định 6 (đặt =3 nếu muốn tổng chỉ x3 so với gốc).
+
+11) v12.7 — TĂNG EXP ĐỘT PHÁ THÊM x2 (6 -> 12), Bế Quan Treo bớt nhanh
+  - EXP_REQUIRED_MULT mặc định 6 -> 12 (src/game/constants.js). Tu vi nhận mỗi lần (tay / bế quan / treo / bí cảnh…) vẫn không đổi => mọi thời gian lên tầng dài gấp 2 so với v12.6.
+  - Bế Quan Treo (Ngũ Linh Căn + Phàm Thể): Luyện Khí tầng 1 ~8,7 giờ (~2,2 phiên 4 giờ) | Kết Đan tầng 11 ~20,5 giờ | Hóa Thần tầng 21 ~35 giờ | Độ Kiếp tầng 23 ~58 giờ.
+    Thiên Linh Căn + Huyền Thể: Luyện Khí tầng 1 ~4,2 giờ | Hóa Thần tầng 21 ~17 giờ. Hỗn Độn + Vô Cực: Hóa Thần tầng 21 ~3,9 giờ.
+  - Bấm tay (Ngũ + Phàm): Luyện Khí tầng 11 ~72 phút | Kết Đan tầng 11 ~2,1 giờ | Hóa Thần tầng 21 ~3,5 giờ.
+  - Muốn CHỈ làm treo chậm hơn mà không đụng tu luyện bấm tay: giữ EXP_REQUIRED_MULT, hạ TREO_EFFICIENCY trong src/game/balance.js (hiện 0.10).
+  - Host đặt EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 12.
+
+12) v12.8 — TĂNG EXP ĐỘT PHÁ THÊM x2 (12 -> 24)
+  - EXP_REQUIRED_MULT mặc định 12 -> 24 (src/game/constants.js). Tu vi nhận mỗi lần không đổi => thời gian lên tầng dài gấp 2 so với v12.7 (gấp 12 lần v12.5).
+  - Bế Quan Treo (Ngũ Linh Căn + Phàm Thể): Luyện Khí tầng 1 ~17 giờ | Kết Đan tầng 11 ~41 giờ | Hóa Thần tầng 21 ~70 giờ. Thiên + Huyền: Hóa Thần tầng 21 ~34 giờ. Hỗn Độn + Vô Cực: ~8 giờ.
+  - Bấm tay (Ngũ + Phàm): Luyện Khí tầng 11 ~2,4 giờ | Kết Đan tầng 11 ~4,1 giờ | Hóa Thần tầng 21 ~7 giờ.
+  - Host đặt EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 24.
+
+13) v12.9 — BẾ QUAN TREO CHẬM GẤP 10 LẦN
+  - TREO_EFFICIENCY 10% -> 1% (src/game/balance.js): tu vi mỗi giờ treo = 1% tốc độ Tu Luyện bấm tay (cùng tư chất & buff). Tu Luyện bấm tay, Bế Quan, EXP_REQUIRED_MULT (24) KHÔNG đổi.
+  - Thời gian treo lên 1 tầng (gấp 10 lần v12.8). Ngũ Linh Căn + Phàm Thể: Luyện Khí tầng 1 ~7 ngày | Kết Đan tầng 11 ~17 ngày | Hóa Thần tầng 21 ~29 ngày.
+    Thiên Linh Căn + Huyền Thể: Hóa Thần tầng 21 ~14 ngày. Hỗn Độn + Vô Cực: Hóa Thần tầng 21 ~3 ngày.
+  - Mỗi phiên 4 giờ vẫn xuất quan cưỡng chế như cũ; tu vi một phiên giờ nhỏ => treo hợp làm "góp thêm" lúc vắng mặt, tu luyện chính vẫn là bấm tay.
+  - Chỉnh lại bất cứ lúc nào: TREO_EFFICIENCY (0.01 = 1%; 0.05 = 5%; 0.10 = 10%).
+
+14) v13.0 — TĂNG EXP ĐỘT PHÁ x10 (24 -> 240), theo yêu cầu (thay cho cách hạ hiệu suất treo của v12.9)
+  - EXP_REQUIRED_MULT mặc định 24 -> 240 (src/game/constants.js). TREO_EFFICIENCY đưa về 0.10 (bỏ mức 1% của v12.9) để không bị chậm chồng hai lần.
+  - Tu vi nhận mỗi lần (tay / bế quan / treo / bí cảnh…) KHÔNG đổi => MỌI cách tu luyện đều chậm gấp 10 lần v12.8.
+  - Treo (Ngũ + Phàm): Luyện Khí tầng 1 ~7 ngày | Kết Đan tầng 11 ~17 ngày | Hóa Thần tầng 21 ~29 ngày (bằng v12.9).
+  - Bấm tay (Ngũ + Phàm): Luyện Khí tầng 11 ~24 giờ | Kết Đan tầng 11 ~41 giờ | Hóa Thần tầng 21 ~70 giờ.
+  - Host đặt EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 240.
+
+15) v13.1 — TĂNG EXP ĐỘT PHÁ THÊM x20 (240 -> 4800), theo yêu cầu
+  - EXP_REQUIRED_MULT mặc định 240 -> 4800 (src/game/constants.js). Tu vi nhận mỗi lần không đổi => mọi cách tu luyện chậm gấp 20 lần v13.0.
+  - Treo (Ngũ + Phàm): Luyện Khí tầng 1 ~140 ngày | Hóa Thần tầng 21 ~580 ngày. Bấm tay (Ngũ + Phàm): Luyện Khí tầng 11 ~20 ngày | Kết Đan tầng 11 ~34 ngày | Hóa Thần tầng 21 ~58 ngày (bấm liên tục).
+    Hỗn Độn + Vô Cực treo: Hóa Thần tầng 21 ~60 ngày.
+  - Muốn giảm: sửa EXP_REQUIRED_MULT (vd 480). Host đặt biến EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 4800.
+
+16) v13.2 — GIẢM EXP ĐỘT PHÁ (4800 -> 1200), theo yêu cầu "giảm nhẹ"
+  - EXP_REQUIRED_MULT mặc định 4800 -> 1200 (src/game/constants.js) = ÷4 so với v13.1 (vẫn gấp 5 lần v13.0 và gấp 600 lần v12.5). Tu vi nhận mỗi lần không đổi.
+  - Treo (Ngũ + Phàm): Luyện Khí tầng 1 ~35 ngày | Hóa Thần tầng 21 ~145 ngày. Hỗn Độn + Vô Cực treo: Hóa Thần tầng 21 ~15 ngày.
+  - Bấm tay liên tục (Ngũ + Phàm): Luyện Khí tầng 11 ~5 ngày | Kết Đan tầng 11 ~8,5 ngày | Hóa Thần tầng 21 ~14,5 ngày.
+  - Chỉnh tiếp: sửa EXP_REQUIRED_MULT (vd 600 = nhẹ hơn nữa; 240 = mức v13.0). Host đặt biến EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 1200.
+
+17) v13.3 — HIỆU SUẤT BẾ QUAN TREO GIẢM (10% -> 5% so với bấm tay)
+  - TREO_EFFICIENCY 0.10 -> 0.05 (src/game/balance.js): treo máy chỉ còn 5% tốc độ Tu Luyện bấm tay (cùng tư chất & buff). Bấm tay, Bế Quan, EXP_REQUIRED_MULT (1200) KHÔNG đổi.
+  - Treo (Ngũ + Phàm), chậm gấp 2 so với v13.2: Luyện Khí tầng 1 ~70 ngày | Hóa Thần tầng 21 ~290 ngày. Hỗn Độn + Vô Cực: Hóa Thần tầng 21 ~30 ngày.
+  - Chỉnh lại: TREO_EFFICIENCY (0.02 = 2%; 0.05 = 5%; 0.10 = 10%). Hiển thị trong /treoquan tự cập nhật theo số này.
+
+18) v13.4 — GIẢM THỜI GIAN TU LUYỆN, GIỮ HIỆU SUẤT TREO THẤP
+  - EXP_REQUIRED_MULT mặc định 1200 -> 240 (src/game/constants.js) = ÷5 so với v13.3. TREO_EFFICIENCY GIỮ 5% (treo vẫn kém bấm tay). Tu vi nhận mỗi lần không đổi.
+  - Bấm tay liên tục (Ngũ + Phàm): Luyện Khí tầng 11 ~24 giờ | Kết Đan tầng 11 ~41 giờ | Hóa Thần tầng 21 ~70 giờ.
+  - Treo (Ngũ + Phàm): Luyện Khí tầng 1 ~14 ngày | Hóa Thần tầng 21 ~58 ngày. Hỗn Độn + Vô Cực treo: Hóa Thần tầng 21 ~6 ngày.
+  - Chỉnh: EXP_REQUIRED_MULT (thời gian chung), TREO_EFFICIENCY (riêng treo). Host đặt biến EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 240.
