@@ -22,7 +22,10 @@ const WAR_DURATION = CD.WAR_DURATION_SECONDS; const REWARD_WIN_BUFF_SECONDS = CD
 
 const warbar = (pct) => { const f = Math.max(0, Math.min(WARBAR_LENGTH, Math.round(WARBAR_LENGTH * pct / 100))); return E.warbar_fill.repeat(f) + E.warbar_empty.repeat(WARBAR_LENGTH - f); };
 const fmtTimeLeft = (s) => { s = Math.max(0, int(s)); return `${Math.floor(s / 60)}p${String(s % 60).padStart(2, '0')}s`; };
-const isEligible = (row) => !!row && row.world_tier === 0 && (row.realm_index < K.HOATHAN_REALM_IDX || (row.realm_index === K.HOATHAN_REALM_IDX && row.stage_index <= K.HOATHAN_VIENMAN_STAGE));
+/** v14: Admin của bot (ADMIN_DISCORD_IDS / ADMIN_CODE_APPROVER_IDS, gồm cả chủ bot tự dò). */
+const isBotAdmin = (userId) => userId != null && (K.ADMIN_DISCORD_IDS.some((x) => String(x) === String(userId)) || K.ADMIN_CODE_APPROVER_IDS.some((x) => String(x) === String(userId)));
+/** v14: Admin được tham chiến bất kể cảnh giới / thế giới (truyền userId để áp dụng). */
+const isEligible = (row, userId) => (!!row && isBotAdmin(userId)) || (!!row && row.world_tier === 0 && (row.realm_index < K.HOATHAN_REALM_IDX || (row.realm_index === K.HOATHAN_REALM_IDX && row.stage_index <= K.HOATHAN_VIENMAN_STAGE)));
 const eligibilityText = () => 'Phàm Giới, tu vi tối đa **Hóa Thần Viên Mãn**';
 
 const getActiveWar = (guildId) => D.get("SELECT * FROM sect_wars WHERE guild_id = ? AND status IN ('registration','launching','active') ORDER BY war_id DESC LIMIT 1", guildId);
@@ -102,6 +105,29 @@ function doAttack(warId, attackerId, targetId) {
   }
   D.run('UPDATE sect_war_participants SET hp = ?, assists = assists + 1 WHERE war_id = ? AND user_id = ?', hp, warId, target.user_id);
   return `⚔️ <@${attackerId}> gây **${damage}** sát thương lên <@${target.user_id}> tại **${NODES[nodeKey].name}**.${critTxt} (HP còn lại: ${Math.max(0, hp)}/${maxHp})`;
+}
+
+// ---- v14: Thiên Đạo Chưởng (chiêu riêng của Admin) ----
+const THIEN_DAO_SKILL = 'Thiên Đạo Chưởng';
+const THIEN_DAO_DAMAGE_TEXT = '100000000000000000000000000000000';   // hiển thị -100000000000000000000000000000000 Máu (vượt giới hạn số nguyên DB nên chỉ là chuỗi hiển thị; HP lưu = 0)
+const THIEN_DAO_MAX_MENTIONS = 20;
+/**
+ * Admin bấm "Giao Chiến" → tự tung Thiên Đạo Chưởng, không cần chọn mục tiêu:
+ * hạ gục MỌI địch (tông môn khác) đang đứng ở cùng cứ điểm. Không né tránh, không bạo kích, không phụ thuộc chỉ số.
+ * Mỗi mạng vẫn được tính +KILL_POINTS điểm tông môn và +1 kill (MVP) như đòn thường.
+ */
+function doThienDaoChuong(warId, adminId) {
+  const r = getAttackableEnemies(warId, adminId);
+  if (r.error) return r.error;
+  const part = getParticipant(warId, adminId); const t = now(); const { nodeKey, enemies } = r;
+  D.transaction(() => {
+    for (const e of enemies) D.run('UPDATE sect_war_participants SET hp = 0, node_key = NULL, revive_at = ? WHERE war_id = ? AND user_id = ?', t + REVIVE_SECONDS, warId, e.user_id);
+    D.run('UPDATE sect_war_participants SET kills = kills + ? WHERE war_id = ? AND user_id = ?', enemies.length, warId, adminId);
+    addScore(warId, part.sect_id, KILL_POINTS * enemies.length);
+  });
+  const shown = enemies.slice(0, THIEN_DAO_MAX_MENTIONS).map((e) => `<@${e.user_id}>`).join(', ');
+  const more = enemies.length > THIEN_DAO_MAX_MENTIONS ? ` và ${enemies.length - THIEN_DAO_MAX_MENTIONS} người khác` : '';
+  return `🌌 <@${adminId}> tung chiêu **${THIEN_DAO_SKILL}**: **-${THIEN_DAO_DAMAGE_TEXT} Máu**!\n☠️ **HẠ GỤC ${enemies.length}** địch tại **${NODES[nodeKey].name}**: ${shown}${more} (+${KILL_POINTS * enemies.length} điểm cho tông môn). Đối phương trọng thương **${REVIVE_SECONDS}s**.`;
 }
 
 // ---- vòng lặp nền ----
@@ -200,6 +226,7 @@ function doNopkho(userId, amount) {
 
 module.exports = {
   NODES, NODE_ORDER, TICK_SECONDS, NODE_CAPTURE_SECONDS, WIN_SCORE, REWARD_WIN_TITLE, REWARD_WIN_LINHTHACH, RUTKHO_DAILY_LIMIT, REVIVE_SECONDS,
+  isBotAdmin, doThienDaoChuong, THIEN_DAO_SKILL, THIEN_DAO_DAMAGE_TEXT,
   warbar, fmtTimeLeft, isEligible, eligibilityText, getActiveWar, getOtherActiveWarForUser, createWar, activateWar, joinWar, getParticipant, isDown, moveToNode,
   getWarNodes, getWarScores, checkActionCooldown, getAttackableEnemies, doAttack, runTick, khotongInfo, doRutkho, doNopkho,
 };

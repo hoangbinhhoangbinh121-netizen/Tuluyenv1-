@@ -83,7 +83,7 @@ function mapView(warId) {
     v.button({ key: `mv_${key}`, label: info.name, emoji: info.emoji, style: 'secondary', row: key === 'trungtam' ? 1 : 0 }, async (i) => {
       const row = Cu.getCultivator(i.user.id);
       if (!row || !row.sect_id) return eph(i, '❌ Bạn cần đã `/batdau` và gia nhập 1 tông môn (`/giatongmon`) để tham chiến.');
-      if (!W.isEligible(row)) return eph(i, `❌ Tu vi của bạn không đủ điều kiện tham chiến (chỉ dành cho ${W.eligibilityText()}).`);
+      if (!W.isEligible(row, i.user.id)) return eph(i, `❌ Tu vi của bạn không đủ điều kiện tham chiến (chỉ dành cho ${W.eligibilityText()}).`);
       const remain = W.checkActionCooldown(i.user.id);
       if (remain > 0) return eph(i, `⏳ Thao tác quá nhanh, chờ ${remain.toFixed(1)}s.`);
       if (W.moveToNode(warId, i.user.id, row.sect_id, key) === 'down') return eph(i, '☠️ Bạn đang trọng thương, chưa thể tiến quân — chờ hồi sinh tại đại bản doanh.');
@@ -93,6 +93,11 @@ function mapView(warId) {
   v.button({ key: 'atk', label: 'Giao Chiến', emoji: E.kiem, style: 'danger', row: 2 }, async (i) => {
     const remain = W.checkActionCooldown(i.user.id);
     if (remain > 0) return eph(i, `⏳ Thao tác quá nhanh, chờ ${remain.toFixed(1)}s.`);
+    // v14: Admin bấm Giao Chiến → tự tung Thiên Đạo Chưởng (không cần chọn mục tiêu)
+    if (W.isBotAdmin(i.user.id)) {
+      const msg = W.doThienDaoChuong(warId, i.user.id);
+      return i.reply({ content: msg, allowedMentions: { parse: [] } });
+    }
     const r = W.getAttackableEnemies(warId, i.user.id);
     if (r.error) return eph(i, r.error);
     return i.reply({ content: '🎯 Chọn mục tiêu để giao chiến (đối phương không có quyền từ chối):', components: targetSelectView(warId, i.user.id, r.nodeKey, r.enemies).components(), flags: EPHEMERAL });
@@ -117,7 +122,7 @@ function registrationView(warId) {
   v.button({ key: 'join', label: 'Tham Gia', emoji: E.thamgia, style: 'green' }, async (i) => {
     const row = Cu.getCultivator(i.user.id);
     if (!row || !row.sect_id) return eph(i, '❌ Bạn cần `/batdau` và gia nhập 1 tông môn trước khi tham chiến.');
-    if (!W.isEligible(row)) return eph(i, `❌ Tu vi của bạn không đủ điều kiện tham chiến (chỉ dành cho ${W.eligibilityText()}). Hiện tại: ${R.realmDisplay(row.realm_index, row.stage_index)}.`);
+    if (!W.isEligible(row, i.user.id)) return eph(i, `❌ Tu vi của bạn không đủ điều kiện tham chiến (chỉ dành cho ${W.eligibilityText()}). Hiện tại: ${R.realmDisplay(row.realm_index, row.stage_index)}.`);
     if (W.getOtherActiveWarForUser(i.user.id, i.guildId)) return eph(i, '❌ Bạn đang tham gia 1 Tông Môn Chiến khác rồi, không thể ghi danh 2 trận cùng lúc.');
     W.joinWar(warId, i.user.id, row.sect_id);
     await i.update({ embeds: [buildRegistrationEmbed(warId)], components: v.components() });

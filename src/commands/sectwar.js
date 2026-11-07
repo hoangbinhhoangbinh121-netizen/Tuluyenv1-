@@ -17,7 +17,7 @@ defineCommand({
     if (W.getOtherActiveWarForUser(ctx.user.id, ctx.guild.id)) return ctx.send('❌ Bạn đang tham gia 1 Tông Môn Chiến khác ở server khác rồi, không thể tham chiến 2 trận cùng lúc. Hãy đợi trận đó kết thúc trước.');
     const war = W.getActiveWar(ctx.guild.id);
     if (war && war.status === 'active') {
-      if (!W.isEligible(row)) return ctx.send(`❌ Tu vi của bạn không đủ điều kiện tham chiến (chỉ dành cho ${W.eligibilityText()}).`);
+      if (!W.isEligible(row, ctx.user.id)) return ctx.send(`❌ Tu vi của bạn không đủ điều kiện tham chiến (chỉ dành cho ${W.eligibilityText()}).`);
       W.joinWar(war.war_id, ctx.user.id, row.sect_id);
       return ctx.send({ embeds: [V.buildMapEmbed(war.war_id)], components: V.mapView(war.war_id).components() });
     }

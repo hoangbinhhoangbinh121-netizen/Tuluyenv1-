@@ -1,4 +1,4 @@
-# Tiên Giới Bot v13.9 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v14 — Node.js + discord.js + SQLite
 
 Bot Discord game tu tiên, chuyển từ bản Python (`tuluyenv1_daolu_fixed_v10`) sang **Node.js**.
 Dữ liệu lưu trong **1 file SQLite** (`data/tutien.db`) đi kèm bot — không cần PostgreSQL hay dịch vụ database riêng.
