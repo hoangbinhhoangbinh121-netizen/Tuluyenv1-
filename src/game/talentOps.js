@@ -13,10 +13,11 @@ const Cu = require('./cultivator');
 const T = require('./talent');
 const { random, int, fmtNum } = require('../util');
 
+const { E } = require('./emoji');   // v13.9: icon pixel (tự rơi về Unicode 🧿 🔮 📜 nếu chưa tải lên)
 const ITEM = {
-  bao_the_chat: { icon: '🧿', name: 'Thiên Bảo · Thể Chất' },
-  bao_linh_can: { icon: '🔮', name: 'Thiên Bảo · Linh Căn' },
-  truyen_thua: { icon: '📜', name: 'Truyền Thừa Ngọc Giản' },
+  bao_the_chat: { get icon() { return E.bao_thechat; }, name: 'Thiên Bảo · Thể Chất' },
+  bao_linh_can: { get icon() { return E.bao_linhcan; }, name: 'Thiên Bảo · Linh Căn' },
+  truyen_thua: { get icon() { return E.truyenthua; }, name: 'Truyền Thừa Ngọc Giản' },
 };
 const itemText = (k, n = 1) => `${ITEM[k].icon} **${n}** ${ITEM[k].name}`;
 const pct = (x) => `${Math.round(x * 100)}%`;

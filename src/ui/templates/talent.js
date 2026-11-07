@@ -9,6 +9,8 @@ const { E } = require('../emojis');
 const { num } = require('../format');
 const { COLORS } = require('../theme/colors');
 
+const HANH_KEY = { Kim: 'hanh_kim', Mộc: 'hanh_moc', Thủy: 'hanh_thuy', Hỏa: 'hanh_hoa', Thổ: 'hanh_tho' };
+const hi = (n) => (HANH_KEY[n] ? `${E[HANH_KEY[n]]} ` : '');   // icon pixel ngũ hành (dị/đặc thù: không có)
 const fx = (o) => T.fxLines(o).join('\n') || '—';
 const track = (cur, total) => Array.from({ length: total }, (_, i) => (i < cur ? '🟩' : '⬜')).join('');
 const f3 = (x) => (Math.round(x * 1000) / 1000).toString().replace('.', ',');
@@ -23,9 +25,9 @@ function stepField(row, which) {
 function resonanceField(row) {
   const p = T.profile(row);
   const act = T.RESONANCES.filter((r) => r.test(p));
-  const lines = act.map((r) => `✨ **${r.name}** — ${r.desc}\n${fx(r.fx)}`);
+  const lines = act.map((r) => `${E.conghuong} **${r.name}** — ${r.desc}\n${fx(r.fx)}`);
   const hint = T.RESONANCES.filter((r) => !r.test(p)).slice(0, 3).map((r) => `🔒 **${r.name}**: ${r.cond}`);
-  return { name: `🔗 Cộng hưởng Thể Chất × Linh Căn`, value: [...lines, ...(act.length ? [] : hint)].join('\n') || 'Chưa có cộng hưởng nào.', inline: false };
+  return { name: `${E.conghuong} Cộng hưởng Thể Chất × Linh Căn`, value: [...lines, ...(act.length ? [] : hint)].join('\n') || 'Chưa có cộng hưởng nào.', inline: false };
 }
 const tuText = (row) => {
   const base = BAL.talentBase(row); const eff = BAL.talentMult(row);
@@ -39,7 +41,7 @@ function theChat(row, note) {
   const mine = b.sources.filter((s) => s.kind === 'Thiên phú' || s.kind === 'Biến dị');
   const fields = [
     { name: `${E.thechat || '🧬'} Phẩm cấp`, value: `**${row.the_chat}** (${T.TC_RANK(p.tc.idx)}) — hệ số ×${f3(T.mult(K.THE_CHAT, row.the_chat))}${p.tc.variant ? `\n✦ Biến dị: **${p.tc.variant}**` : ''}`, inline: false },
-    { name: '🌟 Thức tỉnh', value: `${track(p.tc.stage, 4)} **${T.STAGE_NAMES[p.tc.stage]}** (hiệu lực thiên phú ×${f3(T.STAGE_MULT[p.tc.stage])})\nTiến độ tích lũy: **${num(p.tc.prog)}** _(Đột Phá, Thiên Kiếp, Bí Cảnh, Boss)_`, inline: false },
+    { name: `${E.thuctinh} Thức tỉnh`, value: `${track(p.tc.stage, 4)} **${T.STAGE_NAMES[p.tc.stage]}** (hiệu lực thiên phú ×${f3(T.STAGE_MULT[p.tc.stage])})\nTiến độ tích lũy: **${num(p.tc.prog)}** _(Đột Phá, Thiên Kiếp, Bí Cảnh, Boss)_`, inline: false },
     { name: `📖 Thiên phú — ${tal ? tal.name : '—'}`, value: tal ? tal.desc : '—', inline: false },
     { name: '⚙️ Hiệu ứng đang hoạt động', value: mine.map((s) => `**${s.name}**\n${fx(s.fx)}`).join('\n') || '—', inline: false },
     resonanceField(row),
@@ -63,13 +65,13 @@ function linhCan(row, note) {
   const adv = T.KHAC[p.lc.primary];
   const fields = [
     { name: `${E.linhcan || '🌿'} Phẩm cấp`, value: `**${row.linh_can}** (${T.LC_RANK(p.lc.idx)}) — hệ số ×${f3(T.mult(K.LINH_CAN, row.linh_can))}`, inline: false },
-    { name: '🌈 Hành (thuộc tính)', value: `${p.lc.roots.map((r, i) => `${i === 0 ? '**' : ''}${r}${i === 0 ? '**' : ''}`).join(' · ')}\n_${T.ELEMENT_KIND(p.lc.primary)}${p.lc.roots.length > 1 ? ` — ${p.lc.roots.length} hành nên mỗi hành bị loãng ×${f3(p.lc.dilution)}` : ''}_`, inline: true },
-    { name: '💠 Độ tinh khiết', value: `**${p.lc.purity}%**\n_tu luyện ×${f3(T.tuluyenPurity(row))}, hấp thu ×${f3(T.purityAbsorb(p.lc.purity))}_`, inline: true },
-    { name: '🌟 Thức tỉnh', value: `${track(p.lc.awaken, 3)} **${T.LC_AWAKEN_NAMES[p.lc.awaken]}** (hiệu lực thuộc tính ×${f3(T.LC_AWAKEN_MULT[p.lc.awaken])})\nTiến độ tích lũy: **${num(p.lc.prog)}** _(Tu Luyện, Bế Quan, Bí Cảnh, Boss)_`, inline: false },
-    { name: `🔥 Thuộc tính ${p.lc.primary}`, value: `${trait ? trait.desc : '—'}\n${sTrait ? fx(sTrait.fx) : '—'}`, inline: false },
+    { name: '🌈 Hành (thuộc tính)', value: `${p.lc.roots.map((r, i) => `${hi(r)}${i === 0 ? '**' : ''}${r}${i === 0 ? '**' : ''}`).join(' · ')}\n_${T.ELEMENT_KIND(p.lc.primary)}${p.lc.roots.length > 1 ? ` — ${p.lc.roots.length} hành nên mỗi hành bị loãng ×${f3(p.lc.dilution)}` : ''}_`, inline: true },
+    { name: `${E.tinhkhiet} Độ tinh khiết`, value: `**${p.lc.purity}%**\n_tu luyện ×${f3(T.tuluyenPurity(row))}, hấp thu ×${f3(T.purityAbsorb(p.lc.purity))}_`, inline: true },
+    { name: `${E.thuctinh} Thức tỉnh`, value: `${track(p.lc.awaken, 3)} **${T.LC_AWAKEN_NAMES[p.lc.awaken]}** (hiệu lực thuộc tính ×${f3(T.LC_AWAKEN_MULT[p.lc.awaken])})\nTiến độ tích lũy: **${num(p.lc.prog)}** _(Tu Luyện, Bế Quan, Bí Cảnh, Boss)_`, inline: false },
+    { name: `${hi(p.lc.primary) || '🔥 '}Thuộc tính ${p.lc.primary}`, value: `${trait ? trait.desc : '—'}\n${sTrait ? fx(sTrait.fx) : '—'}`, inline: false },
     ev
-      ? { name: `🌌 Tiến hóa — ${ev[1].name}`, value: `${ev[1].mech}\n${sEvo ? fx(sEvo.fx) : fx(ev[1].fx)}`, inline: false }
-      : { name: '🌌 Tiềm năng tiến hóa', value: `**${pot ? pot.name : '—'}** — ${pot ? pot.mech : ''}\n_Cần Thức Tỉnh Lần III và độ tinh khiết ≥ ${T.LC_EVOLVE.purity}%._`, inline: false },
+      ? { name: `${E.tienhoa} Tiến hóa — ${ev[1].name}`, value: `${ev[1].mech}\n${sEvo ? fx(sEvo.fx) : fx(ev[1].fx)}`, inline: false }
+      : { name: `${E.tienhoa} Tiềm năng tiến hóa`, value: `**${pot ? pot.name : '—'}** — ${pot ? pot.mech : ''}\n_Cần Thức Tỉnh Lần III và độ tinh khiết ≥ ${T.LC_EVOLVE.purity}%._`, inline: false },
     { name: '⚔️ Tương khắc', value: `Khắc **${adv || '—'}** (+4% sức mạnh khi đấu pháp, +5% sát thương Boss hành đó) · bị **${KHAC_OF ? KHAC_OF[0] : '—'}** khắc.\nBoss hiện tại đối ứng theo nguyên tố từng cấp.`, inline: false },
     resonanceField(row),
     stepField(row, 'lc'),

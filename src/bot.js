@@ -13,6 +13,7 @@ require('./commands/treoquan');
 require('./commands/chuoi');
 require('./commands/talent');
 require('./commands/adminTuChat');
+require('./commands/guideTalent');
 require('./commands/admin');
 require('./commands/dan');
 require('./commands/kho');
@@ -114,7 +115,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v13.7 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v13.9 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);
@@ -122,7 +123,7 @@ async function main() {
   if (/\s|^["']|["']$/.test(TOKEN)) console.warn('⚠️ DISCORD_TOKEN có dấu cách/dấu nháy thừa — hãy xoá đi nếu bot không đăng nhập được.');
   const driver = D.initDb();
   console.log(`🗄️ SQLite: ${D.DB_PATH} (driver: ${driver})`);
-  try { const m = require('./game/talentOps').migrateAll(); console.log(`🧬 Thể Chất/Linh Căn v13.7: ${m.total} nhân vật, đã đồng bộ hồ sơ cho ${m.written} người.`); } catch (e) { console.error('⚠️ migrate Thể Chất/Linh Căn:', e); }
+  try { const m = require('./game/talentOps').migrateAll(); console.log(`🧬 Thể Chất/Linh Căn v13.9: ${m.total} nhân vật, đã đồng bộ hồ sơ cho ${m.written} người.`); } catch (e) { console.error('⚠️ migrate Thể Chất/Linh Căn:', e); }
   await syncPixelEmoji();
 
   process.on('unhandledRejection', (e) => console.error('⚠️ unhandledRejection:', e));

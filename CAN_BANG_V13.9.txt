@@ -1,4 +1,4 @@
-CÂN BẰNG V13.7 — TỐC ĐỘ TƯ CHẤT + THỂ CHẤT / LINH CĂN (THỨC TỈNH · TIẾN HÓA)
+CÂN BẰNG V13.8 — TỐC ĐỘ TƯ CHẤT + THỂ CHẤT / LINH CĂN (THỨC TỈNH · TIẾN HÓA)
 (Chỉ đổi: PvP, chỉ số theo cảnh giới, tốc độ tu luyện/bế quan. Không sửa gì khác.)
 
 1) LINH CĂN (nhân tốc độ tu luyện / bế quan)
@@ -259,3 +259,20 @@ V13.7 — LỆNH ADMIN MỚI (chỉ admin trong ADMIN_CODE_APPROVER_IDS dùng đ
   /tangtoctuluyen he_so so_phut       Sự kiện tăng tốc TOÀN server: nhân thêm lên Tu Luyện, Bế Quan, Bế Quan Treo (hệ số 0.1–50,
                                       so_phut = tự hết hạn; he_so "tat" hoặc 1 = tắt; bỏ trống = xem). Lưu ở bảng bot_settings,
                                       còn nguyên sau khi khởi động lại. Chỉ nhân tu vi — KHÔNG nhân Linh Thạch Bế Quan, không đổi exp đột phá.
+
+
+================================================================
+V13.8
+================================================================
+  - /huongdantuchat: hướng dẫn đầy đủ (8 trang, dropdown): tổng quan, tiến độ, Thiên Bảo & Truyền Thừa, thức tỉnh Thể Chất,
+    thức tỉnh Linh Căn, tiến hóa/Biến Dị, chiến đấu & cộng hưởng, lộ trình gợi ý. Số liệu lấy thẳng từ game/talent.js.
+  - /tangtoctuluyen: bật/tắt thủ công sẽ đăng thông báo ra kênh thế giới (/datkenhthegioi), hoặc kênh đang gõ lệnh nếu chưa cài.
+    Hết hạn tự động (so_phut) thì KHÔNG đăng thông báo (hệ số tự về x1).
+
+
+==================== v13.9 ====================
+• SỬA LỖI: Linh Phù không rơi ở Hóa Thần Viên Mãn. Điều kiện cũ so stage_index với 3 (Tầng 4), nhưng Viên Mãn Hóa Thần là tầng 20 (index K.HOATHAN_VIENMAN_STAGE = 19). Nay: Hóa Thần (K.HOATHAN_REALM_IDX) và stage_index >= K.HOATHAN_VIENMAN_STAGE, hoặc đã Phi Thăng.
+  Tỉ lệ rơi Linh Phù/Tiên Phù (bicanh.js LINHPHU_RATE): Bí Cảnh thường 30%/lượt, Bí Cảnh Linh Giới 35%/lượt; tối đa K.PHITHANG_LINH_PHU_CAN cái.
+• Thiên Đạo Thạch: chỉ rơi chắc chắn ở Bí Cảnh Hợp Thể (Linh Giới), 1–3 / 1–4 / 2–7 theo bậc I / II / III. 40 Thiên Đạo Thạch → 1 Thiên Bảo Thể Chất.
+• 13 emoji pixel mới (assets/emoji, KHÔNG đổi emoji cũ): bao_thechat, bao_linhcan, truyenthua, thuctinh, tienhoa, conghuong, tinhkhiet, hanh_kim, hanh_moc, hanh_thuy, hanh_hoa, hanh_tho, tangtoc (fallback Unicode trong data/emoji_fallback.json). Gắn vào /thechat, /linhcan, /huongdantuchat, vật phẩm Thiên Bảo/Truyền Thừa, sự kiện tăng tốc.
+• /huongdantuchat thêm 2 trang: "Nguồn Thiên Đạo Thạch & Linh Phù" (số liệu đọc thẳng từ code) và "Sự kiện tăng tốc & Admin" (tổng 10 trang).

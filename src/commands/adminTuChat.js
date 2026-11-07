@@ -7,6 +7,9 @@ const T = require('../game/talent');
 const AT = require('../game/adminTalent');
 const ST = require('../game/settings');
 const { fmtNum, now } = require('../util');
+const { createEmbed } = require('../ui/components/baseEmbed');
+const { announceWorld } = require('../ui/worldChannel');
+const { E } = require('../ui/emojis');
 
 const memberOpt = { name: 'thanh_vien', type: 'user', required: true, description: 'Thành viên' };
 const chTc = K.THE_CHAT.map((t) => ({ name: `${t.name} (x${t.mult})`.slice(0, 100), value: t.name }));
@@ -79,13 +82,25 @@ defineCommand({
     const show = () => {
       const i = ST.speedInfo();
       if (!i.active) return 'ℹ️ Hiện **không** có sự kiện tăng tốc (hệ số ×1).';
-      return `⚡ Đang tăng tốc toàn server **×${i.mult}** ${i.until ? `— còn ${Math.max(1, Math.ceil((i.until - now()) / 60))} phút` : '— đến khi admin tắt'}.`;
+      return `${E.tangtoc} Đang tăng tốc toàn server **×${i.mult}** ${i.until ? `— còn ${Math.max(1, Math.ceil((i.until - now()) / 60))} phút` : '— đến khi admin tắt'}.`;
     };
     if (!raw) return ctx.send(show());
-    if (['tat', 'off', 'reset', 'huy'].includes(raw)) { ST.setSpeed(1, 0); return ctx.send('🛑 Đã tắt sự kiện tăng tốc tu luyện (về ×1).'); }
+    // v13.8: thông báo ra kênh thế giới (/datkenhthegioi) hoặc kênh hiện tại nếu chưa cài
+    const announce = async (title, text) => {
+      try {
+        const client = (ctx.interaction || ctx.message || {}).client; if (!client || !ctx.guild) return;
+        await announceWorld(client, ctx.guild.id, createEmbed({ cat: 'thiendao', header: 'THIÊN ĐẠO', status: title, description: text }), { channelId: ctx.channel && ctx.channel.id });
+      } catch (_) { /* thông báo lỗi không làm hỏng lệnh */ }
+    };
+    if (['tat', 'off', 'reset', 'huy'].includes(raw)) {
+      const was = ST.speedInfo().active; ST.setSpeed(1, 0);
+      if (was) await announce('Sự kiện kết thúc', '🛑 Sự kiện **tăng tốc tu luyện** đã kết thúc. Tốc độ tu luyện trở lại bình thường.');
+      return ctx.send('🛑 Đã tắt sự kiện tăng tốc tu luyện (về ×1).');
+    }
     const m = Number(raw);
     if (!(m >= ST.SPEED_MIN && m <= ST.SPEED_MAX)) return ctx.send(`❌ Hệ số phải từ ${ST.SPEED_MIN} đến ${ST.SPEED_MAX}.`);
     ST.setSpeed(m, Math.max(0, Number(ctx.args.so_phut) || 0));
+    if (m !== 1) await announce('Tăng tốc tu luyện', `${E.tangtoc} **Thiên địa linh khí cuồn cuộn!** Mọi tu sĩ được tăng tốc tu luyện **×${m}** (Tu Luyện, Bế Quan, Bế Quan Treo)${ST.speedInfo().until ? ` trong **${Math.ceil((ST.speedInfo().until - now()) / 60)} phút**` : ' cho đến khi Thiên Đạo thu hồi'}. Mau tu luyện nào!`);
     return ctx.send(`✅ ${show()}\nÁp dụng cho mọi người chơi ngay lập tức (nhân thêm lên tốc độ hiện tại của từng người). Không ảnh hưởng exp cần để đột phá.`);
   },
 });

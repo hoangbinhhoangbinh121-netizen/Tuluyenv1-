@@ -13,6 +13,8 @@ const { now, int, random, randInt, choice, fmtNum } = require('../util');
 const DIEM_LINH_NGO_MAX = 100;
 const BICANH_THUONGCO_CAN = 10;
 const BICANH_LINHGIOI_SCALE = [1.0, 1.6, 2.4];
+/** Tỉ lệ rơi Linh Phù/Tiên Phù (1 cái mỗi lần, dừng khi đủ K.PHITHANG_LINH_PHU_CAN) — /huongdantuchat đọc từ đây. */
+const LINHPHU_RATE = { thuong: 0.30, linhgioi: 0.35 };
 const BICANH_DACBIET_CONGPHAP_CHANCE = 0.15;
 
 const CHAINS = [
@@ -71,9 +73,9 @@ function doBicanh(userId, tierIdx = 0) {
     const g = randInt(1, 3); const nm = row.manh_ghep_phithang + g; up.manh_ghep_phithang = nm;
     msg += `\n🧩 Nhặt được **${g}** mảnh ghép Phi Thăng Lệnh (${nm}/${K.MANHGHEP_PHITHANG_CAN}, đủ ${K.MANHGHEP_PHITHANG_CAN} thì \`/chephithanglenh\` để chế thành 1 ${E.linhgioilenh}).`;
   }
-  const isHTVM = realmIdx === 5 && row.stage_index === 3;
+  const isHTVM = realmIdx === K.HOATHAN_REALM_IDX && row.stage_index >= K.HOATHAN_VIENMAN_STAGE;   // v13.9: sửa lỗi cũ — Viên Mãn Hóa Thần là tầng 20 (index 19), không phải index 3
   const canPhu = isHTVM || row.world_tier > 0; const pc = R.phuCol(row.world_tier);
-  if (canPhu && row[pc] < K.PHITHANG_LINH_PHU_CAN && random() < 0.30) {
+  if (canPhu && row[pc] < K.PHITHANG_LINH_PHU_CAN && random() < LINHPHU_RATE.thuong) {
     up[pc] = row[pc] + 1;
     msg += `\n${E.linhphu} Bạn cảm ngộ được 1 mảnh **${R.linhphuLabel(row)}** cho nhiệm vụ Con Đường Phi Thăng (${row[pc] + 1}/${K.PHITHANG_LINH_PHU_CAN}).`;
   }
@@ -182,7 +184,7 @@ function doBicanhLinhgioi(userId, subKey) {
   const up = { tu_vi: row.tu_vi + tuVi, linh_thach: row.linh_thach + lt, last_bicanh_linhgioi: t };
   const loot = [`**${fmtNum(tuVi)}** tu vi`, `**${fmtNum(lt)}** ${E.linhthach} Linh Thạch`];
   const pc = R.phuCol(row.world_tier);
-  if (row[pc] < K.PHITHANG_LINH_PHU_CAN && random() < 0.35) {
+  if (row[pc] < K.PHITHANG_LINH_PHU_CAN && random() < LINHPHU_RATE.linhgioi) {
     up[pc] = row[pc] + 1;
     loot.push(`${E.linhphu} **1 ${R.linhphuLabel(row)}** (${row[pc] + 1}/${K.PHITHANG_LINH_PHU_CAN})`);
   }
@@ -241,6 +243,6 @@ function doBicanhLinhgioi(userId, subKey) {
 }
 
 module.exports = {
-  CHAINS, DACBIET_GROUPS, DIEM_LINH_NGO_MAX, BICANH_THUONGCO_CAN, ITEM_EMOJI, ITEM_COL, ITEM_LABEL,
+  LINHPHU_RATE, BICANH_LINHGIOI_SCALE, CHAINS, DACBIET_GROUPS, DIEM_LINH_NGO_MAX, BICANH_THUONGCO_CAN, ITEM_EMOJI, ITEM_COL, ITEM_LABEL,
   doBicanh, doBicanhDacBiet, doChePhithangLenh, allLinhgioiSubtiers, loadLinhgioiProgress, doBicanhLinhgioi,
 };

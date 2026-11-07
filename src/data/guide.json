@@ -45,6 +45,10 @@
         "Hồ sơ Linh Căn: hành, độ tinh khiết, thức tỉnh (3 lần), tiến hóa, tương khắc."
       ],
       [
+        "huongdantuchat",
+        "Hướng dẫn đầy đủ: tiến độ, Thiên Bảo, Truyền Thừa, thức tỉnh, tiến hóa."
+      ],
+      [
         "treoquan",
         "Bế quan treo máy — tu luyện tự động tối đa 4 giờ/phiên, đủ hạn tự xuất quan cưỡng chế, gõ lại để làm mới."
       ],
@@ -280,6 +284,30 @@
       [
         "thuhoilinhthach",
         "[Admin] Thu hồi bớt Linh Thạch của 1 thành viên về đúng 1 mốc cố định."
+      ],
+      [
+        "fullexp",
+        "[Admin] Đầy tu vi cho 1 thành viên (đủ đột phá tầng kế)."
+      ],
+      [
+        "tangthechat",
+        "[Admin] Tặng Thể Chất chỉ định cho 1 thành viên."
+      ],
+      [
+        "tanglinhcan",
+        "[Admin] Tặng Linh Căn chỉ định cho 1 thành viên."
+      ],
+      [
+        "rolltuchat",
+        "[Admin] Roll lại ngẫu nhiên Thể Chất / Linh Căn của 1 thành viên."
+      ],
+      [
+        "thuhoituchat",
+        "[Admin] Thu hồi, trả Thể Chất / Linh Căn về bản gốc."
+      ],
+      [
+        "tangtoctuluyen",
+        "[Admin] Tăng tốc tu luyện toàn server (có thông báo kênh thế giới, tự hết hạn)."
       ]
     ]
   }
