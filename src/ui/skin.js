@@ -1,7 +1,7 @@
 'use strict';
 /**
  * LỚP ĐỒNG BỘ GIAO DIỆN — mọi tin nhắn bot gửi ra (tính năng cũ lẫn mới) đều đi qua đây để:
- *  • Embed cũ: đổi màu về bảng màu v7, thêm footer "✦ Tiên Giới Bot v14 · Thiên Đạo" + timestamp, ép giới hạn Discord.
+ *  • Embed cũ: đổi màu về bảng màu v7, thêm footer "✦ Tiên Giới Bot v14.1 · Thiên Đạo" + timestamp, ép giới hạn Discord.
  *  • Tin nhắn chữ thuần ("❌ …", "⏳ …", "✅ …") → Embed chuẩn (thành công/lỗi/cooldown/cảnh báo/thông tin) có mã lỗi E00x.
  *  • Mọi emoji tuỳ chỉnh cũ gắn cứng ID → emoji pixel hiện hành (không bao giờ hiện ":tên:" thô).
  *  • Bọc interaction: reply/editReply/followUp/update an toàn (không lỗi "đã trả lời"), tự báo "đang xử lý" nếu chậm >2,2s.

@@ -124,6 +124,7 @@ function talentTables() {
 }
 
 module.exports = {
+  get pets() { return require('./petBalance'); },   // v14.0: cân bằng Linh Thú tập trung tại game/petBalance.js
   B, growthMult, physiqueStatMult, stageGain, scaledFlat, realmProgress, pvpPowers, pvpStake, warHitFrac,
   paceMinutes, tuluyenBase, dongquanBase, paceFactor, talentMult, talentBase, effectiveTalent, talentTables,
 };

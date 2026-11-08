@@ -105,15 +105,6 @@ function doLuyenkhi(userId) {
   return `⚒️ Luyện thành pháp bảo mới! Vĩnh viễn +${a} Công Kích, +${d} Phòng Ngự.`;
 }
 
-function doNuoiduong(userId) {
-  const row = Cu.getCultivator(userId);
-  if (!row.linh_thu) return '❌ Bạn chưa có Linh Thú. Hãy khám phá Bí Cảnh để có cơ hội nhặt được trứng.';
-  const cost = 30 * (row.linh_thu_level + 1);
-  if (row.tu_vi < cost) return `❌ Cần ${cost} tu vi để nuôi dưỡng ${row.linh_thu} (hiện có ${row.tu_vi}).`;
-  Cu.updateCultivator(userId, { tu_vi: row.tu_vi - cost, linh_thu_level: row.linh_thu_level + 1, hp: row.hp + BAL.scaledFlat(5, row.realm_index), atk: row.atk + BAL.scaledFlat(2, row.realm_index) });
-  return `${E.dongthanh} ${row.linh_thu} đã lên cấp ${row.linh_thu_level + 1}! (+${BAL.scaledFlat(5, row.realm_index)} Sinh Mệnh, +${BAL.scaledFlat(2, row.realm_index)} Công Kích cho bạn)`;
-}
-
 // ---------- Đan Dược Phá Giới ----------
 function buyDanPhaGioi(userId) {
   const row = Cu.getCultivator(userId);
@@ -197,6 +188,6 @@ function useDanDuoc(userId, key) {
 }
 
 module.exports = {
-  refreshRotatingDanduoc, getCurrentDanduocList, buyDanPhuong, doLuyendan, doSudungdan, doLuyenkhi, doNuoiduong,
+  refreshRotatingDanduoc, getCurrentDanduocList, buyDanPhuong, doLuyendan, doSudungdan, doLuyenkhi,
   buyDanPhaGioi, craftDanPhaGioi, doCanDanGiamDotpha, doTaytuyReroll, doTaytuyNuabanReroll, getDanDuocUses, useDanDuoc,
 };

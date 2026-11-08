@@ -17,23 +17,50 @@ const NODE_ORDER = ['bac', 'tay', 'trungtam', 'dong', 'nam'];
 const TICK_SECONDS = 10; const NODE_CAPTURE_SECONDS = 30; const WIN_SCORE = 5000; const KILL_POINTS = 10;
 const REWARD_WIN_CONGHIEN = 10000; const REWARD_WIN_LINHTHACH = 5000000; const REWARD_LOSE_CONGHIEN = 5000; const REWARD_LOSE_LINHTHACH = 2000000;
 const REWARD_WIN_TITLE = 'Bá Chủ Bát Hoang'; const CRIT_CHANCE = 0.15; const CRIT_MULT = 1.5; const DODGE_CHANCE = 0.10;
-const REVIVE_SECONDS = 20; const ATTACK_COOLDOWN_SECONDS = 2; const RUTKHO_DAILY_LIMIT = 5000000; const WARBAR_LENGTH = 10;
+const REVIVE_SECONDS = 20; const ATTACK_COOLDOWN_SECONDS = 1; const RUTKHO_DAILY_LIMIT = 5000000; const WARBAR_LENGTH = 10;
 const WAR_DURATION = CD.WAR_DURATION_SECONDS; const REWARD_WIN_BUFF_SECONDS = CD.REWARD_WIN_BUFF_SECONDS;
 
 const warbar = (pct) => { const f = Math.max(0, Math.min(WARBAR_LENGTH, Math.round(WARBAR_LENGTH * pct / 100))); return E.warbar_fill.repeat(f) + E.warbar_empty.repeat(WARBAR_LENGTH - f); };
 const fmtTimeLeft = (s) => { s = Math.max(0, int(s)); return `${Math.floor(s / 60)}p${String(s % 60).padStart(2, '0')}s`; };
-/** v14: Admin của bot (ADMIN_DISCORD_IDS / ADMIN_CODE_APPROVER_IDS, gồm cả chủ bot tự dò). */
-const isBotAdmin = (userId) => userId != null && (K.ADMIN_DISCORD_IDS.some((x) => String(x) === String(userId)) || K.ADMIN_CODE_APPROVER_IDS.some((x) => String(x) === String(userId)));
-/** v14: Admin được tham chiến bất kể cảnh giới / thế giới (truyền userId để áp dụng). */
-const isEligible = (row, userId) => (!!row && isBotAdmin(userId)) || (!!row && row.world_tier === 0 && (row.realm_index < K.HOATHAN_REALM_IDX || (row.realm_index === K.HOATHAN_REALM_IDX && row.stage_index <= K.HOATHAN_VIENMAN_STAGE)));
-const eligibilityText = () => 'Phàm Giới, tu vi tối đa **Hóa Thần Viên Mãn**';
+// v14.0: Tông Môn Chiến tách làm 2 chiến trường riêng — Nhân Giới (Phàm Giới, tối đa Hóa Thần Viên Mãn) và Linh Giới (đã Phi Thăng) — mỗi bên tự chiến với nhau.
+const WORLDS = { 0: { key: 'nhan', name: 'Nhân Giới', emoji: '🌏' }, 1: { key: 'linh', name: 'Linh Giới', emoji: '🌌' } };
+const worldOf = (row) => (row && row.world_tier > 0 ? 1 : 0);
+const worldName = (w) => (WORLDS[w] || WORLDS[0]).name;
+const worldLabel = (w) => `${(WORLDS[w] || WORLDS[0]).emoji} ${worldName(w)}`;
+const isNhanEligible = (row) => !!row && row.world_tier === 0 && (row.realm_index < K.HOATHAN_REALM_IDX || (row.realm_index === K.HOATHAN_REALM_IDX && row.stage_index <= K.HOATHAN_VIENMAN_STAGE));
+/** world = null → đủ điều kiện ở chiến trường của chính thế giới mình; world = 0/1 → phải đúng chiến trường đó. */
+const isEligible = (row, world = null) => {
+  if (!row) return false;
+  const w = worldOf(row);
+  if (world !== null && world !== undefined && Number(world) !== w) return false;
+  return w === 1 ? true : isNhanEligible(row);
+};
+const eligibilityText = (world = 0) => (Number(world) === 1 ? 'người đã Phi Thăng lên **Linh Giới** trở lên' : 'Phàm Giới, tu vi tối đa **Hóa Thần Viên Mãn**');
+/** Sát thương mặc định khi Admin bấm Giao Chiến (hạ gục tức thì). */
+const ADMIN_DAMAGE = 100000000000000000;
 
-const getActiveWar = (guildId) => D.get("SELECT * FROM sect_wars WHERE guild_id = ? AND status IN ('registration','launching','active') ORDER BY war_id DESC LIMIT 1", guildId);
+// ---- chiến báo (chỉ lưu trong bộ nhớ — hiện trên bản đồ thay vì spam kênh) ----
+const WARLOG = new Map();
+function pushWarLog(warId, line) {
+  const k = String(warId); const a = WARLOG.get(k) || []; a.push(line); while (a.length > 6) a.shift(); WARLOG.set(k, a);
+  if (WARLOG.size > 50) WARLOG.delete(WARLOG.keys().next().value);
+}
+const getWarLog = (warId) => WARLOG.get(String(warId)) || [];
+// ---- nhật ký thao tác của từng người (bảng giao chiến) ----
+const USERLOG = new Map();
+function pushUserLog(warId, userId, line) {
+  const k = `${warId}:${userId}`; const a = USERLOG.get(k) || []; a.push(line); while (a.length > 5) a.shift(); USERLOG.set(k, a);
+  if (USERLOG.size > 2000) USERLOG.delete(USERLOG.keys().next().value);
+}
+const getUserLog = (warId, userId) => USERLOG.get(`${warId}:${userId}`) || [];
+
+const getActiveWar = (guildId, world = 0) => D.get("SELECT * FROM sect_wars WHERE guild_id = ? AND COALESCE(world, 0) = ? AND status IN ('registration','launching','active') ORDER BY war_id DESC LIMIT 1", guildId, Number(world) || 0);
+const getActiveWars = (guildId) => D.all("SELECT * FROM sect_wars WHERE guild_id = ? AND status IN ('registration','launching','active') ORDER BY war_id DESC", guildId);
 const getOtherActiveWarForUser = (userId, excludeGuild) => D.get("SELECT w.* FROM sect_wars w JOIN sect_war_participants p ON p.war_id = w.war_id WHERE p.user_id = ? AND w.status IN ('registration','launching','active') AND w.guild_id != ? ORDER BY w.war_id DESC LIMIT 1", userId, excludeGuild);
 
-function createWar(guildId, channelId, status = 'registration') {
+function createWar(guildId, channelId, status = 'registration', world = 0) {
   return D.transaction(() => {
-    const id = D.run('INSERT INTO sect_wars (guild_id, channel_id, status, started_at, ends_at) VALUES (?, ?, ?, ?, 0)', guildId, channelId, status, now()).lastInsertRowid;
+    const id = D.run('INSERT INTO sect_wars (guild_id, channel_id, status, started_at, ends_at, world) VALUES (?, ?, ?, ?, 0, ?)', guildId, channelId, status, now(), Number(world) || 0).lastInsertRowid;
     for (const key of Object.keys(NODES)) D.run('INSERT INTO sect_war_nodes (war_id, node_key, owner_sect_id, capture_sect_id, capture_progress) VALUES (?, ?, NULL, NULL, 0)', id, key);
     return id;
   });
@@ -77,7 +104,14 @@ function getAttackableEnemies(warId, attackerId) {
   return { nodeKey: part.node_key, enemies };
 }
 
-function doAttack(warId, attackerId, targetId) {
+/** Mục tiêu tự chọn: địch tại cùng cứ điểm có tỉ lệ máu thấp nhất. */
+function pickAutoTarget(enemies) {
+  let best = null; let bestR = Infinity;
+  for (const x of enemies) { const mx = Math.max(1, x.max_hp || 1); const r = (x.hp ? x.hp : mx) / mx; if (r < bestR) { bestR = r; best = x; } }
+  return best;
+}
+/** opts.admin = true → Admin: bỏ qua né/bạo kích, trừ thẳng ADMIN_DAMAGE sinh lực đối thủ (hạ gục tức thì). Trả về chuỗi kết quả. */
+function doAttack(warId, attackerId, targetId, opts = {}) {
   const part = getParticipant(warId, attackerId);
   if (isDown(part)) return `☠️ Bạn đang trọng thương, còn **${int(Math.max(0, part.revive_at - now()))}s** nữa mới hồi sinh được.`;
   if (!part || !part.node_key) return '❌ Bạn chưa tiến quân vào cứ điểm nào — bấm nút tiến quân trước.';
@@ -85,14 +119,19 @@ function doAttack(warId, attackerId, targetId) {
   const target = D.get('SELECT * FROM sect_war_participants WHERE war_id = ? AND user_id = ? AND node_key = ? AND sect_id != ? AND (revive_at IS NULL OR revive_at <= ?)', warId, targetId, nodeKey, part.sect_id, t);
   if (!target) return '❌ Mục tiêu không còn ở cứ điểm này nữa (đã di chuyển/bị hạ) — hãy chọn lại.';
   const atkRow = Cu.getCultivator(attackerId); const defRow = Cu.getCultivator(target.user_id);
-  if (random() < DODGE_CHANCE) return `🌀 <@${target.user_id}> đã né tránh đòn tấn công của <@${attackerId}> tại **${NODES[nodeKey].name}**!`;
-  const isCrit = random() < CRIT_CHANCE;
+  const admin = !!opts.admin;
+  if (!admin && random() < DODGE_CHANCE) return `🌀 <@${target.user_id}> đã né tránh đòn tấn công của <@${attackerId}> tại **${NODES[nodeKey].name}**!`;
+  const isCrit = !admin && random() < CRIT_CHANCE;
   const maxHp = target.max_hp || Math.max(1, defRow ? Cu.effectiveMaxHp(defRow) : 1);
   // v12.3: cùng mô hình % sinh mệnh với PvP (chênh cảnh giới/chỉ số quyết định có kiểm soát, không còn atk - def tuyệt đối)
-  const frac = (atkRow && defRow) ? BAL.warHitFrac(atkRow, defRow, Cu) : 0.1;
-  let damage = int(maxHp * frac * randUniform(0.6, 1.4));
-  if (isCrit) damage = int(damage * CRIT_MULT);
-  damage = Math.max(1, damage);
+  let damage;
+  if (admin) damage = ADMIN_DAMAGE;
+  else {
+    const frac = (atkRow && defRow) ? BAL.warHitFrac(atkRow, defRow, Cu) : 0.1;
+    damage = int(maxHp * frac * randUniform(0.6, 1.4));
+    if (isCrit) damage = int(damage * CRIT_MULT);
+    damage = Math.max(1, damage);
+  }
   const hp = (target.hp ? target.hp : maxHp) - damage;
   const critTxt = isCrit ? ' 💥 **Bạo Kích!**' : '';
   if (hp <= 0) {
@@ -101,33 +140,12 @@ function doAttack(warId, attackerId, targetId) {
       D.run('UPDATE sect_war_participants SET hp = 0, node_key = NULL, revive_at = ? WHERE war_id = ? AND user_id = ?', t + REVIVE_SECONDS, warId, target.user_id);
       addScore(warId, part.sect_id, KILL_POINTS);
     });
+    pushWarLog(warId, admin ? `👑 <@${attackerId}> thiên phạt hạ gục <@${target.user_id}> tại ${NODES[nodeKey].name}` : `☠️ <@${attackerId}> hạ gục <@${target.user_id}> tại ${NODES[nodeKey].name}`);
+    if (admin) return `👑 **ADMIN** <@${attackerId}> giáng thiên phạt lên <@${target.user_id}> tại **${NODES[nodeKey].name}**: **-${String(ADMIN_DAMAGE)} HP** → ☠️ **HẠ GỤC**! (+${KILL_POINTS} điểm cho tông môn). Đối phương trọng thương **${REVIVE_SECONDS}s**.`;
     return `☠️ <@${attackerId}> đã **HẠ GỤC** <@${target.user_id}> tại **${NODES[nodeKey].name}**!${critTxt} (-${damage} HP, +${KILL_POINTS} điểm cho tông môn). Đối phương trọng thương **${REVIVE_SECONDS}s**.`;
   }
   D.run('UPDATE sect_war_participants SET hp = ?, assists = assists + 1 WHERE war_id = ? AND user_id = ?', hp, warId, target.user_id);
   return `⚔️ <@${attackerId}> gây **${damage}** sát thương lên <@${target.user_id}> tại **${NODES[nodeKey].name}**.${critTxt} (HP còn lại: ${Math.max(0, hp)}/${maxHp})`;
-}
-
-// ---- v14: Thiên Đạo Chưởng (chiêu riêng của Admin) ----
-const THIEN_DAO_SKILL = 'Thiên Đạo Chưởng';
-const THIEN_DAO_DAMAGE_TEXT = '100000000000000000000000000000000';   // hiển thị -100000000000000000000000000000000 Máu (vượt giới hạn số nguyên DB nên chỉ là chuỗi hiển thị; HP lưu = 0)
-const THIEN_DAO_MAX_MENTIONS = 20;
-/**
- * Admin bấm "Giao Chiến" → tự tung Thiên Đạo Chưởng, không cần chọn mục tiêu:
- * hạ gục MỌI địch (tông môn khác) đang đứng ở cùng cứ điểm. Không né tránh, không bạo kích, không phụ thuộc chỉ số.
- * Mỗi mạng vẫn được tính +KILL_POINTS điểm tông môn và +1 kill (MVP) như đòn thường.
- */
-function doThienDaoChuong(warId, adminId) {
-  const r = getAttackableEnemies(warId, adminId);
-  if (r.error) return r.error;
-  const part = getParticipant(warId, adminId); const t = now(); const { nodeKey, enemies } = r;
-  D.transaction(() => {
-    for (const e of enemies) D.run('UPDATE sect_war_participants SET hp = 0, node_key = NULL, revive_at = ? WHERE war_id = ? AND user_id = ?', t + REVIVE_SECONDS, warId, e.user_id);
-    D.run('UPDATE sect_war_participants SET kills = kills + ? WHERE war_id = ? AND user_id = ?', enemies.length, warId, adminId);
-    addScore(warId, part.sect_id, KILL_POINTS * enemies.length);
-  });
-  const shown = enemies.slice(0, THIEN_DAO_MAX_MENTIONS).map((e) => `<@${e.user_id}>`).join(', ');
-  const more = enemies.length > THIEN_DAO_MAX_MENTIONS ? ` và ${enemies.length - THIEN_DAO_MAX_MENTIONS} người khác` : '';
-  return `🌌 <@${adminId}> tung chiêu **${THIEN_DAO_SKILL}**: **-${THIEN_DAO_DAMAGE_TEXT} Máu**!\n☠️ **HẠ GỤC ${enemies.length}** địch tại **${NODES[nodeKey].name}**: ${shown}${more} (+${KILL_POINTS * enemies.length} điểm cho tông môn). Đối phương trọng thương **${REVIVE_SECONDS}s**.`;
 }
 
 // ---- vòng lặp nền ----
@@ -226,7 +244,7 @@ function doNopkho(userId, amount) {
 
 module.exports = {
   NODES, NODE_ORDER, TICK_SECONDS, NODE_CAPTURE_SECONDS, WIN_SCORE, REWARD_WIN_TITLE, REWARD_WIN_LINHTHACH, RUTKHO_DAILY_LIMIT, REVIVE_SECONDS,
-  isBotAdmin, doThienDaoChuong, THIEN_DAO_SKILL, THIEN_DAO_DAMAGE_TEXT,
   warbar, fmtTimeLeft, isEligible, eligibilityText, getActiveWar, getOtherActiveWarForUser, createWar, activateWar, joinWar, getParticipant, isDown, moveToNode,
-  getWarNodes, getWarScores, checkActionCooldown, getAttackableEnemies, doAttack, runTick, khotongInfo, doRutkho, doNopkho,
+  getWarNodes, getWarScores, checkActionCooldown, getAttackableEnemies, doAttack, runTick,
+  WORLDS, worldOf, worldName, worldLabel, getActiveWars, pickAutoTarget, ADMIN_DAMAGE, getWarLog, getUserLog, pushUserLog, pushWarLog, khotongInfo, doRutkho, doNopkho,
 };

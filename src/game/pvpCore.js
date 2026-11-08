@@ -15,6 +15,7 @@ const { geminiGenerate } = require('./ai');
 const { now, int, random, randUniform, randInt, choice } = require('../util');
 const BAL = require('./balance');
 const T = require('./talent');
+const PetC = require('./petCombat');
 
 const ATTACK_NORMAL = K.ATTACK_NORMAL;
 const PVP_ACTION_DEFEND = '🛡️ Phòng Thủ';
@@ -45,6 +46,12 @@ const hpBar = (cur, max, width = 10) => {
   const f = Math.round(width * Math.min(1, cur / max));
   return '█'.repeat(f) + '░'.repeat(width - f);
 };
+/** Giữ khối 1 hiệp ≤ 1000 ký tự (giới hạn field embed) nhưng LUÔN giữ dòng sinh lực cuối cùng. */
+const fitBlock = (block, max = 1000) => {
+  const text = block.join('\n'); if (text.length <= max) return text;
+  const last = block[block.length - 1]; const head = block.slice(0, -1).join('\n');
+  return `${head.slice(0, Math.max(0, max - last.length - 2))}…\n${last}`;
+};
 const pad4 = (skills) => { const o = skills.slice(0, 4); while (o.length < 4) o.push(''); return o; };
 const statArrow = (a, b) => (a > b ? ['🔺', ''] : b > a ? ['', '🔺'] : ['', '']);
 
@@ -55,6 +62,14 @@ function roundAction(attackerTag, defenderTag, atkStat, defStat, powerAtk, power
   const lines = [];
   action = action !== null && action !== undefined ? action : choice(skills);
   const record = { attacker: attackerTag, target: defenderTag, selected_action: action, dodge: false, damage: null, is_crit: false, counter_damage: null, effect: null, effect_duration: null, spirit_beast_triggered: null, heal_amount: null };
+  // v14.0: Linh Thú — mods.pet = { arena } (xem game/petCombat.js). Không có arena → hành vi cũ.
+  const pc = mods && mods.pet ? mods.pet : null; const PC = pc ? require('./petCombat') : null;
+  const atkKey = defenderKey === 'B' ? 'A' : 'B';
+  if (pc) {
+    const pr = PC.pre(pc.arena, atkKey, hpPool);
+    lines.push(...pr.lines);
+    if (pr.skip) { record.skipped = pr.stunned ? 'stun' : 'down'; record.hp_a = hpPool.A; record.hp_b = hpPool.B; return { lines, record }; }
+  }
   if (action === ATTACK_NORMAL) lines.push(`${attackerTag} tung ra ${action}.`);
   else if (action === PVP_ACTION_KILLMOVE) lines.push(`${attackerTag} tung ra đòn **${action}** quyết định!`);
   else lines.push(`${attackerTag} sử dụng **${action}**.`);
@@ -62,10 +77,12 @@ function roundAction(attackerTag, defenderTag, atkStat, defStat, powerAtk, power
   // ---- v12.3: sát thương tính theo % thanh sinh mệnh (100), không còn one-shot theo chỉ số tuyệt đối ----
   const rp = Math.min(3, Math.max(0.33, powerAtk / Math.max(1.0, powerDef)));       // sức mạnh tổng (đã gồm chênh cảnh giới + công pháp)
   let dodge = 0.07 + Math.min(0.18, Math.max(0.0, ((powerDef - powerAtk) / Math.max(1.0, powerAtk)) * 0.10));
-  dodge = Math.max(0.02, Math.min(0.30, dodge) + (dm.dodge || 0));
+  dodge = Math.max(0.02, Math.min(0.30, dodge) + (dm.dodge || 0) + (pc ? PC.dynDodge(pc.arena, defenderKey) : 0));
   if (random() < dodge) {
     lines.push(`🌪️ ${defenderTag} né tránh thành công.`);
-    record.dodge = true; record.hp_a = hpPool.A; record.hp_b = hpPool.B;
+    record.dodge = true;
+    if (pc) PC.post(pc.arena, atkKey, hpPool, lines, record);
+    record.hp_a = hpPool.A; record.hp_b = hpPool.B;
     return { lines, record };
   }
   const armor = atkStat / (atkStat + defStat * (1 - (am.pierce || 0)) * 0.7 + 1);                              // 0..1 (ngang nhau ≈ 0.588)
@@ -76,8 +93,13 @@ function roundAction(attackerTag, defenderTag, atkStat, defStat, powerAtk, power
   if (dm.dr) damage = Math.max(1, Math.round(damage * (1 - dm.dr)));
   const isCrit = forceCrit ? true : random() < Math.min(0.32, 0.10 + Math.max(0.0, rp - 1) * 0.10) + (am.crit || 0);
   if (isCrit) damage = Math.max(1, Math.round(damage * 1.5 * (1 + (am.critMult || 0))));
-  damage = Math.min(damage, Math.ceil(hpPool[defenderKey]));
-  hpPool[defenderKey] = Math.max(0, hpPool[defenderKey] - damage);
+  if (pc) {
+    damage = PC.outgoing(pc.arena, atkKey, damage, hpPool);
+    damage = PC.incoming(pc.arena, defenderKey, atkKey, damage, hpPool, lines);   // khiên → Hộ Chủ → phản thương; tự trừ sinh lực, trả sát thương thực
+  } else {
+    damage = Math.min(damage, Math.ceil(hpPool[defenderKey]));
+    hpPool[defenderKey] = Math.max(0, hpPool[defenderKey] - damage);
+  }
   lines.push(`💥 Gây ${damage} sát thương lên ${defenderTag}.`);
   if (isDefending) lines.push(`🛡️ ${defenderTag} đang phòng thủ, sát thương giảm đáng kể.`);
   record.damage = damage;
@@ -99,7 +121,8 @@ function roundAction(attackerTag, defenderTag, atkStat, defStat, powerAtk, power
     lines.push(`✨ ${defenderTag} nhận **${effect}** (${dur} hiệp).`);
     record.effect = effect; record.effect_duration = dur;
   }
-  if (petName && random() < 0.2) { lines.push(`🐉 ${petName} phát động hiệu quả.`); record.spirit_beast_triggered = petName; }
+  if (pc) PC.post(pc.arena, atkKey, hpPool, lines, record);
+  else if (petName && random() < 0.2) { lines.push(`🐉 ${petName} phát động hiệu quả.`); record.spirit_beast_triggered = petName; }
   record.hp_a = hpPool.A; record.hp_b = hpPool.B;
   return { lines, record };
 }
@@ -151,9 +174,10 @@ function doPvp(userId, targetId) {
   const [mAtkA, mAtkB] = statArrow(atkA, atkB); const [mDefA, mDefB] = statArrow(defA, defB); const [mSpdA, mSpdB] = statArrow(spdA, spdB); const [mPowA, mPowB] = statArrow(powerA, powerB);
   const header = `🅰️ <@${userId}> (${realmA}) — Công ${atkA}${mAtkA} | Thủ ${defA}${mDefA} | Tốc ${spdA}${mSpdA} | Lực Chiến ${powerA}${mPowA}\n🅱️ <@${targetId}> (${realmB}) — Công ${atkB}${mAtkB} | Thủ ${defB}${mDefB} | Tốc ${spdB}${mSpdB} | Lực Chiến ${powerB}${mPowB}${buffNote}`;
   const skillsA = pvpActionListFor(a); const skillsB = pvpActionListFor(b);
-  const petA = a.linh_thu || ''; const petB = b.linh_thu || '';
+  const arena = PetC.buildArena(a, b);
+  const petA = arena.A.pet ? arena.A.pet.name : ''; const petB = arena.B.pet ? arena.B.pet.name : '';
   const hpMax = 100; const hp = { A: hpMax, B: hpMax };
-  const modsA = T.combatMods(a); const modsB = T.combatMods(b);
+  const modsA = PetC.mergeMods(T.combatMods(a), arena.A); const modsB = PetC.mergeMods(T.combatMods(b), arena.B);
   const tagA = `<@${userId}>`; const tagB = `<@${targetId}>`;
   const blocks = []; const battleRounds = [];
   for (let rnd = 1; rnd <= PVP_ROUNDS; rnd++) {
@@ -164,12 +188,12 @@ function doPvp(userId, targetId) {
     for (const [ak, dk] of [[first, second], [second, first]]) {
       if (hp[ak] <= 0 || hp[dk] <= 0) continue;
       const r = ak === 'A'
-        ? roundAction(tagA, tagB, atkA, defB, powerA, powerB, skillsA, petA, hp, 'B', null, false, false, { att: modsA, def: modsB })
-        : roundAction(tagB, tagA, atkB, defA, powerB, powerA, skillsB, petB, hp, 'A', null, false, false, { att: modsB, def: modsA });
+        ? roundAction(tagA, tagB, atkA, defB, powerA, powerB, skillsA, petA, hp, 'B', null, false, false, { att: modsA, def: modsB, pet: { arena } })
+        : roundAction(tagB, tagA, atkB, defA, powerB, powerA, skillsB, petB, hp, 'A', null, false, false, { att: modsB, def: modsA, pet: { arena } });
       block.push(...r.lines); recs.push(r.record);
     }
     block.push(`❤️ ${tagA}: ${Math.max(0, hp.A)}/${hpMax}  |  ${tagB}: ${Math.max(0, hp.B)}/${hpMax}`);
-    blocks.push([rnd, block.join('\n').slice(0, 1000)]);
+    blocks.push([rnd, fitBlock(block)]);
     battleRounds.push({ round: rnd, actions: recs, hp_a_after: Math.max(0, hp.A), hp_b_after: Math.max(0, hp.B) });
   }
   let aWins;
@@ -179,16 +203,19 @@ function doPvp(userId, targetId) {
   const loserNewHp = aWins ? Math.max(1, int(b.cur_hp * 0.85)) : Math.max(1, int(a.cur_hp * 0.85));
   const real = settlePvpAtomic(userId, targetId, winnerId, stakeCap, loserNewHp, blocks.length, t);
   if (real === null) return '⏳ Bạn vừa đấu pháp ở nơi khác trước đó rất gần đây, trận này không được tính. Vui lòng thử lại.';
+  const petSettle = PetC.settle(arena, aWins ? 'A' : 'B');
   const resultLine = aWins
     ? `${E.cup} <@${userId}> chiến thắng đấu pháp! ${real > 0 ? `Đoạt được **${real}** tu vi từ đối thủ.` : 'Đối thủ không còn tu vi để đoạt.'}`
     : `💥 <@${targetId}> chiến thắng đấu pháp! <@${userId}> ${real > 0 ? `mất **${real}** tu vi.` : 'nhưng không mất tu vi (đã cạn).'}`;
   const embed = new EmbedBuilder().setTitle('⚔️ ĐẤU PHÁP').setDescription(header).setColor(aWins ? 0xf1c40f : 0xe74c3c);
   for (const [rnd, text] of blocks) embed.addFields({ name: `⏱️ Hiệp ${rnd}/${PVP_ROUNDS}`, value: text, inline: false });
   embed.addFields({ name: `${E.cup} Kết Quả`, value: `${resultLine}\n🅰️ <@${userId}>: ${realmA}\n🅱️ <@${targetId}>: ${realmB}`, inline: false });
+  const petNotes = [petSettle.A && `🅰️ ${petSettle.A}`, petSettle.B && `🅱️ ${petSettle.B}`].filter(Boolean).join('\n');
+  if (petNotes) embed.addFields({ name: '🐾 Linh Thú', value: petNotes.slice(0, 1000), inline: false });
   const s4a = pad4(skillsA.slice(1)); const s4b = pad4(skillsB.slice(1));
   const aiContext = {
     ally_cultivation: a.cong_phap || 'Chưa trang bị công pháp', enemy_cultivation: b.cong_phap || 'Chưa trang bị công pháp',
-    ally_spirit_beast: petA || '(không có)', enemy_spirit_beast: petB || '(không có)',
+    ally_spirit_beast: PetC.describe(arena.A), enemy_spirit_beast: PetC.describe(arena.B),
     ally_skill_1: s4a[0], ally_skill_2: s4a[1], ally_skill_3: s4a[2], ally_skill_4: s4a[3],
     enemy_skill_1: s4b[0], enemy_skill_2: s4b[1], enemy_skill_3: s4b[2], enemy_skill_4: s4b[3],
     battle_data: JSON.stringify({ ally_tag: tagA, enemy_tag: tagB, ally_max_hp: hpMax, enemy_max_hp: hpMax, rounds: battleRounds, winner: aWins ? tagA : tagB }),
@@ -229,6 +256,7 @@ async function narratePvpViaAi(aiContext, fallbackEmbed) {
 }
 
 module.exports = {
+  fitBlock,
   ATTACK_NORMAL, PVP_ACTION_DEFEND, PVP_ACTION_KILLMOVE, PVP_ROUNDS, PVP_CHALLENGE_TIMEOUT, PVP_ROUND_TIMEOUT, PVP_LOCK_MESSAGE,
   pvpIsLocked, pvpSetLocked, hpBar, pad4, statArrow, roundAction, settlePvpAtomic, pvpActionListFor, doPvp, narratePvpViaAi, safeSubstitute,
 };

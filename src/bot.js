@@ -16,6 +16,7 @@ require('./commands/adminTuChat');
 require('./commands/guideTalent');
 require('./commands/admin');
 require('./commands/dan');
+require('./commands/pets');
 require('./commands/kho');
 require('./commands/chiendau');
 require('./commands/phithang');
@@ -100,9 +101,11 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
   });
   if (USE_MEMBERS) client.on(Events.GuildMemberRemove, (m) => {
     try {
-      const W = require('./game/sectwar'); const war = W.getActiveWar(m.guild.id); if (!war) return;
-      const part = W.getParticipant(war.war_id, m.id);
-      if (part && part.node_key) W.moveToNode(war.war_id, m.id, part.sect_id, null);
+      const W = require('./game/sectwar');
+      for (const war of W.getActiveWars(m.guild.id)) {
+        const part = W.getParticipant(war.war_id, m.id);
+        if (part && part.node_key) W.moveToNode(war.war_id, m.id, part.sect_id, null);
+      }
     } catch (e) { console.error('⚠️ GuildMemberRemove:', e.message); }
   });
   if (withContent) client.on(Events.MessageCreate, async (m) => {
@@ -115,7 +118,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v13.9 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v14.1 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);
@@ -124,6 +127,7 @@ async function main() {
   const driver = D.initDb();
   console.log(`🗄️ SQLite: ${D.DB_PATH} (driver: ${driver})`);
   try { const m = require('./game/talentOps').migrateAll(); console.log(`🧬 Thể Chất/Linh Căn v13.9: ${m.total} nhân vật, đã đồng bộ hồ sơ cho ${m.written} người.`); } catch (e) { console.error('⚠️ migrate Thể Chất/Linh Căn:', e); }
+  try { const n = require('./game/pets').migrateAll(); console.log(`🐾 Linh Thú v14.0: đã chuyển đổi ${n} Linh Thú kiểu cũ sang hệ thống mới.`); } catch (e) { console.error('⚠️ migrate Linh Thú:', e.message); }
   await syncPixelEmoji();
 
   process.on('unhandledRejection', (e) => console.error('⚠️ unhandledRejection:', e));

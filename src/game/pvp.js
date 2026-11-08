@@ -9,6 +9,7 @@ const Cu = require('./cultivator');
 const P = require('./pvpCore');
 const BAL = require('./balance');
 const T = require('./talent');
+const PetC = require('./petCombat');
 const F = require('./format');
 const { E } = require('./emoji');
 const { View, globalClickAllowed, EPHEMERAL } = require('../ui/kit');
@@ -32,10 +33,11 @@ function buildSession(guildId, channelId, aId, bId) {
   const [mSpdA, mSpdB] = P.statArrow(spdA, spdB); const [mPowA, mPowB] = P.statArrow(powerA, powerB);
   const header = `🅰️ <@${aId}> (${realmA}) — Công ${atkA}${mAtkA} | Thủ ${defA}${mDefA} | Tốc ${spdA}${mSpdA} | Lực Chiến ${powerA}${mPowA}\n🅱️ <@${bId}> (${realmB}) — Công ${atkB}${mAtkB} | Thủ ${defB}${mDefB} | Tốc ${spdB}${mSpdB} | Lực Chiến ${powerB}${mPowB}${buffNote}`;
   const hpMax = 100;
+  const arena = PetC.buildArena(a, b);
   const s = {
     id: crypto.randomBytes(6).toString('hex'), guild_id: guildId, channel_id: channelId, a_id: aId, b_id: bId,
-    mods: { A: T.combatMods(a), B: T.combatMods(b) }, atk: { A: atkA, B: atkB }, def_: { A: defA, B: defB }, spd: { A: spdA, B: spdB }, power: { A: powerA, B: powerB },
-    skills: { A: P.pvpActionListFor(a), B: P.pvpActionListFor(b) }, pet: { A: a.linh_thu || '', B: b.linh_thu || '' },
+    arena, mods: { A: PetC.mergeMods(T.combatMods(a), arena.A), B: PetC.mergeMods(T.combatMods(b), arena.B) }, atk: { A: atkA, B: atkB }, def_: { A: defA, B: defB }, spd: { A: spdA, B: spdB }, power: { A: powerA, B: powerB },
+    skills: { A: P.pvpActionListFor(a), B: P.pvpActionListFor(b) }, pet: { A: arena.A.pet ? arena.A.pet.name : '', B: arena.B.pet ? arena.B.pet.name : '' },
     tag: { A: `<@${aId}>`, B: `<@${bId}>` }, hp_max: hpMax, hp_pool: { A: hpMax, B: hpMax }, round: 1,
     actions: { A: null, B: null }, acted: { A: false, B: false }, resolving: false, round_token: 0, active_view: null,
     round_blocks: [], battle_data_rounds: [], header, realm_line: `🅰️ <@${aId}>: ${realmA}\n🅱️ <@${bId}>: ${realmB}`,
@@ -138,14 +140,15 @@ async function resolveRoundImpl(s) {
     const action = s.actions[ak];
     if (action === PVP_ACTION_DEFEND) {
       block.push(`${s.tag[ak]} thi triển **${PVP_ACTION_DEFEND}**, không ra đòn hiệp này.`);
+      block.push(...PetC.idle(s.arena, ak, hp));
       recs.push({ attacker: s.tag[ak], target: s.tag[dk], selected_action: PVP_ACTION_DEFEND, dodge: false, damage: null, is_crit: false, counter_damage: null, effect: null, effect_duration: null, spirit_beast_triggered: null, heal_amount: null, hp_a: hp.A, hp_b: hp.B });
       continue;
     }
-    const r = P.roundAction(s.tag[ak], s.tag[dk], s.atk[ak], s.def_[dk], s.power[ak], s.power[dk], s.skills[ak], s.pet[ak], hp, dk, action, s.actions[dk] === PVP_ACTION_DEFEND, action === PVP_ACTION_KILLMOVE, { att: s.mods[ak], def: s.mods[dk] });
+    const r = P.roundAction(s.tag[ak], s.tag[dk], s.atk[ak], s.def_[dk], s.power[ak], s.power[dk], s.skills[ak], s.pet[ak], hp, dk, action, s.actions[dk] === PVP_ACTION_DEFEND, action === PVP_ACTION_KILLMOVE, { att: s.mods[ak], def: s.mods[dk], pet: { arena: s.arena } });
     block.push(...r.lines); recs.push(r.record);
   }
   block.push(`❤️ ${s.tag.A}: ${Math.max(0, hp.A)}/${s.hp_max}  |  ${s.tag.B}: ${Math.max(0, hp.B)}/${s.hp_max}`);
-  s.round_blocks.push([rnd, block.join('\n').slice(0, 1000)]);
+  s.round_blocks.push([rnd, P.fitBlock(block)]);
   s.battle_data_rounds.push({ round: rnd, actions: recs, hp_a_after: Math.max(0, hp.A), hp_b_after: Math.max(0, hp.B) });
   if (!(hp.A <= 0 || hp.B <= 0 || rnd >= PVP_ROUNDS)) {
     s.round += 1; s.actions = { A: null, B: null }; s.acted = { A: false, B: false }; s.resolving = false; s.round_token += 1;
@@ -168,6 +171,7 @@ async function finishSession(s) {
   const loserNewHp = aWins ? Math.max(1, int((s.cur_hp_b || 0) * 0.85)) : Math.max(1, int((s.cur_hp_a || 0) * 0.85));
   const real = P.settlePvpAtomic(s.a_id, s.b_id, winnerId, BAL.pvpStake(s.rowA, s.rowB, aWins), loserNewHp, s.round_blocks.length, now());
   cleanupSession(s);
+  const petSettle = real === null ? { A: '', B: '' } : PetC.settle(s.arena, aWins ? 'A' : 'B');
   const m = s.message;
   if (real === null) {
     if (m) { try { await m.edit({ content: '⏳ Một trong hai bên vừa đấu pháp ở nơi khác trước đó rất gần đây, trận này không được tính.', embeds: [], components: [] }); } catch (_) { /* bỏ qua */ } }
@@ -179,13 +183,15 @@ async function finishSession(s) {
   const emb = new EmbedBuilder().setTitle('⚔️ ĐẤU PHÁP — KẾT THÚC').setDescription(s.header).setColor(aWins ? 0xf1c40f : 0xe74c3c);
   for (const [rnd, text] of s.round_blocks) emb.addFields({ name: `⏱️ Hiệp ${rnd}/${PVP_ROUNDS}`, value: text, inline: false });
   emb.addFields({ name: `${E.cup} Kết Quả`, value: `${resultLine}\n${s.realm_line}`, inline: false });
+  const petNotes = [petSettle.A && `🅰️ ${petSettle.A}`, petSettle.B && `🅱️ ${petSettle.B}`].filter(Boolean).join('\n');
+  if (petNotes) emb.addFields({ name: '🐾 Linh Thú', value: petNotes.slice(0, 1000), inline: false });
   if (m) { try { await m.edit({ embeds: [emb], components: [] }); } catch (_) { /* bỏ qua */ } }
   if (process.env.GEMINI_API_KEY && m) {
     const s4a = P.pad4(s.skills.A.slice(1)); const s4b = P.pad4(s.skills.B.slice(1));
     const ra = Cu.getCultivator(s.a_id); const rb = Cu.getCultivator(s.b_id);
     const ctx = {
       ally_cultivation: (ra && ra.cong_phap) || 'Chưa trang bị công pháp', enemy_cultivation: (rb && rb.cong_phap) || 'Chưa trang bị công pháp',
-      ally_spirit_beast: s.pet.A || '(không có)', enemy_spirit_beast: s.pet.B || '(không có)',
+      ally_spirit_beast: PetC.describe(s.arena.A), enemy_spirit_beast: PetC.describe(s.arena.B),
       ally_skill_1: s4a[0], ally_skill_2: s4a[1], ally_skill_3: s4a[2], ally_skill_4: s4a[3],
       enemy_skill_1: s4b[0], enemy_skill_2: s4b[1], enemy_skill_3: s4b[2], enemy_skill_4: s4b[3],
       battle_data: JSON.stringify({ ally_tag: s.tag.A, enemy_tag: s.tag.B, ally_max_hp: s.hp_max, enemy_max_hp: s.hp_max, rounds: s.battle_data_rounds, winner: aWins ? s.tag.A : s.tag.B }),

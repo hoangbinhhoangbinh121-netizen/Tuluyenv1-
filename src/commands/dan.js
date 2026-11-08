@@ -12,7 +12,6 @@ const { fmtNum } = require('../util');
 const simple = (name, description, fn) => defineCommand({ name, description, needsCultivator: true, run: (ctx) => ctx.send(fn(ctx.user.id, ctx)) });
 simple('luyendan', 'Luyện đan dược từ nguyên liệu', (u) => Dan.doLuyendan(u));
 simple('luyenkhi', 'Luyện pháp bảo từ nguyên liệu', (u) => Dan.doLuyenkhi(u));
-simple('linhthu', 'Nuôi dưỡng linh thú của bạn', (u) => Dan.doNuoiduong(u));
 simple('quaycongphap', 'Quay ngẫu nhiên 1 Công Pháp (không chọn tầng, giá cố định)', (u) => CP.doRandomCongphap(u));
 simple('taytuydan', 'Luyện Đan Tẩy Tủy Trọng Sinh — roll lại Linh Căn + Thể Chất', (u) => Dan.doTaytuyReroll(u));
 defineCommand({

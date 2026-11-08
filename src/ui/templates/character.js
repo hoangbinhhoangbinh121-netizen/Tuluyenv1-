@@ -31,7 +31,7 @@ function tongquan(user, row) {
   row = Cu.getCultivator(user.id);
   const maxHp = Cu.effectiveMaxHp(row);
   const luc = Cu.calcLucChien(row);
-  const moc = Cu.lucChienMocAt(required);
+  const moc = Cu.lucChienMocAt(R.tuViRequiredLegacy(row.realm_index, row.stage_index, row.world_tier));
   const world = `${R.worldTierName(row.world_tier)}${row.world_tier ? ` (Phi Thăng lần ${row.world_tier})` : ''}`;
   return createEmbed({
     cat: 'nhanvat', status: 'Online', title: `${row.title ? `「${row.title}」 ` : ''}${nameOf(user)}`,
@@ -84,7 +84,7 @@ function trangbi(user, row) {
     fields: [
       section(`Công pháp đang dùng (${tiers.length}/${K.CONGPHAP_MAX_EQUIP_SLOTS})`, tiers.length ? tiers.map((t) => `${E.congphap} Tầng ${t} — ${names[t] || '???'}`) : ['Chưa trang bị'], { }),
       section('Pháp bảo', [pb ? `${E.phapbao} **${pb.name}**` : 'Chưa trang bị']),
-      section('Linh thú', [row.linh_thu ? `${E.dongthanh} ${row.linh_thu} (cấp ${num(row.linh_thu_level)})` : 'Chưa có']),
+      section('Linh thú', [`${E.dongthanh} ${require('../../game/pets').profileLine(row.user_id)}`]),
     ],
   });
 }

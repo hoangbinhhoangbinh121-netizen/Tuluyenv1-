@@ -105,6 +105,7 @@ function attack(guildId, userId, action = 'atk') {
     D.run('INSERT INTO wb7_damage (boss_id, user_id, damage, hits, last_hit) VALUES (?,?,?,1,?) ON CONFLICT(boss_id, user_id) DO UPDATE SET damage = damage + excluded.damage, hits = hits + 1, last_hit = excluded.last_hit', boss.boss_id, userId, dealt, t);
     const bossHp = hpBefore - dealt;
     const killed = bossHp <= 0;
+    try { require('./pets').onBoss(userId); } catch (_) { /* Linh Thú không được làm hỏng đòn đánh Boss */ }
 
     // Phản đòn (không có khi vừa kết liễu)
     let counter = 0;

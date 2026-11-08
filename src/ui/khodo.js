@@ -30,6 +30,7 @@ function buildKhodoEmbed(user, row) {
       `${E.tienkim} ${row.tien_kim}  ${E.tienngoc} ${row.tien_ngoc}  ${E.thienhoatinh} ${row.thien_hoa_tinh}  ${E.hukhongkettinh} ${row.hu_khong_ket_tinh}\n` +
       `${E.thiendaothach} ${row.thien_dao_thach}  ${E.manhtiengioilenh} ${row.manh_tien_gioi_lenh}  ${E.daonguyentinh} ${row.dao_nguyen_tinh}  ${E.thiendaoan} ${row.thien_dao_an}\n${E.thienkiepchiluc} ${row.thien_kiep_chi_luc}`, false);
   }
+  try { const ps = require('../game/pets').inventorySummary(row.user_id); if (ps.text) f(`${E.dongthanh} Linh Thú & Trứng`, ps.text.slice(0, 1024), false); } catch (_) { /* bỏ qua */ }
   const owned = [...Cu.ownedCongphapTiers(row)].sort((a, b) => a - b);
   if (owned.length) {
     const names = Object.fromEntries(CP.getCurrentCongphapList().map((c) => [c.tier, c.name]));

@@ -1,8 +1,0 @@
-V14 — THIÊN ĐẠO CHƯỞNG (TÔNG MÔN CHIẾN)
-- Admin của bot (ADMIN_DISCORD_IDS / ADMIN_CODE_APPROVER_IDS / ADMIN_IDS, gồm chủ bot tự dò) tham gia Tông Môn Chiến như người chơi thường
-  (vẫn cần /batdau + đã vào 1 tông môn). Riêng Admin được bỏ qua giới hạn cảnh giới "tối đa Hóa Thần Viên Mãn / Phàm Giới".
-- Khi Admin tiến quân vào 1 cứ điểm rồi bấm nút "Giao Chiến": KHÔNG hiện bảng chọn mục tiêu, bot tự tung chiêu
-  "Thiên Đạo Chưởng": -100000000000000000000000000000000 Máu lên MỌI địch (tông môn khác) đang ở cùng cứ điểm.
-  Không né tránh, không bạo kích. Mỗi địch bị hạ: +10 điểm tông môn, +1 kill (tính MVP), trọng thương 20s như bình thường.
-- Người chơi thường: giữ nguyên cơ chế Giao Chiến cũ.
-- File đổi: src/game/sectwar.js (isBotAdmin, doThienDaoChuong), src/ui/sectWarViews.js (nút Giao Chiến), src/commands/sectwar.js.

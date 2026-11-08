@@ -161,7 +161,7 @@ function themDaoLuView(userId) {
 }
 function donghanhGroupView(userId) {
   const v = new View({ ownerId: userId, timeout: 120 });
-  v.button({ key: 'thu', label: 'Linh Thú', emoji: E.dongthanh, style: 'blurple' }, (i) => eph(i, Dan.doNuoiduong(userId)));
+  v.button({ key: 'thu', label: 'Linh Thú', emoji: E.dongthanh, style: 'blurple' }, (i) => require('./petViews').open(i, userId));
   v.button({ key: 'dl', label: 'Đạo Lữ', emoji: E.daolu, style: 'blurple' }, (i) => {
     const row = Cu.getCultivator(userId);
     const status = row ? Dl.daoLuStatus(userId) : '❌ Bạn chưa bắt đầu tu tiên.';

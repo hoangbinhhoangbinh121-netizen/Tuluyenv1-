@@ -27,7 +27,7 @@ function buildStatusEmbed(user, row0) {
   const curHp = Cu.syncHpRegen(userId, row);
   row = Cu.getCultivator(userId);
   const lucChien = Cu.calcLucChien(row);
-  const lucChienMoc = Cu.lucChienMocAt(required);
+  const lucChienMoc = Cu.lucChienMocAt(R.tuViRequiredLegacy(realmIdx, stageIdx, worldTier));
   const maxHp = Cu.effectiveMaxHp(row);
   const titlePrefix = row.title ? `「${row.title}」 ` : '';
   const emb = new EmbedBuilder()
@@ -53,7 +53,7 @@ function buildStatusEmbed(user, row0) {
   f(`${E.khivan} Khí Vận`, row.khi_van);
   f(`${E.nguyenlieu} Nguyên Liệu`, row.nguyen_lieu);
   f(`${E.danduoc} Đan Dược`, row.dan_duoc);
-  f(`${E.dongthanh} Linh Thú`, row.linh_thu ? `${row.linh_thu} (cấp ${row.linh_thu_level})` : 'Chưa có');
+  f(`${E.dongthanh} Linh Thú`, require('../game/pets').profileLine(userId));
   if (row.partner_id) {
     const lv = parseInt(row.dao_lu_level || 1, 10);
     const need = K.DAO_LU_LEVEL_THRESHOLDS[lv + 1];

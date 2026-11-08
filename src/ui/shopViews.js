@@ -163,6 +163,7 @@ function shopView(userId) {
   }));
   v.button({ key: 'quay', label: 'Quay Ngẫu Nhiên Công Pháp', emoji: E.sk_ngaunhien, style: 'green', row: 4 }, (i) => eph(i, CP.doRandomCongphap(userId)));
   v.button({ key: 'pgd', label: `Mua Đan Dược Phá Giới (${fmtNum(K.DAN_PHA_GIOI_COST_LINH_THACH)} 💎)`, emoji: E.phagioidan, style: 'blurple', row: 4 }, (i) => eph(i, Dan.buyDanPhaGioi(userId)));
+  v.button({ key: 'linhthu', label: 'Cửa Hàng Linh Thú', emoji: E.dongthanh, style: 'green', row: 4 }, async (i) => i.reply({ ...require('./petViews').render(userId, 'sh', 0, ''), flags: EPHEMERAL }));
   return v;
 }
 

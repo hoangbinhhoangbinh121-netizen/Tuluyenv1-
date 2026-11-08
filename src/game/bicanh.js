@@ -1,5 +1,7 @@
 'use strict';
 /** Bí Cảnh (thường / Vạn Linh Cốc / Đặc Biệt / Linh Giới) + chế Phi Thăng Lệnh — port 1:1 */
+const Pets = require('./pets');
+const PB = require('./petBalance');
 const K = require('./constants');
 const CD = require('./cooldowns');
 const R = require('./realm');
@@ -79,11 +81,6 @@ function doBicanh(userId, tierIdx = 0) {
     up[pc] = row[pc] + 1;
     msg += `\n${E.linhphu} Bạn cảm ngộ được 1 mảnh **${R.linhphuLabel(row)}** cho nhiệm vụ Con Đường Phi Thăng (${row[pc] + 1}/${K.PHITHANG_LINH_PHU_CAN}).`;
   }
-  if (!row.linh_thu && random() < 0.1) {
-    const beast = choice(['Hỏa Vân Báo', 'Thanh Long Sủng', 'Tuyết Hồ Ly', 'Huyền Vũ Quy']);
-    up.linh_thu = beast; up.linh_thu_level = 1;
-    msg += `\n${E.dongthanh} May mắn! Bạn nhặt được trứng linh thú và nở ra **${beast}**!`;
-  }
   const ldc = K.LINHDUOC_DACBIET_DROP_CHANCE[Math.min(tierIdx, K.LINHDUOC_DACBIET_DROP_CHANCE.length - 1)];
   if (random() < ldc) {
     const g = randInt(1, 2); up.linh_duoc_dac_biet = (row.linh_duoc_dac_biet || 0) + g;
@@ -107,7 +104,7 @@ function doBicanh(userId, tierIdx = 0) {
     }
   }
   Cu.updateCultivator(userId, up);
-  return msg + TO.rollDrops(userId, 'bicanh', lootM);
+  return msg + TO.rollDrops(userId, 'bicanh', lootM) + Pets.onBicanh(userId, PB.SOURCE_IDX.thuong(tierIdx));   // v14.0: Linh Thú — trứng/thú hoang/vật phẩm/EXP
 }
 
 function doBicanhDacBiet(userId, group) {
@@ -136,7 +133,7 @@ function doBicanhDacBiet(userId, group) {
     }
   }
   Cu.updateCultivator(userId, up);
-  return msg + TO.rollDrops(userId, 'bicanh', TO.lootMultOf(row) * 2);   // Bí Cảnh Đặc Biệt: cơ duyên gấp đôi
+  return msg + TO.rollDrops(userId, 'bicanh', TO.lootMultOf(row) * 2) + Pets.onBicanh(userId, PB.SOURCE_IDX.dacbiet());   // Bí Cảnh Đặc Biệt: cơ duyên gấp đôi
 }
 
 function doChePhithangLenh(userId) {
@@ -239,7 +236,7 @@ function doBicanhLinhgioi(userId, subKey) {
     tc = `\n${E.bicanh} Bí Cảnh Thượng Cổ: đã hoàn thành **${n}/${BICANH_THUONGCO_CAN}** lần (điều kiện Phi Thăng Tiên Giới).`;
   }
   Cu.updateCultivator(userId, up);
-  return `${E.bicanhlinhgioi} Khám phá **${subName}** (${chain.name}): nhận ${loot.join(', ')}.${bossNote}${ach}${tc}${allDone}`;
+  return `${E.bicanhlinhgioi} Khám phá **${subName}** (${chain.name}): nhận ${loot.join(', ')}.${bossNote}${ach}${tc}${allDone}${Pets.onBicanh(userId, PB.SOURCE_IDX.linhgioi[chain.key] || 6)}`;
 }
 
 module.exports = {

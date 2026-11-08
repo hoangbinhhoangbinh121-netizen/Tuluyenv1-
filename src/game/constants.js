@@ -32,6 +32,12 @@ const EXP_REQUIRED_MULT_DEFAULT = 240;   // v13.4: giảm từ 1200 xuống 240 
 const _envMult = Number(process.env.EXP_REQUIRED_MULT);
 const EXP_REQUIRED_MULT = Number.isFinite(_envMult) && _envMult > 0 ? _envMult : EXP_REQUIRED_MULT_DEFAULT;
 
+// v14.0: giảm mốc tu vi cần để đột phá — ĐẠI cảnh giới (tầng cuối của mỗi cảnh giới → cảnh giới kế) giảm nhiều hơn, TIỂU cảnh giới (các tầng trong cảnh giới) chỉ giảm nhẹ.
+// Chỉ tác động tới R.tuViRequired (điều kiện đột phá/hiển thị); R.tuViRequiredBase (tốc độ & phần thưởng tu vi) KHÔNG đổi. Có thể chỉnh bằng env EXP_GATE_MAJOR_MULT / EXP_GATE_MINOR_MULT.
+const _gm = (name, def) => { const v = Number(process.env[name]); return Number.isFinite(v) && v > 0 ? v : def; };
+const EXP_GATE_MINOR_MULT = _gm('EXP_GATE_MINOR_MULT', 0.90);
+const EXP_GATE_MAJOR_MULT = _gm('EXP_GATE_MAJOR_MULT', 0.65);
+
 const HOATHAN_REALM_IDX = 5;
 const HOATHAN_VIENMAN_STAGE = totalStageCount(HOATHAN_REALM_IDX) - 1;
 const DOKIEP_REALM_IDX = 9;
@@ -55,6 +61,6 @@ function addAdmin(id) {
 module.exports = {
   ...C,
   ADMIN_CODE_APPROVER_IDS, ADMIN_DISCORD_IDS, addAdmin, REALMS, TANG_20, TANG_23, totalStageCount,
-  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE, EXP_REQUIRED_MULT,
+  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE, EXP_REQUIRED_MULT, EXP_GATE_MINOR_MULT, EXP_GATE_MAJOR_MULT,
   _REALM_SPEED_MAX_KNOWN: Math.max(...Object.keys(C.REALM_SPEED_MULT).map(Number)),
 };

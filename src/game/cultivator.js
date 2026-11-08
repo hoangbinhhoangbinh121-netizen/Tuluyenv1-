@@ -152,7 +152,7 @@ function syncHpRegen(userId, row = null) {
 }
 
 function lucChienMocAt(requiredTuVi) {
-  const gate = R.tuViRequired(K.HOATHAN_REALM_IDX, K.HOATHAN_VIENMAN_STAGE, 0);
+  const gate = R.tuViRequiredLegacy(K.HOATHAN_REALM_IDX, K.HOATHAN_VIENMAN_STAGE, 0);
   return Math.max(1, int(K.THIENKIEP_MIN_LUC_CHIEN * requiredTuVi / gate));
 }
 

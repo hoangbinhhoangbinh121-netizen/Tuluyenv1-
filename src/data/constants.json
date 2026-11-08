@@ -1416,7 +1416,7 @@
     ],
     [
      "tongmonchien",
-     "Tham gia Tông Môn Chiến, tranh 5 cứ điểm với tông môn khác."
+     "Tham gia Tông Môn Chiến theo giới của bạn (Nhân Giới / Linh Giới tự chiến riêng), tranh 5 cứ điểm."
     ],
     [
      "tongmonchien_bando",
@@ -1485,11 +1485,11 @@
   {
    "key": "dongnghiep",
    "label": "🐾 Linh Thú, Song Tu & Giao Dịch",
-   "desc": "Nuôi linh thú, kết đôi song tu và trao đổi vật phẩm với người khác.",
+   "desc": "Linh Thú (3 loại Khế Ước, 45 loài, tiến hóa đa nhánh), song tu và trao đổi vật phẩm.",
    "commands": [
     [
      "linhthu",
-     "Nuôi dưỡng linh thú của bạn."
+     "Hệ thống Linh Thú: 45 loài, Khế Ước, Nuôi Dưỡng, Tiến Hóa, Kỹ Năng, Huyết Mạch, Xuất Chiến."
     ],
     [
      "songtu",

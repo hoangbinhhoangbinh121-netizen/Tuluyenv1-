@@ -1,6 +1,64 @@
 // TỰ SINH từ tuluyenbot.py (init_db + _migrate) — giữ nguyên schema để mở thẳng DB cũ.
 'use strict';
 const CREATE_TABLES = [
+  `
+        CREATE TABLE IF NOT EXISTS pets (
+            pet_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            owner TEXT NOT NULL,
+            species TEXT NOT NULL,
+            nick TEXT DEFAULT '',
+            level INTEGER DEFAULT 1,
+            exp INTEGER DEFAULT 0,
+            bond INTEGER DEFAULT 0,
+            purity INTEGER DEFAULT 20,
+            contract TEXT DEFAULT '',
+            slot TEXT DEFAULT '',
+            fighter INTEGER DEFAULT 0,
+            gen INTEGER DEFAULT 0,
+            inherit TEXT DEFAULT '',
+            ranks TEXT DEFAULT '{}',
+            legacy INTEGER DEFAULT 0,
+            born_at REAL DEFAULT 0,
+            last_play REAL DEFAULT 0,
+            wins INTEGER DEFAULT 0,
+            battles INTEGER DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS idx_pets_owner ON pets(owner);
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_pets_slot ON pets(owner, slot) WHERE slot != '';
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_pets_fighter ON pets(owner) WHERE fighter = 1;
+        CREATE TABLE IF NOT EXISTS pet_eggs (
+            egg_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            owner TEXT NOT NULL,
+            species TEXT NOT NULL,
+            tier INTEGER DEFAULT 1,
+            purity INTEGER DEFAULT 30,
+            hatch_at REAL DEFAULT 0,
+            source TEXT DEFAULT '',
+            created_at REAL DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS idx_pet_eggs_owner ON pet_eggs(owner);
+        CREATE TABLE IF NOT EXISTS pet_items (
+            owner TEXT NOT NULL,
+            item TEXT NOT NULL,
+            qty INTEGER DEFAULT 0,
+            PRIMARY KEY (owner, item)
+        );
+        CREATE TABLE IF NOT EXISTS pet_wild (
+            owner TEXT PRIMARY KEY,
+            species TEXT NOT NULL,
+            level INTEGER DEFAULT 1,
+            purity INTEGER DEFAULT 30,
+            src INTEGER DEFAULT 1,
+            expires_at REAL DEFAULT 0
+        );
+        CREATE TABLE IF NOT EXISTS pet_daily (
+            owner TEXT NOT NULL,
+            day TEXT NOT NULL,
+            item TEXT NOT NULL,
+            qty INTEGER DEFAULT 0,
+            PRIMARY KEY (owner, day, item)
+        );
+        `,
   "\n        CREATE TABLE IF NOT EXISTS bot_settings (\n            key TEXT PRIMARY KEY,\n            value TEXT DEFAULT ''\n        )\n        ",
   "\n        CREATE TABLE IF NOT EXISTS admin_grants (\n            user_id TEXT NOT NULL,\n            kind TEXT NOT NULL,\n            prev_tier TEXT DEFAULT '',\n            prev_json TEXT DEFAULT '{}',\n            by_admin TEXT DEFAULT '',\n            created_at REAL DEFAULT 0,\n            PRIMARY KEY (user_id, kind)\n        )\n        ",
   "\n        CREATE TABLE IF NOT EXISTS chuoi_pairs (\n            user_lo TEXT NOT NULL,\n            user_hi TEXT NOT NULL,\n            streak INTEGER DEFAULT 0,\n            best INTEGER DEFAULT 0,\n            total_days INTEGER DEFAULT 0,\n            last_lo_day INTEGER DEFAULT 0,\n            last_hi_day INTEGER DEFAULT 0,\n            last_done_day INTEGER DEFAULT 0,\n            created_at REAL DEFAULT 0,\n            PRIMARY KEY (user_lo, user_hi)\n        )\n        ",
@@ -154,6 +212,9 @@ const ADD_COLUMNS = {
     "insurance_data": "TEXT DEFAULT '{}'",
     "risk_trade_data": "TEXT DEFAULT '{}'",
     "last_ruong_at": "REAL DEFAULT 0"
+  },
+  "sect_wars": {
+    "world": "INTEGER DEFAULT 0"
   },
   "sect_war_participants": {
     "hp": "INTEGER DEFAULT 0",

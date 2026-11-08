@@ -38,7 +38,10 @@ function tuViRequiredBase(realmIdx, stageIdx, worldTier = 0) {
  * Tu vi cần để đột phá lên tiểu cảnh giới kế tiếp = mốc gốc × K.EXP_REQUIRED_MULT.
  * Dùng cho: điều kiện/trừ tu vi khi đột phá, thanh tiến độ & mọi chỗ hiển thị, trần Hóa Thần, mốc lực chiến Thiên Kiếp.
  */
-const tuViRequired = (realmIdx, stageIdx, worldTier = 0) => int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT);
+/** Mốc cũ (trước v14.0, chưa áp hệ số ĐẠI/TIỂU cảnh giới) — chỉ dùng để tính mốc Lực Chiến Thiên Kiếp cho khỏi lệch. */
+const tuViRequiredLegacy = (realmIdx, stageIdx, worldTier = 0) => int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT);
+const isMajorGate = (realmIdx, stageIdx) => stageIdx >= K.totalStageCount(realmIdx) - 1;      // tầng cuối của cảnh giới = cửa ải sang ĐẠI cảnh giới kế
+const tuViRequired = (realmIdx, stageIdx, worldTier = 0) => int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT * (isMajorGate(realmIdx, stageIdx) ? K.EXP_GATE_MAJOR_MULT : K.EXP_GATE_MINOR_MULT));
 
 /** [realmIdx, stageIdx] kế tiếp, hoặc null nếu đã ở Tiên Đế. */
 function nextStage(realmIdx, stageIdx) {
@@ -64,6 +67,6 @@ const linhgioilenhLabel = (row) => (row.world_tier > 0 ? 'Tiên Lệnh' : 'Linh 
 const linhphuLabel = (row) => (row.world_tier > 0 ? 'Tiên Phù' : 'Linh Phù');
 
 module.exports = {
-  realmSpeedMult, realmDisplay, tuViRequired, tuViRequiredBase, nextStage, rollWeighted, getMult,
+  realmSpeedMult, realmDisplay, tuViRequired, tuViRequiredBase, tuViRequiredLegacy, isMajorGate, nextStage, rollWeighted, getMult,
   worldTierName, worldMult, worldTierFlavor, lenhCol, phuCol, linhgioilenhLabel, linhphuLabel,
 };

@@ -1,4 +1,7 @@
-# Tiên Giới Bot v14 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v14.1 — Node.js + discord.js + SQLite
+
+> **v14.1** — Thay emoji pixel Linh Thú (45 loài + 9 huy hiệu phẩm cấp) bằng bộ tranh người dùng cung cấp (`assets/source/pet_sheet_v14_1.png`, cắt bằng `scripts/build_pet_emoji_from_sheet_v14_1.py`). Không đổi logic.
+> **v14.0** — Linh Thú & Khế Ước làm lại (45 loài, 3 loại khế ước, `/linhthu`), Tông Môn Chiến tách Nhân Giới / Linh Giới, giảm EXP đột phá. Chi tiết: `CAN_BANG_V14.0.txt`.
 
 Bot Discord game tu tiên, chuyển từ bản Python (`tuluyenv1_daolu_fixed_v10`) sang **Node.js**.
 Dữ liệu lưu trong **1 file SQLite** (`data/tutien.db`) đi kèm bot — không cần PostgreSQL hay dịch vụ database riêng.
