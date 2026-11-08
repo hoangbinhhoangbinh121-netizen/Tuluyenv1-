@@ -66,6 +66,13 @@ function prefixCtx(message, tokens, def) {
 }
 
 async function runCommand(def, ctx) {
+  // v14.2: BẢO TRÌ TOÀN BOT — chặn mọi lệnh (trừ /baotri để tắt). Chạy TRƯỚC khi defer để người chơi thấy thông báo ngay.
+  const M = require('../game/maintenance');
+  if (M.isOn() && !def.maintenanceExempt) {
+    const p = { embeds: [M.notice()] };
+    if (ctx.interaction) { try { return await ctx.interaction.reply({ ...p, flags: MessageFlags.Ephemeral }); } catch (_) { return null; } }
+    return ctx.send(p);
+  }
   const perms = ctx.interaction?.memberPermissions || ctx.message?.member?.permissions;
   const isGuildAdmin = !!(perms && perms.has('Administrator'));
   if (def.admin && !isAdminApprover(ctx.user.id)) return ctx.send({ embeds: [N.error('Lệnh này chỉ dành riêng cho admin được chỉ định.', 'E006')] });

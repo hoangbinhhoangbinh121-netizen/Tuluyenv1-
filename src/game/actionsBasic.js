@@ -34,6 +34,22 @@ function tuluyenMultFor(userId, row) {
   return { mult: talentMult(row) * fx * cpBonus * wt * st * sectBuff * buff * ST.speedMult(), sectBuff, buff };
 }
 
+/**
+ * v14.2: tu vi KỲ VỌNG mỗi lần bấm Tu Luyện (đúng công thức tuluyenR: sàn công thức cũ, ×TULUYEN_SPEED_MULT, cơ hội ×2 của thiên phú).
+ * Bế Quan Treo lấy giá trị này × TREO_EFFICIENCY → treo luôn đúng bằng 5% tốc độ bấm tay ở MỌI cảnh giới
+ * (trước v14.2 treo thiếu ×3 TULUYEN_SPEED_MULT và bỏ qua sàn Phàm Nhân nên chỉ nhận ~1,7% và ~0,03%).
+ */
+function tuluyenExpectedPerClick(userId, row) {
+  const { mult } = tuluyenMultFor(userId, row);
+  const need = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier);
+  const tb = BAL.tuluyenBase(need, row.realm_index, row.stage_index, CD.COOLDOWN_TULUYEN);
+  const rs = R.realmSpeedMult(row.realm_index);
+  let sum = 0; let n = 0;
+  for (let k = 8; k <= 15; k += 1) for (let q = 0; q < 21; q += 1) { sum += Math.max(k * COMPENSATION * rs, tb * (0.85 + 0.3 * (q + 0.5) / 21)); n += 1; }
+  const base = sum / n;
+  return Math.max(1, base * mult * BAL.B.TULUYEN_SPEED_MULT) * (1 + T.bundle(row).proc);
+}
+
 /** Tu luyện — trả dữ liệu có cấu trúc (UI v7 dựng Embed từ đây). */
 function tuluyenR(userId) {
   const row = Cu.getCultivator(userId);
@@ -124,4 +140,4 @@ function doHoiHp(userId) {
   return `💚 **Hồi HP** — đang hồi phục dần theo thời gian (0.5% Sinh Mệnh tối đa/phút), không cần làm gì thêm, chỉ cần chờ:\n${bar}\n${fmtNum(curHp)}/${fmtNum(maxHp)}\n⏳ Còn khoảng **${F.fmtTime(minutesLeft * 60)}** nữa là hồi ĐẦY 100%.`;
 }
 
-module.exports = { tuluyenR, dongquanR, doTuluyen, doDongquan, doCanngo, doLinhmach, doHoiHp, tuluyenBuffMult, tuluyenMultFor };
+module.exports = { tuluyenExpectedPerClick, tuluyenR, dongquanR, doTuluyen, doDongquan, doCanngo, doLinhmach, doHoiHp, tuluyenBuffMult, tuluyenMultFor };

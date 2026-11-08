@@ -1,5 +1,6 @@
-# Tiên Giới Bot v14.1 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v14.2 — Node.js + discord.js + SQLite
 
+> **v14.2** — Sửa Bế Quan Treo (treo đúng 5% tốc độ Tu Luyện bấm tay — trước đó tính thiếu nên xuất quan gần như không nhận tu vi), bỏ giới hạn 4 giờ, tách `/xuatquan` khỏi `/treoquan`; thêm `/baotri` bảo trì toàn bộ bot.
 > **v14.1** — Thay emoji pixel Linh Thú (45 loài + 9 huy hiệu phẩm cấp) bằng bộ tranh người dùng cung cấp (`assets/source/pet_sheet_v14_1.png`, cắt bằng `scripts/build_pet_emoji_from_sheet_v14_1.py`). Không đổi logic.
 > **v14.0** — Linh Thú & Khế Ước làm lại (45 loài, 3 loại khế ước, `/linhthu`), Tông Môn Chiến tách Nhân Giới / Linh Giới, giảm EXP đột phá. Chi tiết: `CAN_BANG_V14.0.txt`.
 

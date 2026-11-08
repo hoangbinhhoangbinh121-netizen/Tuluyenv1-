@@ -89,9 +89,9 @@ function buildSettingsEmbed(user, row) {
     const maxS = (BALN.B.TREO_MAX_HOURS > 0) ? BALN.B.TREO_MAX_HOURS * 3600 : Infinity;
     const el = row.treo_start > 0 ? Math.max(0, t - row.treo_start) : 0;
     let tv;
-    if (row.treo_start > 0 && el >= maxS) tv = '⛔ Đã đủ hạn — sắp xuất quan cưỡng chế, `/treoquan` để nhận & làm mới';
-    else if (row.treo_start > 0) tv = `🧘 Đang treo ${F.fmtTime(el)}${Number.isFinite(maxS) ? ` (còn ${F.fmtTime(maxS - el)} thì xuất quan cưỡng chế)` : ''} — \`/treoquan\``;
-    else if (row.treo_forced) tv = '⛔ Phiên trước đã xuất quan cưỡng chế — `/treoquan` để làm mới & treo tiếp';
+    if (row.treo_start > 0 && el >= maxS) tv = '⛔ Đã đủ hạn — sắp xuất quan cưỡng chế, `/xuatquan` để nhận tu vi';
+    else if (row.treo_start > 0) tv = `🧘 Đang treo ${F.fmtTime(el)}${Number.isFinite(maxS) ? ` (còn ${F.fmtTime(maxS - el)} thì xuất quan cưỡng chế)` : ''} — \`/xuatquan\` để nhận tu vi`;
+    else if (row.treo_forced) tv = '⛔ Phiên trước đã xuất quan cưỡng chế — `/treoquan` để treo tiếp';
     else tv = '💤 Chưa treo — `/treoquan` để bắt đầu';
     f(`${E.treoquan || E.bequan} Bế Quan Treo`, tv);
   }

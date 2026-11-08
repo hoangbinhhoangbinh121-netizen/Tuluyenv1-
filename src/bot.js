@@ -2,7 +2,7 @@
 require('dotenv').config();
 const AC = require('./autoconfig');
 AC.applyDefaults();   // điền mọi biến còn thiếu bằng mặc định — chỉ cần mỗi DISCORD_TOKEN
-const { Client, GatewayIntentBits, Partials, Events, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Events, REST, Routes, MessageFlags } = require('discord.js');
 const D = require('./db');
 const { syncPixelEmoji, applyEmojiFallbacks, continuePixelSyncInBackground } = require('./game/emoji');
 const { wrapInteraction } = require('./ui/skin');
@@ -10,6 +10,7 @@ const kit = require('./ui/kit');
 const F = require('./commands/framework');
 require('./commands/basic');
 require('./commands/treoquan');
+require('./commands/baotri');
 require('./commands/chuoi');
 require('./commands/talent');
 require('./commands/adminTuChat');
@@ -81,6 +82,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
     await applyEmojiFallbacks(c);
     continuePixelSyncInBackground();
     installErrorReporter(c);
+    try { if (require('./game/maintenance').isOn()) { c.user.setPresence({ status: 'dnd', activities: [{ name: '🛠️ Đang bảo trì' }] }); console.log('🛠️ Bot đang ở chế độ BẢO TRÌ (admin gõ /baotri để tắt).'); } } catch (_) { /* bỏ qua */ }
     await detectOwner(c);
     try { await registerSlash(c); } catch (e) { console.error('❌ Đăng ký slash lỗi:', e.message, '— kiểm tra bot đã được mời với quyền "applications.commands" (và GUILD_ID nếu có đặt).'); }
     startBackground(client);
@@ -95,6 +97,11 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
     try {
       wrapInteraction(i);   // v7: phản hồi luôn đi qua lớp đồng bộ giao diện + chống lỗi "đã trả lời"
       if (i.isChatInputCommand()) await F.handleSlash(i);
+      else if ((i.isModalSubmit() || i.isMessageComponent()) && require('./game/maintenance').isOn()) {
+        // v14.2: bảo trì toàn bot — nút bấm / menu / modal cũ cũng bị chặn
+        const M = require('./game/maintenance');
+        try { await i.reply({ embeds: [M.notice()], flags: MessageFlags.Ephemeral }); } catch (_) { try { await i.followUp({ embeds: [M.notice()], flags: MessageFlags.Ephemeral }); } catch (_2) { /* hết hạn */ } }
+      }
       else if (i.isModalSubmit()) await kit.routeModal(i);
       else if (i.isMessageComponent()) await kit.routeComponent(i);
     } catch (e) { require('./errorlog').logError('interactionCreate', e); }
@@ -118,7 +125,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v14.1 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v14.2 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);

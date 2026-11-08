@@ -33,8 +33,8 @@ const B = {
   DONGQUAN_PCT: 0.12,            // một lần Bế Quan = 12% tu vi cần cho tầng kế (tư chất chuẩn)
   // ---- Bế Quan Treo Máy (v12.4.2) ----
   TULUYEN_SPEED_MULT: 3,         // v13.5: tăng tốc độ Tu Luyện + Bế Quan bấm tay x3 (KHÔNG áp dụng cho Bế Quan Treo, Bí Cảnh, Động Phủ... và Linh Thạch)
-  TREO_EFFICIENCY: 0.05,         // v13.3: treo máy chỉ bằng 5% tốc độ Tu Luyện bấm tay (giảm từ 10%); bấm tay không đổi
-  TREO_MAX_HOURS: 4,             // v12.5: mỗi phiên treo tối đa 4 giờ — đủ hạn thì bị XUẤT QUAN CƯỠNG CHẾ (tự nhận tu vi), rồi /treoquan để làm mới, treo tiếp. 0 = không giới hạn
+  TREO_EFFICIENCY: 0.05,         // v14.2: ĐÚNG 5% tốc độ Tu Luyện bấm tay ở mọi cảnh giới (đã sửa lỗi tính thiếu). v13.3: treo máy chỉ bằng 5% tốc độ Tu Luyện bấm tay (giảm từ 10%); bấm tay không đổi
+  TREO_MAX_HOURS: 0,             // v14.2: KHÔNG giới hạn thời gian treo (trước: 4 giờ rồi xuất quan cưỡng chế). Đặt >0 để bật lại giới hạn.
   CHUOI_DAILY_PCT: 0.04,         // v12.5 Chuỗi Đồng Tu: thưởng mỗi ngày hoàn thành = 4% tu vi gốc của tầng hiện tại, x(1 + min(chuỗi,30)/15) => tối đa 12%
   CHUOI_MAX_REWARD_PAIRS: 3,     // mỗi người chỉ nhận thưởng từ tối đa 3 chuỗi/ngày (chuỗi thừa vẫn tăng nhưng không có thưởng) — chống cày nick phụ
   CHUOI_MILESTONES: { 3: 0.10, 7: 0.20, 14: 0.40, 30: 0.80, 60: 1.20, 100: 2.0, 200: 3.0, 365: 5.0 },   // mốc chuỗi → thưởng thêm (x tu vi gốc của tầng)

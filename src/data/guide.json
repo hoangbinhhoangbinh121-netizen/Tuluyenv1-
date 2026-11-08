@@ -50,7 +50,15 @@
       ],
       [
         "treoquan",
-        "Bế quan treo máy — tu luyện tự động tối đa 4 giờ/phiên, đủ hạn tự xuất quan cưỡng chế, gõ lại để làm mới."
+        "Bế quan treo máy — tu luyện tự động, KHÔNG giới hạn giờ, chỉ bằng 5% tốc độ Tu Luyện bấm tay. Dùng /xuatquan để nhận tu vi."
+      ],
+      [
+        "xuatquan",
+        "Xuất quan — kết thúc bế quan treo và nhận toàn bộ tu vi đã tích lũy (tách riêng khỏi /treoquan)."
+      ],
+      [
+        "baotri",
+        "[Admin] Bật/tắt chế độ BẢO TRÌ toàn bộ bot — mọi lệnh, nút bấm và vòng nền game đều tạm dừng."
       ],
       [
         "chuoi",

@@ -3,7 +3,8 @@
  * BẾ QUAN TREO MÁY (v12.4.2) — tu luyện tự động, không cần bấm.
  *  - Bắt đầu: ghi mốc `treo_start` vào DB (còn nguyên khi bot khởi động lại).
  *  - Xuất quan: tu vi nhận = tốc độ Tu Luyện bấm tay × BAL.B.TREO_EFFICIENCY (10%) × thời gian treo.
- *  - v12.5: mỗi phiên treo tối đa TREO_MAX_HOURS (4 giờ). Đủ hạn → XUẤT QUAN CƯỠNG CHẾ: tự cộng tu vi của 4 giờ và kết thúc phiên
+ *  - v14.2: KHÔNG còn giới hạn 4 giờ (TREO_MAX_HOURS = 0); Xuất Quan tách thành lệnh /xuatquan riêng (cùng engine). Treo = đúng 5% Tu Luyện bấm tay.
+ *  - (cũ, v12.5) mỗi phiên treo tối đa TREO_MAX_HOURS (4 giờ). Đủ hạn → XUẤT QUAN CƯỠNG CHẾ: tự cộng tu vi của 4 giờ và kết thúc phiên
  *    (vòng nền quét mỗi phút + xử lý ngay khi người chơi mở /treoquan). Dùng /treoquan để LÀM MỚI và treo phiên tiếp theo.
  *  - Tốc độ tính từ mốc GỐC (R.tuViRequiredBase) và hệ số tư chất/buff dùng CHUNG với Tu Luyện (A.tuluyenMultFor)
  *    → đồng bộ với hệ cân bằng, không phụ thuộc hệ số tăng exp đột phá. Không cộng Linh Thạch (tránh lạm phát).
@@ -22,10 +23,10 @@ const maxSeconds = () => (B.TREO_MAX_HOURS > 0 ? int(B.TREO_MAX_HOURS * 3600) : 
 
 /** Tu vi / giây khi treo ở cảnh giới & tư chất hiện tại. */
 function rateOf(userId, row) {
-  const needBase = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier);
-  const perClick = BAL.tuluyenBase(needBase, row.realm_index, row.stage_index, CD.COOLDOWN_TULUYEN);
+  // v14.2: = tu vi kỳ vọng của Tu Luyện bấm tay (cùng công thức, gồm ×TULUYEN_SPEED_MULT & sàn) ÷ cooldown × TREO_EFFICIENCY (5%).
   const { mult, sectBuff, buff } = A.tuluyenMultFor(userId, row);
-  return { rate: (perClick / CD.COOLDOWN_TULUYEN) * B.TREO_EFFICIENCY * mult, mult, sectBuff: sectBuff > 1, buff: buff > 1 };
+  const handPerSec = A.tuluyenExpectedPerClick(userId, row) / CD.COOLDOWN_TULUYEN;
+  return { rate: handPerSec * B.TREO_EFFICIENCY, handRate: handPerSec, mult, sectBuff: sectBuff > 1, buff: buff > 1 };
 }
 
 /** Trạng thái treo hiện tại (không ghi DB). */

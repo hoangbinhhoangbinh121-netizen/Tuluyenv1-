@@ -18,7 +18,7 @@ const long = (sec) => {
 };
 const limitText = (s) => (Number.isFinite(s.maxSeconds) ? `tối đa ${long(s.maxSeconds)} mỗi lần` : 'không giới hạn giờ treo');
 const HOUR = (rate) => `${num(Math.round(rate * 3600))} tu vi/giờ`;
-const HINT = 'Dùng `/treoquan` chọn **Xuất quan** (hoặc `!treoquan xuatquan`) để nhận tu vi.';
+const HINT = 'Dùng `/xuatquan` (hoặc `!xuatquan`) để **xuất quan & nhận tu vi** bất cứ lúc nào — không giới hạn thời gian treo.';
 const ts = (sec) => `<t:${Math.floor(Number(sec) || 0)}:R>`;
 /** Dòng nhắc: lần treo trước đã bị xuất quan cưỡng chế (do đủ hạn). */
 const forcedLine = (n) => (n && n.forced
@@ -45,7 +45,7 @@ function view(r) {
       return createEmbed({
         cat: 'treoquan', header: 'BẾ QUAN TREO', status: 'Nhập định thành công', color: COLORS.CULTIVATION,
         description: `${icon()} Đạo hữu đóng cửa động phủ, tĩnh tọa nhập định. Linh khí tự thấm vào kinh mạch — **không cần bấm**, rời đi lúc nào cũng được.${Number.isFinite(r.maxSeconds) ? `\n⏳ Phiên này kéo dài tối đa **${long(r.maxSeconds)}**, đủ hạn sẽ tự xuất quan lúc ${ts(r.start + r.maxSeconds)}.` : ''}${forcedLine(r.notice)}\n\n${HINT}`,
-        fields: stats(r), footer: 'Treo máy chậm hơn tu luyện bấm tay — bù lại không tốn công.',
+        fields: stats(r), footer: 'Treo = 5% tốc độ Tu Luyện bấm tay, bù lại không tốn công và không giới hạn giờ.',
       });
     case 'dang_treo':
       return createEmbed({
