@@ -7,7 +7,41 @@
  * mọi thao tác CẬP NHẬT TẠI CHỖ (không sinh tin nhắn mới, không bị trôi). Chủ menu được kiểm tra ở mỗi lần bấm; mọi hàm logic lại kiểm tra
  * quyền sở hữu pet_id theo (owner, pet_id) nên không thể giả mạo.
  */
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const DJS = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = DJS;
+
+/**
+ * v14.3 — EmbedBuilder "an toàn giới hạn". Emoji tùy chỉnh <:tên:id> dài ~45 ký tự nên một dòng thú có thể >150 ký tự;
+ * 8 dòng như vậy vượt 1024 của một ô → Discord/discord.js ném lỗi (mã 65dd). Mọi ô/mô tả đều được cắt theo ranh giới DÒNG
+ * (không cắt giữa emoji <:..:..>), thêm "…", và không bao giờ để trống.
+ */
+const LIM = { fname: 256, fvalue: 1024, desc: 4096, title: 256 };
+function fit(text, max, fallback = '\u200b') {
+  let t = String(text === undefined || text === null ? '' : text);
+  if (!t.trim()) return fallback;
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max - 2);
+  const nl = cut.lastIndexOf('\n');
+  let out = nl > max * 0.4 ? cut.slice(0, nl) : cut;
+  out = out.replace(/<a?:[A-Za-z0-9_]*(?::\d*)?$/, '').replace(/<[^>]*$/, '');       // bỏ phần emoji/mention bị cắt dở
+  const open = (out.match(/\*\*/g) || []).length % 2; if (open) out += '**';           // đóng đậm nếu bị cắt giữa chừng
+  return `${out}…`;
+}
+/** Ghép danh sách dòng vừa khít `max` ký tự; phần còn lại gộp thành "… và N mục nữa". */
+function listFit(lines, max, more = (n) => `… và ${n} mục nữa`) {
+  const out = []; let len = 0;
+  for (let i = 0; i < lines.length; i += 1) {
+    const tail = i < lines.length - 1 ? more(lines.length - i - 1).length + 1 : 0;
+    if (len + lines[i].length + 1 + tail > max && out.length) return `${out.join('\n')}\n${more(lines.length - i)}`;
+    out.push(lines[i]); len += lines[i].length + 1;
+  }
+  return out.join('\n');
+}
+class EmbedBuilder extends DJS.EmbedBuilder {
+  addFields(...f) { return super.addFields(f.flat().map((x) => ({ ...x, name: fit(x.name, LIM.fname), value: fit(x.value, LIM.fvalue) })).slice(0, 25)); }
+  setDescription(t) { return super.setDescription(fit(t, LIM.desc, '\u200b')); }
+  setTitle(t) { return super.setTitle(fit(t, LIM.title, '\u200b')); }
+}
 const D = require('../db');
 const K = require('../game/constants');
 const Cu = require('../game/cultivator');
@@ -36,6 +70,8 @@ const COLORS = { 1: 0x95a5a6, 2: 0x2ecc71, 3: 0x3498db, 4: 0xa0522d, 5: 0x9b59b6
 
 // ---------------------------------------------------------------- tiện ích dựng thành phần
 const em = (s) => toComponentEmoji(s);
+/** Emoji cho lựa chọn của menu chọn: PHẢI là đối tượng {name} hoặc {id,name} (chuỗi Unicode trần làm discord.js ném lỗi xác thực). */
+const optEmoji = (s) => { const e = toComponentEmoji(s); return typeof e === 'string' ? { name: e } : e; };
 function btn(id, label, emoji, style = ButtonStyle.Secondary, disabled = false) {
   const b = new ButtonBuilder().setCustomId(id.slice(0, 100)).setLabel(String(label).slice(0, 80)).setStyle(style).setDisabled(!!disabled);
   const e = emoji ? em(emoji) : null; if (e) b.setEmoji(e);
@@ -88,12 +124,12 @@ function pickPet(owner, petId) {
 }
 function navRow(uid, tab, petId) {
   return rowOf(new StringSelectMenuBuilder().setCustomId(cid(uid, 'nav', petId)).setPlaceholder('📂 Chọn mục...')
-    .addOptions(TABS.map(([k, name, icon, desc]) => ({ label: name, value: k, emoji: icon, description: desc.slice(0, 100), default: k === tab }))));
+    .addOptions(TABS.map(([k, name, icon, desc]) => ({ label: name, value: k, emoji: optEmoji(icon), description: desc.slice(0, 100), default: k === tab }))));
 }
 function petSelRow(uid, tab, pets, cur, arg = '') {
   if (!pets.length) return null;
   return rowOf(new StringSelectMenuBuilder().setCustomId(cid(uid, 'psel', 0, `${tab}${arg ? `:${arg}` : ''}`)).setPlaceholder('🐾 Chọn Linh Thú...')
-    .addOptions(pets.slice(0, 25).map((p) => { const v = P.view(p); return { label: `${v.name} · Lv.${v.level}`.slice(0, 100), description: `${v.tierInfo.name} · ${v.sp.hanh}${p.slot ? ` · ${slotName(p.slot)}` : ' · Viên'}${p.fighter ? ' · ⚔️ xuất chiến' : ''}`.slice(0, 100), value: String(p.pet_id), default: cur && p.pet_id === cur.pet_id }; })));
+    .addOptions(pets.slice(0, 25).map((p) => { const v = P.view(p); return { label: `${v.name} · Lv.${v.level}`.slice(0, 100), description: `${v.tierInfo.name} · ${v.sp.hanh}${p.slot ? ` · ${slotName(p.slot)}` : ' · Viên'}${p.fighter ? ' · ⚔️ xuất chiến' : ''}`.slice(0, 100), value: String(p.pet_id), default: !!(cur && p.pet_id === cur.pet_id) }; })));
 }
 
 function renderOverview(uid, ctx) {
@@ -104,8 +140,8 @@ function renderOverview(uid, ctx) {
   const lines = ['bm', 'dh1', 'dh2'].map((k) => { const p = sl[k]; const v = p ? P.view(p, row.realm_index) : null; return `${k === 'bm' ? '🔮' : '🐾'} **${slotName(k)}:** ${v ? petOneLine(v) : '_trống_'}`; });
   e.addFields({ name: '📜 Ô Khế Ước (1 Bản Mệnh + 2 Đồng Hành · mỗi trận chỉ 1 thú xuất chiến)', value: lines.join('\n').slice(0, 1020), inline: false });
   const nVien = P.countVien(owner);
-  e.addFields({ name: `🏞️ Linh Thú Viên (${nVien}/${PB.VIEN_CAPACITY})`, value: nVien ? P.listPets(owner).filter((p) => !p.slot).slice(0, 8).map((p) => petOneLine(P.view(p, row.realm_index))).join('\n') + (nVien > 8 ? `\n… và ${nVien - 8} con nữa (mục Danh Sách)` : '') : '_Chưa có thú nào ở Viên._', inline: false });
-  if (eggs.length) e.addFields({ name: `🥚 Trứng (${eggs.length}/${PB.EGG_CAPACITY})`, value: eggs.map((g) => `• ${P.tierIcon(g.tier)} Trứng ${PB.tierInfo(g.tier).name} — ${g.hatch_at <= now() ? '**đã nở được!**' : `nở sau ${P.fmtDur(g.hatch_at - now())}`}`).join('\n').slice(0, 1000), inline: false });
+  { const vien = P.listPets(owner).filter((p) => !p.slot).map((p) => petOneLine(P.view(p, row.realm_index))); e.addFields({ name: `🏞️ Linh Thú Viên (${nVien}/${PB.VIEN_CAPACITY})`, value: vien.length ? listFit(vien, 1000, (n) => `… và ${n} con nữa (mục Danh Sách)`) : '_Chưa có thú nào ở Viên._', inline: false }); }
+  if (eggs.length) e.addFields({ name: `🥚 Trứng (${eggs.length}/${PB.EGG_CAPACITY})`, value: listFit(eggs.map((g) => `• ${P.tierIcon(g.tier)} Trứng ${PB.tierInfo(g.tier).name} — ${g.hatch_at <= now() ? '**đã nở được!**' : `nở sau ${P.fmtDur(g.hatch_at - now())}`}`), 1000, (n) => `… và ${n} trứng nữa`), inline: false });
   if (wild) { const sp = PD.speciesOf(wild.species); e.addFields({ name: '🌿 Thú hoang đang chờ', value: `${P.emojiOf(sp)} **${sp.name}** (${P.tierIcon(sp.tier)} ${PB.tierInfo(sp.tier).name}) · Lv.${wild.level} — còn ${P.fmtDur(wild.expires_at - now())}. Vào mục **Khế Ước** để thu phục.`, inline: false }); }
   e.addFields({ name: '🎒 Vật phẩm Linh Thú', value: itemsText(owner).slice(0, 1000), inline: false });
   return { embeds: [e], components: [navRow(uid, 'ov', 0), rowOf(btn(cid(uid, 'hatch'), 'Nở Trứng', '🐣', ButtonStyle.Success, !eggs.some((g) => g.hatch_at <= now())), btn(cid(uid, 'shop'), 'Cửa Hàng Linh Thú', E.shop, ButtonStyle.Primary), btn(cid(uid, 'rf', 0, 'ov'), 'Làm Mới', E.lammoi))] };
@@ -197,7 +233,7 @@ function renderBlood(uid, petId, sac) {
   let sacPet = sac ? cands.find((p) => p.pet_id === Number(sac)) : null;
   e.addFields({ name: `🧬 Truyền Thừa (đời ${v.gen}/${PB.INHERIT.maxGen}) — hiến tế 1 thú ở Viên`, value: `Thú hiến tế biến mất; thú này nhận **${Math.round(PB.INHERIT.frac * 100)}%** độ thuần của nó và có thể thừa hưởng **1 kỹ năng** (ô Truyền Thừa — thay ô cũ). Phí ${fmtNum(PB.INHERIT.cost(v.tier))} Linh Thạch. Thú hiến tế phải ≥ ${PB.tierInfo(Math.max(1, v.tier - PB.INHERIT.minTierGap)).name}.${cands.length ? '' : '\n_Chưa có thú phù hợp ở Linh Thú Viên._'}` });
   if (cands.length) {
-    comps.push(rowOf(new StringSelectMenuBuilder().setCustomId(cid(uid, 'ssel', pet.pet_id)).setPlaceholder('🧬 Chọn thú hiến tế...').addOptions(cands.slice(0, 25).map((p) => { const sv = P.view(p); return { label: `${sv.name} · Lv.${sv.level}`.slice(0, 100), description: `${sv.tierInfo.name} · huyết mạch ${sv.purity}`.slice(0, 100), value: String(p.pet_id), default: sacPet && sacPet.pet_id === p.pet_id }; }))));
+    comps.push(rowOf(new StringSelectMenuBuilder().setCustomId(cid(uid, 'ssel', pet.pet_id)).setPlaceholder('🧬 Chọn thú hiến tế...').addOptions(cands.slice(0, 25).map((p) => { const sv = P.view(p); return { label: `${sv.name} · Lv.${sv.level}`.slice(0, 100), description: `${sv.tierInfo.name} · huyết mạch ${sv.purity}`.slice(0, 100), value: String(p.pet_id), default: !!(sacPet && sacPet.pet_id === p.pet_id) }; }))));
     if (sacPet) {
       const sv = P.view(sacPet); e.addFields({ name: `Hiến tế: ${nm(sv)}`, value: `+${Math.floor(sv.purity * PB.INHERIT.frac)} độ thuần. Chọn kỹ năng muốn truyền (tỉ lệ ~${Math.round(P.inheritChance({ tier: v.tier }, { tier: sv.tier, purity: sv.purity }) * 100)}%):\n${sv.skills.map((s) => `• ${s.name}`).join('\n')}` });
       comps.push(rowOf(...sv.skills.map((s) => btn(cid(uid, 'inh', pet.pet_id, `${sacPet.pet_id}:${s.key}`), s.name, s.kind === 'active' ? '🗡️' : '🛡️', ButtonStyle.Danger)), btn(cid(uid, 'inh', pet.pet_id, `${sacPet.pet_id}:`), 'Chỉ lấy huyết mạch', '🩸', ButtonStyle.Secondary)));

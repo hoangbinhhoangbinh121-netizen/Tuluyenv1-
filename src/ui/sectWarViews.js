@@ -2,6 +2,16 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { EmbedBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+/** v14.3: ghép các dòng vừa khít `max` ký tự (ô embed tối đa 1024) — cắt theo DÒNG, không cắt giữa emoji <:..:..>. */
+function clipLines(lines, max) {
+  const out = []; let len = 0;
+  for (let i = 0; i < lines.length; i += 1) {
+    const more = `… và ${lines.length - i - 1} dòng nữa`;
+    if (len + lines[i].length + 1 + (i < lines.length - 1 ? more.length + 1 : 0) > max && out.length) return `${out.join('\n')}\n… và ${lines.length - i} dòng nữa`;
+    out.push(lines[i].length > max ? `${lines[i].slice(0, max - 2)}…` : lines[i]); len += lines[i].length + 1;
+  }
+  return out.join('\n');
+}
 const K = require('../game/constants');
 const W = require('../game/sectwar');
 const Cu = require('../game/cultivator');
@@ -35,7 +45,7 @@ function buildRegistrationEmbed(warId) {
   const e = new EmbedBuilder().setTitle(`${E.tongmon} Tông Môn Chiến ${W.worldLabel(world)} — Đăng Ký Tham Gia`).setColor(world ? 0x5865f2 : 0xc27c0e)
     .setDescription(`Chiến trường **${W.worldLabel(world)}** đang mở đăng ký! Bấm **🙋 Tham Gia** để ghi danh cho tông môn của bạn.\n⚠️ Chỉ dành cho ${W.eligibilityText(world)}. Nhân Giới và Linh Giới có hai chiến trường riêng, tự chiến với nhau.\n🔒 Chỉ **Admin** mới có thể bấm **▶️ Bắt Đầu Trận** để chính thức khai chiến.`);
   e.addFields(rows.length
-    ? { name: `📋 Danh sách ghi danh (${total} người)`, value: rows.map((r) => `${E.tongmon} **${getSectName(r.sect_id)}** — ${r.c} người đã ghi danh`).join('\n'), inline: false }
+    ? { name: `📋 Danh sách ghi danh (${total} người)`, value: clipLines(rows.map((r) => `${E.tongmon} **${getSectName(r.sect_id)}** — ${r.c} người đã ghi danh`), 1000), inline: false }
     : { name: '📋 Danh sách ghi danh', value: 'Chưa có ai ghi danh.', inline: false });
   return e.setFooter({ text: 'Đăng ký không giới hạn số lượng tông môn tham chiến.' });
 }
@@ -57,9 +67,9 @@ function buildMapEmbed(warId) {
     e.addFields({ name: `${info.emoji} ${info.name} (+${info.points}/10s)`, value: `${owner}${contest}`, inline: true });
   }
   const ranking = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-  e.addFields({ name: `${E.cup} Bảng Xếp Hạng`, value: ranking.length ? ranking.slice(0, 10).map(([sid, pts], i) => `**${i + 1}.** ${getSectName(sid)} — ${fmtNum(pts)} điểm`).join('\n') : 'Chưa có tông môn nào ghi điểm.', inline: false });
+  e.addFields({ name: `${E.cup} Bảng Xếp Hạng`, value: ranking.length ? clipLines(ranking.slice(0, 10).map(([sid, pts], i) => `**${i + 1}.** ${getSectName(sid)} — ${fmtNum(pts)} điểm`), 1000) : 'Chưa có tông môn nào ghi điểm.', inline: false });
   const wlog = W.getWarLog(warId);
-  if (wlog.length) e.addFields({ name: '📜 Chiến Báo', value: wlog.join('\n').slice(0, 1000), inline: false });
+  if (wlog.length) e.addFields({ name: '📜 Chiến Báo', value: clipLines(wlog, 1000), inline: false });
   if (war) {
     if (war.status === 'active') e.setFooter({ text: `⏳ Thời gian còn lại: ${W.fmtTimeLeft(war.ends_at - now())} | Đạt ${fmtNum(W.WIN_SCORE)} điểm để thắng ngay.` });
     else if (war.status === 'finished') e.setFooter({ text: '🏁 Trận chiến đã kết thúc.' });

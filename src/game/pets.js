@@ -458,8 +458,9 @@ function inventorySummary(userId) {
   if (n) parts.push(`🐾 ${n} Linh Thú`);
   const ready = eggs.filter((e) => e.hatch_at <= now()).length;
   if (eggs.length) parts.push(`🥚 ${eggs.length} trứng${ready ? ` (${ready} đã nở được)` : ''}`);
-  const it = Object.entries(items).map(([k, q]) => `${itemName(k)} ×${q}`);
-  return { n, eggs: eggs.length, items, text: [parts.join(' · '), it.join('\n')].filter(Boolean).join('\n') };
+  // v14.3: tên thuần (không emoji tùy chỉnh dài ~45 ký tự) + nối ngang → Kho Đồ không bao giờ vượt 1024 ký tự/ô
+  const it = Object.entries(items).map(([k, q]) => `${PB.ITEMS[k] ? PB.ITEMS[k].name : k} ×${q}`);
+  return { n, eggs: eggs.length, items, text: [parts.join(' · '), it.join(' · ')].filter(Boolean).join('\n') };
 }
 
 module.exports = {
