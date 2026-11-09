@@ -4,6 +4,7 @@
  *  - Bắt đầu: ghi mốc `treo_start` vào DB (còn nguyên khi bot khởi động lại).
  *  - Xuất quan: tu vi nhận = tốc độ Tu Luyện bấm tay × BAL.B.TREO_EFFICIENCY (10%) × thời gian treo.
  *  - v14.2: KHÔNG còn giới hạn 4 giờ (TREO_MAX_HOURS = 0); Xuất Quan tách thành lệnh /xuatquan riêng (cùng engine). Treo = đúng 5% Tu Luyện bấm tay.
+ *  - v15: Treo = 10% tốc độ Tu Luyện bấm tay (yếu hơn nhiều, không nhân đôi/proc x2), tu vi tích lũy dần đều theo thời gian.
  *  - (cũ, v12.5) mỗi phiên treo tối đa TREO_MAX_HOURS (4 giờ). Đủ hạn → XUẤT QUAN CƯỠNG CHẾ: tự cộng tu vi của 4 giờ và kết thúc phiên
  *    (vòng nền quét mỗi phút + xử lý ngay khi người chơi mở /treoquan). Dùng /treoquan để LÀM MỚI và treo phiên tiếp theo.
  *  - Tốc độ tính từ mốc GỐC (R.tuViRequiredBase) và hệ số tư chất/buff dùng CHUNG với Tu Luyện (A.tuluyenMultFor)
@@ -23,9 +24,9 @@ const maxSeconds = () => (B.TREO_MAX_HOURS > 0 ? int(B.TREO_MAX_HOURS * 3600) : 
 
 /** Tu vi / giây khi treo ở cảnh giới & tư chất hiện tại. */
 function rateOf(userId, row) {
-  // v14.2: = tu vi kỳ vọng của Tu Luyện bấm tay (cùng công thức, gồm ×TULUYEN_SPEED_MULT & sàn) ÷ cooldown × TREO_EFFICIENCY (5%).
+  // v15: = tu vi của Tu Luyện bấm tay (cùng công thức, gồm ×TULUYEN_SPEED_MULT & sàn, KHÔNG có cơ hội x2) ÷ cooldown × TREO_EFFICIENCY (10%) → tích lũy đều theo thời gian.
   const { mult, sectBuff, buff } = A.tuluyenMultFor(userId, row);
-  const handPerSec = A.tuluyenExpectedPerClick(userId, row) / CD.COOLDOWN_TULUYEN;
+  const handPerSec = A.tuluyenExpectedPerClick(userId, row, { noProc: true }) / CD.COOLDOWN_TULUYEN;
   return { rate: handPerSec * B.TREO_EFFICIENCY, handRate: handPerSec, mult, sectBuff: sectBuff > 1, buff: buff > 1 };
 }
 

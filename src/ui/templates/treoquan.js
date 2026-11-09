@@ -45,7 +45,7 @@ function view(r) {
       return createEmbed({
         cat: 'treoquan', header: 'BẾ QUAN TREO', status: 'Nhập định thành công', color: COLORS.CULTIVATION,
         description: `${icon()} Đạo hữu đóng cửa động phủ, tĩnh tọa nhập định. Linh khí tự thấm vào kinh mạch — **không cần bấm**, rời đi lúc nào cũng được.${Number.isFinite(r.maxSeconds) ? `\n⏳ Phiên này kéo dài tối đa **${long(r.maxSeconds)}**, đủ hạn sẽ tự xuất quan lúc ${ts(r.start + r.maxSeconds)}.` : ''}${forcedLine(r.notice)}\n\n${HINT}`,
-        fields: stats(r), footer: 'Treo = 5% tốc độ Tu Luyện bấm tay, bù lại không tốn công và không giới hạn giờ.',
+        fields: stats(r), footer: 'Treo = 10% tốc độ Tu Luyện bấm tay (không nhân đôi), tu vi tích lũy dần theo thời gian.',
       });
     case 'dang_treo':
       return createEmbed({

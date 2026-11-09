@@ -39,7 +39,7 @@ function tuluyenMultFor(userId, row) {
  * Bế Quan Treo lấy giá trị này × TREO_EFFICIENCY → treo luôn đúng bằng 5% tốc độ bấm tay ở MỌI cảnh giới
  * (trước v14.2 treo thiếu ×3 TULUYEN_SPEED_MULT và bỏ qua sàn Phàm Nhân nên chỉ nhận ~1,7% và ~0,03%).
  */
-function tuluyenExpectedPerClick(userId, row) {
+function tuluyenExpectedPerClick(userId, row, opts = {}) {
   const { mult } = tuluyenMultFor(userId, row);
   const need = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier);
   const tb = BAL.tuluyenBase(need, row.realm_index, row.stage_index, CD.COOLDOWN_TULUYEN);
@@ -47,7 +47,8 @@ function tuluyenExpectedPerClick(userId, row) {
   let sum = 0; let n = 0;
   for (let k = 8; k <= 15; k += 1) for (let q = 0; q < 21; q += 1) { sum += Math.max(k * COMPENSATION * rs, tb * (0.85 + 0.3 * (q + 0.5) / 21)); n += 1; }
   const base = sum / n;
-  return Math.max(1, base * mult * BAL.B.TULUYEN_SPEED_MULT) * (1 + T.bundle(row).proc);
+  // v15: opts.noProc = bỏ cơ hội nhận gấp đôi (Bế Quan Treo không được x2, chỉ tích lũy đều như bấm tay thường)
+  return Math.max(1, base * mult * BAL.B.TULUYEN_SPEED_MULT) * (opts.noProc ? 1 : (1 + T.bundle(row).proc));
 }
 
 /** Tu luyện — trả dữ liệu có cấu trúc (UI v7 dựng Embed từ đây). */

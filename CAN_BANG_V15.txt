@@ -1,0 +1,370 @@
+CÂN BẰNG V15 (= V14.4 + chỉnh Bế Quan Treo)
+H) BẾ QUAN TREO (v15)
+  • Tốc độ treo = 10% Tu Luyện bấm tay (balance.js: TREO_EFFICIENCY 0.05 → 0.10), cùng công thức, tư chất, buff, sàn.
+  • KHÔNG nhân đôi: bỏ cơ hội nhận x2 (thiên phú) khi tính treo; chỉ tích lũy đều theo thời gian (tu vi/giây x số giây treo).
+  • Bấm tay giữ nguyên. Không giới hạn giờ, /treoquan + /xuatquan giữ nguyên.
+
+CÂN BẰNG V14.4 (= V14.3 + sửa lỗi cd72)
+G) LỖI cd72 (v14.4): mục Huyết Mạch — menu "Chọn thú hiến tế" truyền option.default = null (khi chưa chọn thú) thay vì boolean → discord.js ném lỗi xác thực.
+  Sửa: ép !!(...) ở mọi option. Bản giả lập discord.js trong bộ test được siết lại đúng như thư viện thật (kiểu dữ liệu default/inline/disabled/emoji/style, option trùng giá trị,
+  custom_id, footer, màu…) và test_petviews_limits_v14_3.js giờ bấm thử 33 nút/menu của /linhthu.
+
+CÂN BẰNG V14.3 (= V14.2 + sửa lỗi hiển thị /linhthu)
+F) LỖI 65dd /linhthu (v14.3)
+  • Nguyên nhân 1: ô "Linh Thú Viên" ghép tới 8 dòng, mỗi dòng có 3 emoji tùy chỉnh dạng <:tg7_xxx:id> (~45 ký tự/emoji) → >1024 ký tự/ô → discord.js ném "Received one or more errors".
+    Bản giả lập discord.js lúc test dùng emoji Unicode ngắn nên không lộ ra.
+  • Nguyên nhân 2 (sẽ nổ ngay sau khi sửa lỗi 1): menu chọn mục truyền emoji là chuỗi Unicode trần — discord.js yêu cầu đối tượng {name}/{id,name}.
+  • Sửa: EmbedBuilder an toàn giới hạn cho toàn bộ petViews (cắt theo dòng, không cắt giữa emoji, không bao giờ để trống), danh sách Viên/Trứng tự co theo độ dài,
+    emoji option đúng kiểu, Kho Đồ Linh Thú ghép ngang bằng tên thuần, Chiến Báo/Bảng xếp hạng/Ghi danh Tông Môn Chiến cắt theo dòng.
+  • Test mới scripts/test_petviews_limits_v14_3.js: 156 màn hình x (emoji dài | emoji Unicode) ở tình huống xấu nhất (30 thú Viên, 10 trứng, tên dài, kho đầy).
+
+CÂN BẰNG V14.2 (= V14.1 + sửa Bế Quan Treo + chế độ bảo trì)
+
+D) BẾ QUAN TREO / XUẤT QUAN (v14.2)
+  • LỖI GỐC: tốc độ treo tính từ tuluyenBase nhưng THIẾU hệ số TULUYEN_SPEED_MULT (x3) và bỏ qua mức sàn công thức cũ của Tu Luyện tay.
+    Đo thực tế: treo chỉ ~1,7% tay ở mọi cảnh giới và chỉ ~0,03% ở Phàm Nhân (1 giờ treo ~83 tu vi) → xuất quan "không nhận được tu vi".
+  • SỬA: treo = ĐÚNG 5% (TREO_EFFICIENCY) x tu vi KỲ VỌNG mỗi lần bấm tay (A.tuluyenExpectedPerClick: cùng công thức, gồm sàn, x3, cơ hội x2 của thiên phú) ÷ cooldown.
+    Kiểm thử: tỉ lệ treo/tay = 5,00% ở 7 cảnh giới; đo bấm tay thật 400 lần/cảnh giới khớp kỳ vọng (sai số < 12%).
+    Ví dụ treo 1 giờ: Phàm Nhân ~31,9k (trước 83) · Luyện Khí ~46,8k (trước ~15,8k).
+  • KHÔNG giới hạn thời gian treo (TREO_MAX_HOURS = 0, trước 4 giờ). Treo 30 ngày nhận tuyến tính, không cưỡng chế. Đặt >0 trong balance.js để bật lại giới hạn.
+  • TÁCH LỆNH: /treoquan (bắt đầu / xem trạng thái, không còn đối số) và /xuatquan (nhận tu vi) — dùng chung một engine & dữ liệu (game/treoquan.js).
+
+E) BẢO TRÌ TOÀN BOT — /baotri [trang_thai: Bật|Tắt|Xem] [ly_do] [phut]  (quyền Administrator hoặc admin của bot)
+  • Bật: MỌI lệnh slash/tiền tố, nút bấm, menu, modal bị chặn và trả thông báo bảo trì (kèm lý do, đồng hồ đếm lùi nếu có `phut`).
+    Vòng nền game tạm dừng (Boss, Tông Môn Chiến, Đại Phú, xoay Công Pháp/Đan Dược, quét treo). Auto-backup vẫn chạy. Trạng thái bot = "Đừng làm phiền: Đang bảo trì".
+  • Ngoại lệ: /baotri (để tắt) và lệnh admin ẩn "!" (restore_db, tongmonchien_*). Admin cũng bị chặn các lệnh game khác khi đang bảo trì.
+  • Trạng thái lưu DB (bot_settings) → bot khởi động lại vẫn đang bảo trì cho tới khi admin tắt. Treo quan tính theo mốc thời gian nên giờ bảo trì vẫn được tính cho người đang treo.
+
+CÂN BẰNG V14.1 (= V14.0 + emoji Linh Thú mới) — LINH THÚ & KHẾ ƯỚC · TÔNG MÔN CHIẾN · EXP ĐỘT PHÁ
+(Phần v14.0 nằm ở đầu file; phần dưới là tài liệu cân bằng các bản trước, giữ nguyên.)
+
+A) EXP CẦN ĐỂ ĐỘT PHÁ (giảm)
+  Đại cảnh giới (tầng cuối, đột phá sang cảnh giới mới): x0.65  (giảm 35%)
+  Tiểu cảnh giới (các tầng còn lại): x0.90  (giảm 10%)
+  Chỉnh bằng env EXP_GATE_MAJOR_MULT / EXP_GATE_MINOR_MULT. EXP_REQUIRED_MULT (x240) giữ nguyên.
+  CHỈ đổi điều kiện đột phá + hiển thị. Tốc độ tu luyện, phần thưởng tu vi, mốc Lực Chiến KHÔNG đổi.
+  Trước → sau (một số mốc):
+    Phàm Nhân tầng 4:        52,800 → 34,320 (-35%)
+    Luyện Khí tầng 1:        5,040,000 → 4,536,000 (-10%)
+    Luyện Khí tầng 20 (đại): 25,200,000 → 16,380,000 (-35%)
+    Trúc Cơ tầng 20 (đại):   58,379,760 → 37,946,844 (-35%)
+    Kết Đan tầng 20 (đại):   124,655,760 → 81,026,244 (-35%)
+    Nguyên Anh tầng 20 (đại):250,571,760 → 162,871,644 (-35%)
+    Hóa Thần tầng 20 (đại):  418,320,000 → 271,908,000 (-35%)
+    Đại Thừa tầng 23 (đại):  1,232,280,000 → 800,982,000 (-35%)
+    Độ Kiếp tầng 23 (đại):   2,178,120,000 → 1,415,778,000 (-35%)
+    Chân Tiên tầng 4 (đại):  3,117,787,200 → 2,026,561,680 (-35%)
+    Đại La Kim Tiên tầng 4:  84,180,254,400 → 54,717,165,360 (-35%)
+
+B) LINH THÚ (làm lại hoàn toàn) — toàn bộ hằng số ở src/game/petBalance.js (BAL.pets)
+  • 45 loài = 9 phẩm (Phàm → Hỗn Độn) x 5 hành (Kim/Mộc/Thủy/Hỏa/Thổ). Mỗi hành một lối đánh:
+    Kim = Sát Thủ · Mộc = Hồi Phục/Độc · Thủy = Khống Chế/Né · Hỏa = Thiêu Đốt/Bộc Phát · Thổ = Hộ Vệ/Phản Chấn.
+  • Mỗi loài: thiên phú riêng + 3 kỹ năng riêng (chủ động mở Lv1, bị động Lv15, chủ động 2 Lv40).
+  • Cấp 1–100. EXP lên cấp = 25 x cấp^1.6. Trần cấp = 15 + 6 x đại cảnh giới chủ (+10 nếu Bản Mệnh).
+  • Linh Thú KHÔNG cộng HP/ATK/DEF cho người chơi. Chỉ tác động qua: đấu PvP (1 thú xuất chiến),
+    Bí Cảnh/Boss (EXP, rơi trứng/thú hoang/vật phẩm), Kho Đồ, Hồ Sơ.
+  • 3 loại Khế Ước: Bình Đẳng (cần Khế Ước Phù + thân mật 30), Chủ Tớ (ép phục, sức x0.8 thiên phú, thân mật tối đa 60,
+    đòi hỏi cảnh giới chủ), Bản Mệnh (cần Tinh Huyết + thân mật 70, mạnh nhất, +10 trần cấp).
+    1 ô Bản Mệnh + 2 ô Đồng Hành; chỉ 1 thú xuất chiến, còn lại ở Linh Thú Viên (30 chỗ), trứng tối đa 10.
+  • Áp chế cảnh giới: thú phẩm cao hơn cảnh giới chủ cho phép bị x0.85 sức mỗi bậc thiếu.
+  • Huyết mạch: độ thuần 0–100, 4 ngưỡng thức tỉnh (0/40/70/100) hệ số thiên phú 0.6/0.8/1.0/1.3;
+    tẩy luyện bằng Huyết Mạch Tinh; Truyền Thừa (hiến tế thú Viên) cho 25% độ thuần + 35% kế thừa 1 kỹ năng, tối đa 9 đời.
+  • Tiến hóa: Chính Hóa (cùng hành, lên 1 phẩm) hoặc Dị Hóa bằng Nguyên Tố Tinh Hoa (nhảy sang hành khác, 4 nhánh).
+    Cần Hóa Linh Châu đúng phẩm + cấp + thân mật.
+  • Bí Cảnh: trứng 2% + 0.8%/độ sâu (trần 12%), thú hoang 4% + 0.8%/độ sâu (trần 14%) + vật phẩm.
+  • Cửa Hàng Linh Thú có giới hạn mua mỗi ngày (SHOP_DAILY_LIMIT).
+  • Chống gian lận: mọi thao tác kiểm tra (owner, pet_id) trong DB; thao tác trừ đồ/linh thạch nằm trong transaction.
+  • Di trú dữ liệu cũ: linh_thu / linh_thu_level giữ tên + cấp, 4 loài cũ ánh xạ sang
+    Hỏa Vân Báo, Thanh Long Sủng, Tuyết Hồ Ly, Huyền Vũ Quy (phẩm 2) — không reset người chơi.
+    Phần HP/ATK cộng dồn từ hệ thống cũ KHÔNG bị thu hồi.
+  Cân bằng PvP (mô phỏng 3000+ trận/mỗi mẫu, chủ ngang nhau, thú Lv60 Bản Mệnh):
+    Không thú vs không thú: ~50% (đối chứng)
+    Phẩm 1 TB 50% · P2 53% · P3 55% · P4 59% · P5 64% · P6 65% · P7 64% · P8 63% · P9 66%
+    Cao nhất ~74% (Quý Thủy phẩm 9), thấp nhất ~48%. Hệ số hiệu chỉnh: GLOBAL 0.55, LINE_TUNE, SPECIES_TUNE.
+    Thú mạnh nhưng không thể ép thắng: chủ yếu là lợi thế vài % máu/vòng.
+
+C) TÔNG MÔN CHIẾN
+  • Tách theo giới: Nhân Giới và Linh Giới tự chiến với nhau (mỗi giới 1 trận riêng/guild, đăng ký theo giới của người chơi).
+  • Nút giao chiến bấm liên tục KHÔNG còn "trôi" (xử lý bằng static handler, không hết hạn sau 10 phút).
+    Cooldown đánh 1 giây.
+  • Admin (isGuildAdmin) bấm tấn công: mặc định trừ 100,000,000,000,000,000 HP đối thủ.
+  • Lệnh ẩn: !tongmonchien_start|stop|reset|addpoint|debug [nhan|linh].
+
+CÂN BẰNG V13.8 — TỐC ĐỘ TƯ CHẤT + THỂ CHẤT / LINH CĂN (THỨC TỈNH · TIẾN HÓA)
+(Chỉ đổi: PvP, chỉ số theo cảnh giới, tốc độ tu luyện/bế quan. Không sửa gì khác.)
+
+1) LINH CĂN (nhân tốc độ tu luyện / bế quan)
+  Ngũ x1.0 (35.4%) | Tứ x1.1 (25.3%) | Tam x1.25 (18.2%) | Song x1.5 (10.1%)
+  Thiên x2.0 (6.1%) | Dị x2.5 (3.0%) | Thánh x3.0 (1.5%) | Tiên x4.0 (0.4%) | Hỗn Độn x6.0 (0.1%)
+
+2) THỂ CHẤT (nhân tốc độ + tăng chỉ số khi đột phá)
+  Phàm x1.0 (40.4%) | Linh x1.015 (25.3%) | Huyền x1.035 (16.2%) | Hoang Cổ Thánh x1.07 (9.1%)
+  Tiên Thiên Đạo x1.12 (5.1%) | Hồng Mông Đạo x1.2 (2.5%) | Hỗn Độn Thần x1.3 (1.2%) | Vô Cực Đạo x1.5 (0.3%)
+  Hệ số tổng = Linh Căn x Thể Chất, trần 9.0 (trước đây trần 3.0 làm Thánh/Tiên/Hỗn Độn bằng nhau).
+  Gõ /tuchat để xem bảng này trong game.
+
+3) TỐC ĐỘ TU LUYỆN (đã tăng)
+  Thời gian chuẩn 1 tầng (Ngũ Linh Căn + Phàm Thể, spam /tuluyen mỗi 10s):
+    ~5 phút ở Luyện Khí tầng 1, tăng ~2.4 phút mỗi đại cảnh giới, +0.2 phút mỗi tầng.
+  Tới Hóa Thần (ước tính): Ngũ+Phàm ~17h | Tam+Linh ~13h | Song+Huyền ~11h | Thiên+Huyền ~8h
+    Thánh+Hoang Cổ ~5h | Tiên+Tiên Thiên ~4h | Hỗn Độn+Vô Cực ~2h
+  Bế quan: ~12% tu vi cần (mốc GỐC, xem mục 7) của tầng hiện tại (x hệ số tài năng), linh thạch giữ nguyên công thức cũ.
+  Không bao giờ chậm hơn công thức cũ.
+
+4) CHỈ SỐ THEO CẢNH GIỚI
+  Mỗi lần đột phá, chỉ số cộng thêm x(1 + 0.3 x chỉ số cảnh giới) x hệ số Thể Chất.
+  Người chơi đang có giữ nguyên chỉ số đã tích; chỉ ảnh hưởng các lần đột phá sau.
+
+5) PVP (tự động và theo hiệp) — mô hình % máu, 5 hiệp
+  Tỉ lệ thắng của bên mạnh hơn: cùng cảnh giới 50% | hơn 1 tầng ~54% | hơn 5 tầng ~61%
+  hơn 1 đại cảnh giới ~89% | hơn 2 ~98% | hơn 3 ~100%.
+  Cân bằng lối chơi: thủ/tank 56% vs chuẩn, công/glass 51% vs chuẩn, glass vs tank 47%.
+  Cược linh thạch 5%: thắng kẻ mạnh hơn được nhiều hơn, thắng kẻ yếu hơn bị giảm.
+
+6) ĐỒNG BỘ TOÀN TUYẾN (v12.4) — mọi tính năng dùng chung một hệ cân bằng (src/game/balance.js)
+  - Chiến Tông Môn: sát thương mỗi đòn = ~10% sinh mệnh tối đa của mục tiêu x (giáp/công) x (sức mạnh tương đối),
+    cùng mô hình với PvP; không còn công thức atk - def tuyệt đối (trước đây lệch hẳn khi chỉ số tăng theo cảnh giới).
+  - Bí Cảnh thường, Bí Cảnh Đặc Biệt Nhân Giới, Động Phủ (thu hoạch), Dùng Đan Dược: phần thưởng TU VI nhân "hệ số đồng bộ"
+    (tu luyện mới nhanh hơn cũ bao nhiêu lần ở đúng cảnh giới/tầng, khoảng x4-x11), để tỉ lệ giữa các nguồn tu vi
+    giữ y như thiết kế cũ. Linh thạch của các nguồn này giữ nguyên công thức cũ (không lạm phát).
+  - Bí Cảnh Linh Giới và Boss Thế Giới vốn đã tính theo tu vi cần/chỉ số hiện tại nên giữ nguyên.
+  - PvP tự động, PvP theo hiệp, bảng xếp hạng/lực chiến, đột phá, Thiên Kiếp đều dùng chung chỉ số và hệ số ở trên.
+
+7) TĂNG EXP ĐỘT PHÁ (v12.4.1) — exp cần tăng, TỐC ĐỘ tu luyện giữ nguyên
+  - Mốc tu vi cần để đột phá của MỌI cảnh giới / tầng / thế giới nhân thêm x24 (mặc định từ v12.8; v12.7 là x12, v12.6 là x6, v12.5 là x2).
+    Chỉnh ở một chỗ: hằng số EXP_REQUIRED_MULT trong src/game/constants.js, hoặc đặt biến môi trường EXP_REQUIRED_MULT
+    (.env / Startup của host, vd EXP_REQUIRED_MULT=3). Khởi động lại bot để có hiệu lực.
+  - Hai hàm trong src/game/realm.js:
+      tuViRequiredBase = mốc GỐC (như v12.4 cũ)       → chỉ dùng để TÍNH tốc độ / phần thưởng tu vi
+      tuViRequired     = mốc gốc x EXP_REQUIRED_MULT   → dùng cho đột phá, thanh tiến độ, hiển thị, trần Hóa Thần
+  - Giữ nguyên lượng tu vi nhận mỗi lần (tính từ mốc gốc): Tu Luyện, Bế Quan, hệ số đồng bộ (Bí Cảnh, Động Phủ, Đan Dược),
+    thưởng tu vi + linh thạch của Boss Thế Giới. Linh thạch không lạm phát.
+    => Thời gian lên 1 tầng dài gấp EXP_REQUIRED_MULT lần (x24), số lần bấm tăng tương ứng.
+  - Mốc lực chiến Thiên Kiếp tính theo TỈ LỆ (mốc / mốc Hóa Thần) nên không đổi.
+  - Người chơi đang có: tu vi giữ nguyên, thanh tiến độ tụt tương ứng (chưa đủ thì phải tu thêm).
+  - Thêm nguồn tu vi mới mà tính theo "tu vi cần": dùng tuViRequiredBase, KHÔNG dùng tuViRequired, để không tự tăng theo hệ số.
+
+8) BẾ QUAN TREO MÁY (v12.4.2) — tu luyện tự động, lên cảnh giới chậm hơn bấm tay
+  - Lệnh: /treoquan (hoặc !treoquan). Bỏ trống: đang rảnh → bắt đầu treo; đang treo → xem trạng thái.
+    Chọn hành động: Bắt đầu (batdau) | Xuất quan — nhận tu vi (xuatquan) | Xem trạng thái (xem).
+  - Tu vi nhận = tốc độ Tu Luyện bấm tay x 10% x thời gian treo, nhân cùng hệ số tư chất & buff như Tu Luyện thường.
+    KHÔNG giới hạn giờ treo (treo bao lâu cũng được, càng lâu tích càng nhiều); treo tối thiểu 1 phút mới xuất quan được.
+    Không cộng Linh Thạch. Tu vi tích lũy có thể vượt mốc đột phá — cứ /dotpha lần lượt từng tầng.
+  - Tốc độ tính từ mốc GỐC (mục 7) nên không đổi khi chỉnh EXP_REQUIRED_MULT; exp để đột phá vẫn theo mốc đã nhân hệ số
+    => lên tầng bằng treo máy lâu hơn hẳn spam tay (ví dụ Ngũ Linh Căn + Phàm Thể, chưa tính buff: Luyện Khí ~1,7 giờ/tầng, Hóa Thần ~4,9 giờ, Độ Kiếp ~8 giờ).
+  - Mốc treo lưu trong DB (cột cultivators.treo_start, tự thêm khi khởi động) nên còn nguyên sau khi bot khởi động lại / khôi phục DB cũ.
+  - Chỉnh: src/game/balance.js -> TREO_EFFICIENCY (10%), TREO_MAX_HOURS (v12.5: 4; 0 = không giới hạn), TREO_MIN_SECONDS (60). Khởi động lại bot để có hiệu lực.
+  - Màn hình Trạng Thái hiển thị thêm dòng "Bế Quan Treo".
+
+9) v12.5 — GIỚI HẠN BẾ QUAN TREO + CHUỖI ĐỒNG TU + 2 EMOJI PIXEL MỚI
+  A. Bế Quan Treo có giới hạn 4 giờ / phiên (balance.js -> TREO_MAX_HOURS = 4)
+    - Đủ 4 giờ: XUẤT QUAN CƯỠNG CHẾ — tự cộng tu vi của 4 giờ và kết thúc phiên, kể cả khi người chơi đang vắng mặt
+      (vòng nền quét mỗi phút; ngoài ra xử lý ngay khi người chơi mở /treoquan hoặc Trạng Thái).
+    - Làm mới: gõ /treoquan lần nữa là treo tiếp phiên mới (đồng hồ 4 giờ tính lại từ đầu). Lần mở đầu tiên sau khi bị cưỡng chế
+      sẽ hiện thông báo "đã xuất quan cưỡng chế, nhận +X tu vi" một lần.
+    - Xuất quan thủ công trước 4 giờ vẫn như cũ. Tốc độ/hiệu suất treo không đổi.
+  B. Chuỗi Đồng Tu (streak giữa hai người chơi) — lệnh /chuoi (hoặc !chuoi)
+    - /chuoi hanh_dong:Đồng tu dao_huu:@ai-đó  (hoặc !chuoi @ai-đó): đồng tu hôm nay với đạo hữu.
+      Mỗi ngày (giờ Việt Nam, đổi ngày lúc 00:00) CẢ HAI cùng gõ lệnh với nhau thì chuỗi +1.
+    - Bỏ lỡ trọn 1 ngày (không đủ cả hai) → chuỗi đứt, lần hoàn thành kế tiếp bắt đầu lại từ 1 (kỷ lục vẫn được lưu).
+    - /chuoi hanh_dong:Xem: các chuỗi của bạn + trạng thái (chờ đối phương / đến lượt bạn / sắp đứt / đã đứt).
+      /chuoi hanh_dong:Bảng xếp hạng: top 10 chuỗi đang sống dài nhất.
+    - Thưởng mỗi lần hoàn thành (cho CẢ HAI): tu vi = 4% tu vi gốc của tầng hiện tại x (1 + min(chuỗi,30)/15), tối đa 12%.
+      Thưởng mốc thêm (x tu vi gốc của tầng): 3 ngày 0.10 · 7 ngày 0.20 · 14 ngày 0.40 · 30 ngày 0.80 · 60 ngày 1.20 · 100 ngày 2.0 · 200 ngày 3.0 · 365 ngày 5.0.
+    - Chống cày nick phụ: mỗi người chỉ nhận thưởng từ tối đa 3 chuỗi mỗi ngày (chuỗi thừa vẫn tăng, không thưởng). Không cộng Linh Thạch.
+    - Chỉnh: balance.js -> CHUOI_DAILY_PCT, CHUOI_MAX_REWARD_PAIRS, CHUOI_MILESTONES. Dữ liệu lưu ở bảng chuoi_pairs (tự tạo khi khởi động).
+    - Màn hình Trạng Thái hiển thị thêm dòng "Chuỗi Đồng Tu" (chuỗi dài nhất đang sống).
+  C. Emoji pixel mới (chỉ 2 icon, mọi emoji khác giữ nguyên): assets/emoji/treoquan.png (đồng hồ cát) và assets/emoji/chuoi.png (chuỗi lửa).
+    Bot tự tải lên thành tg7_treoquan / tg7_chuoi khi khởi động. Vẽ lại bằng: python3 scripts/make_pixel_emoji_v12_streak.py
+  D. Lệnh /tuchat: bảng hệ số Linh Căn / Thể Chất. Lệnh /treoquan và /chuoi đã có trong /huongdan.
+
+10) v12.6 — TĂNG EXP ĐỘT PHÁ x3 (tốc độ tu luyện giữ nguyên)
+  - EXP_REQUIRED_MULT mặc định 2 -> 6 (gấp 3 lần v12.5) cho MỌI cảnh giới / tầng / thế giới. Chỉ đổi ở src/game/constants.js.
+  - Tu vi mỗi lần Tu Luyện / Bế Quan / Treo / Bí Cảnh / Động Phủ / Đan Dược / Boss / Chuỗi KHÔNG đổi (tính từ mốc gốc) => thời gian lên mỗi tầng dài gấp 3.
+    Ví dụ (Ngũ Linh Căn + Phàm Thể, bấm tay): Luyện Khí tầng 11 ~12 -> ~36 phút | Kết Đan tầng 11 ~21 -> ~62 phút | Hóa Thần tầng 21 ~35 -> ~104 phút.
+  - Người chơi đang có: tu vi giữ nguyên, thanh tiến độ tụt tương ứng (cần tu thêm mới đột phá được).
+  - Host có đặt biến EXP_REQUIRED_MULT thì giá trị đó được ưu tiên: hãy ĐỂ TRỐNG hoặc XOÁ dòng này để dùng mặc định 6 (đặt =3 nếu muốn tổng chỉ x3 so với gốc).
+
+11) v12.7 — TĂNG EXP ĐỘT PHÁ THÊM x2 (6 -> 12), Bế Quan Treo bớt nhanh
+  - EXP_REQUIRED_MULT mặc định 6 -> 12 (src/game/constants.js). Tu vi nhận mỗi lần (tay / bế quan / treo / bí cảnh…) vẫn không đổi => mọi thời gian lên tầng dài gấp 2 so với v12.6.
+  - Bế Quan Treo (Ngũ Linh Căn + Phàm Thể): Luyện Khí tầng 1 ~8,7 giờ (~2,2 phiên 4 giờ) | Kết Đan tầng 11 ~20,5 giờ | Hóa Thần tầng 21 ~35 giờ | Độ Kiếp tầng 23 ~58 giờ.
+    Thiên Linh Căn + Huyền Thể: Luyện Khí tầng 1 ~4,2 giờ | Hóa Thần tầng 21 ~17 giờ. Hỗn Độn + Vô Cực: Hóa Thần tầng 21 ~3,9 giờ.
+  - Bấm tay (Ngũ + Phàm): Luyện Khí tầng 11 ~72 phút | Kết Đan tầng 11 ~2,1 giờ | Hóa Thần tầng 21 ~3,5 giờ.
+  - Muốn CHỈ làm treo chậm hơn mà không đụng tu luyện bấm tay: giữ EXP_REQUIRED_MULT, hạ TREO_EFFICIENCY trong src/game/balance.js (hiện 0.10).
+  - Host đặt EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 12.
+
+12) v12.8 — TĂNG EXP ĐỘT PHÁ THÊM x2 (12 -> 24)
+  - EXP_REQUIRED_MULT mặc định 12 -> 24 (src/game/constants.js). Tu vi nhận mỗi lần không đổi => thời gian lên tầng dài gấp 2 so với v12.7 (gấp 12 lần v12.5).
+  - Bế Quan Treo (Ngũ Linh Căn + Phàm Thể): Luyện Khí tầng 1 ~17 giờ | Kết Đan tầng 11 ~41 giờ | Hóa Thần tầng 21 ~70 giờ. Thiên + Huyền: Hóa Thần tầng 21 ~34 giờ. Hỗn Độn + Vô Cực: ~8 giờ.
+  - Bấm tay (Ngũ + Phàm): Luyện Khí tầng 11 ~2,4 giờ | Kết Đan tầng 11 ~4,1 giờ | Hóa Thần tầng 21 ~7 giờ.
+  - Host đặt EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 24.
+
+13) v12.9 — BẾ QUAN TREO CHẬM GẤP 10 LẦN
+  - TREO_EFFICIENCY 10% -> 1% (src/game/balance.js): tu vi mỗi giờ treo = 1% tốc độ Tu Luyện bấm tay (cùng tư chất & buff). Tu Luyện bấm tay, Bế Quan, EXP_REQUIRED_MULT (24) KHÔNG đổi.
+  - Thời gian treo lên 1 tầng (gấp 10 lần v12.8). Ngũ Linh Căn + Phàm Thể: Luyện Khí tầng 1 ~7 ngày | Kết Đan tầng 11 ~17 ngày | Hóa Thần tầng 21 ~29 ngày.
+    Thiên Linh Căn + Huyền Thể: Hóa Thần tầng 21 ~14 ngày. Hỗn Độn + Vô Cực: Hóa Thần tầng 21 ~3 ngày.
+  - Mỗi phiên 4 giờ vẫn xuất quan cưỡng chế như cũ; tu vi một phiên giờ nhỏ => treo hợp làm "góp thêm" lúc vắng mặt, tu luyện chính vẫn là bấm tay.
+  - Chỉnh lại bất cứ lúc nào: TREO_EFFICIENCY (0.01 = 1%; 0.05 = 5%; 0.10 = 10%).
+
+14) v13.0 — TĂNG EXP ĐỘT PHÁ x10 (24 -> 240), theo yêu cầu (thay cho cách hạ hiệu suất treo của v12.9)
+  - EXP_REQUIRED_MULT mặc định 24 -> 240 (src/game/constants.js). TREO_EFFICIENCY đưa về 0.10 (bỏ mức 1% của v12.9) để không bị chậm chồng hai lần.
+  - Tu vi nhận mỗi lần (tay / bế quan / treo / bí cảnh…) KHÔNG đổi => MỌI cách tu luyện đều chậm gấp 10 lần v12.8.
+  - Treo (Ngũ + Phàm): Luyện Khí tầng 1 ~7 ngày | Kết Đan tầng 11 ~17 ngày | Hóa Thần tầng 21 ~29 ngày (bằng v12.9).
+  - Bấm tay (Ngũ + Phàm): Luyện Khí tầng 11 ~24 giờ | Kết Đan tầng 11 ~41 giờ | Hóa Thần tầng 21 ~70 giờ.
+  - Host đặt EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 240.
+
+15) v13.1 — TĂNG EXP ĐỘT PHÁ THÊM x20 (240 -> 4800), theo yêu cầu
+  - EXP_REQUIRED_MULT mặc định 240 -> 4800 (src/game/constants.js). Tu vi nhận mỗi lần không đổi => mọi cách tu luyện chậm gấp 20 lần v13.0.
+  - Treo (Ngũ + Phàm): Luyện Khí tầng 1 ~140 ngày | Hóa Thần tầng 21 ~580 ngày. Bấm tay (Ngũ + Phàm): Luyện Khí tầng 11 ~20 ngày | Kết Đan tầng 11 ~34 ngày | Hóa Thần tầng 21 ~58 ngày (bấm liên tục).
+    Hỗn Độn + Vô Cực treo: Hóa Thần tầng 21 ~60 ngày.
+  - Muốn giảm: sửa EXP_REQUIRED_MULT (vd 480). Host đặt biến EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 4800.
+
+16) v13.2 — GIẢM EXP ĐỘT PHÁ (4800 -> 1200), theo yêu cầu "giảm nhẹ"
+  - EXP_REQUIRED_MULT mặc định 4800 -> 1200 (src/game/constants.js) = ÷4 so với v13.1 (vẫn gấp 5 lần v13.0 và gấp 600 lần v12.5). Tu vi nhận mỗi lần không đổi.
+  - Treo (Ngũ + Phàm): Luyện Khí tầng 1 ~35 ngày | Hóa Thần tầng 21 ~145 ngày. Hỗn Độn + Vô Cực treo: Hóa Thần tầng 21 ~15 ngày.
+  - Bấm tay liên tục (Ngũ + Phàm): Luyện Khí tầng 11 ~5 ngày | Kết Đan tầng 11 ~8,5 ngày | Hóa Thần tầng 21 ~14,5 ngày.
+  - Chỉnh tiếp: sửa EXP_REQUIRED_MULT (vd 600 = nhẹ hơn nữa; 240 = mức v13.0). Host đặt biến EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 1200.
+
+17) v13.3 — HIỆU SUẤT BẾ QUAN TREO GIẢM (10% -> 5% so với bấm tay)
+  - TREO_EFFICIENCY 0.10 -> 0.05 (src/game/balance.js): treo máy chỉ còn 5% tốc độ Tu Luyện bấm tay (cùng tư chất & buff). Bấm tay, Bế Quan, EXP_REQUIRED_MULT (1200) KHÔNG đổi.
+  - Treo (Ngũ + Phàm), chậm gấp 2 so với v13.2: Luyện Khí tầng 1 ~70 ngày | Hóa Thần tầng 21 ~290 ngày. Hỗn Độn + Vô Cực: Hóa Thần tầng 21 ~30 ngày.
+  - Chỉnh lại: TREO_EFFICIENCY (0.02 = 2%; 0.05 = 5%; 0.10 = 10%). Hiển thị trong /treoquan tự cập nhật theo số này.
+
+18) v13.4 — GIẢM THỜI GIAN TU LUYỆN, GIỮ HIỆU SUẤT TREO THẤP
+  - EXP_REQUIRED_MULT mặc định 1200 -> 240 (src/game/constants.js) = ÷5 so với v13.3. TREO_EFFICIENCY GIỮ 5% (treo vẫn kém bấm tay). Tu vi nhận mỗi lần không đổi.
+  - Bấm tay liên tục (Ngũ + Phàm): Luyện Khí tầng 11 ~24 giờ | Kết Đan tầng 11 ~41 giờ | Hóa Thần tầng 21 ~70 giờ.
+  - Treo (Ngũ + Phàm): Luyện Khí tầng 1 ~14 ngày | Hóa Thần tầng 21 ~58 ngày. Hỗn Độn + Vô Cực treo: Hóa Thần tầng 21 ~6 ngày.
+  - Chỉnh: EXP_REQUIRED_MULT (thời gian chung), TREO_EFFICIENCY (riêng treo). Host đặt biến EXP_REQUIRED_MULT thì ưu tiên giá trị đó — để TRỐNG / xoá dòng để dùng mặc định 240.
+
+19) v13.5 — TĂNG TỐC ĐỘ TU LUYỆN BẤM TAY x3
+  - balance.js -> TULUYEN_SPEED_MULT = 3: tu vi mỗi lần /tuluyen và /dongquan (bế quan 3 giờ) nhân 3. Linh Thạch của Bế Quan giữ nguyên (không lạm phát).
+  - KHÔNG đổi: exp đột phá (EXP_REQUIRED_MULT 240), Bế Quan Treo (vẫn 5%, tính từ tốc độ gốc), Bí Cảnh, Động Phủ, Đan Dược, Boss, Chuỗi.
+  - Bấm tay liên tục (Ngũ Linh Căn + Phàm Thể): Luyện Khí tầng 11 ~8 giờ | Kết Đan tầng 11 ~14 giờ | Hóa Thần tầng 21 ~23,5 giờ (trước: 24 / 41 / 70 giờ).
+  - Treo (Ngũ + Phàm): Luyện Khí tầng 11 ~20 ngày | Kết Đan tầng 11 ~34 ngày | Hóa Thần tầng 21 ~58 ngày (không đổi).
+  - Chỉnh: TULUYEN_SPEED_MULT (1 = như v13.4; 5 = nhanh gấp 5).
+
+
+================================================================
+V13.6 — BIG UPDATE: THỂ CHẤT & LINH CĂN
+================================================================
+
+1) TỐC ĐỘ TU LUYỆN THEO TƯ CHẤT (mức "Vừa")
+  Hệ số hiển thị (bảng /tuchat) KHÔNG đổi. Tốc độ hiệu dụng = (Linh Căn x Thể Chất)^1.3  (balance.js -> TALENT_EXP, 1 = như v13.5).
+  Ngũ+Phàm x1.00 | Tứ x1.13 | Tam x1.34 | Song x1.69 | Thiên x2.46 | Dị x3.29 | Thánh x4.17 | Tiên x6.06 | Hỗn Độn x10.27 | trần (Hỗn Độn+Vô Cực) x17.40
+  Áp dụng cho Tu Luyện, Bế Quan và Bế Quan Treo (treo vẫn chỉ 5% tốc độ tương ứng, tối đa 4 giờ/phiên).
+
+2) NHÂN VẬT CÓ HỒ SƠ RIÊNG (lưu trong bảng cultivators)
+  Thể Chất: the_chat_tier/stage/prog/bien_di/pity. Linh Căn: linh_can_tier/hanh/purity/awaken/prog/tienhoa/pity. Kho: bao_the_chat, bao_linh_can, truyen_thua.
+  - Nhân vật mới: roll hành + độ tinh khiết ngẫu nhiên thật.
+  - Người chơi cũ: khi bot khởi động, migrateAll() ghi hồ sơ XÁC ĐỊNH từ user_id (chạy lại luôn ra cùng kết quả; không làm mất gì). Log: "🧬 Thể Chất/Linh Căn v13.6: ...".
+  - Đổi phẩm cấp bằng Đan Tẩy Tủy: hồ sơ phẩm cấp đó đặt lại (thức tỉnh/tiến hóa mất, hành+tinh khiết roll lại). Giao dịch Linh Căn/Thể Chất: hồ sơ đi cùng phẩm cấp.
+  - Thể Chất và Linh Căn độc lập: tiến độ, thức tỉnh, tiến hóa của bên này không ảnh hưởng bên kia (chỉ Cộng Hưởng cần cả hai).
+
+3) CÔNG THỨC
+  Chỉ số = gốc x công pháp x (1 + bonus thể chất/linh căn). Mọi bonus cộng dồn rồi CHẶN TRẦN:
+  Tốc độ tu luyện <= +35%; Hấp thu linh khí (Cảm Ngộ / Linh Mạch) <= +40%; Tỉ lệ Ngộ đạo <= +12%; Công kích <= +15%; Phòng ngự <= +15%; Sinh mệnh <= +15%; Hồi Sinh Mệnh <= +150%; Bạo kích (Đấu Pháp) <= +10%; Sát thương bạo kích <= +25%; Né tránh (Đấu Pháp) <= +10%; Tỉ lệ Đột Phá <= +8%; Giữ tu vi khi Đột Phá thất bại <= +10%; Giảm sát thương Lôi Kiếp <= +45%; Né Lôi Kiếp <= +12%; Thu hoạch Bí Cảnh / Cơ duyên <= +30%; Giảm sát thương nhận (Đấu Pháp) <= +12%; Xuyên giáp (Đấu Pháp) <= +15%; Hút máu (Đấu Pháp) <= +10%; Cơ hội Tu Luyện nhân đôi <= +8%. (Số âm tối thiểu -10%.)
+  Thiên phú Thể Chất nhân STAGE_MULT [0.5,1,1.4,1.8,2.3] theo giai đoạn thức tỉnh (Sơ Khai..Viên Mãn).
+  Thuộc tính Linh Căn = ELEMENT_TRAITS x loãng theo số hành {"1":1,"2":0.85,"3":0.7,"4":0.6,"5":0.5} x thức tỉnh [0.5,1,1.15,1.3] x (0.6 + 0.4 x tinh khiết/100).
+  Độ tinh khiết: tu luyện x(0.85..1.15), hấp thu x(0.8..1.2), đột phá +-2%; trung bình 50 => x1.0.
+  Tương khắc: hành khắc hành chủ đạo đối thủ +4% lực chiến Đấu Pháp (x loãng x thức tỉnh); Boss mỗi cấp có 1 nguyên tố, +-5% sát thương.
+  Hợp công pháp: nhân bonus công pháp 0.92..1.12 theo hành công pháp (tầng) so với hành linh căn.
+
+4) THỂ CHẤT — THIÊN PHÚ (giá trị tại giai đoạn Thức Tỉnh, x1.0)
+  1. Phàm Nhân Chi Tâm: +3.5% Tốc độ tu luyện, +1.5% Tỉ lệ Đột Phá, +1% Giữ tu vi khi Đột Phá thất bại
+  2. Linh Khí Thân Hòa: +10% Hấp thu linh khí (Cảm Ngộ / Linh Mạch), +3% Tốc độ tu luyện
+  3. Huyền Nguyên Hộ Thể: +4% Phòng ngự, +2% Giảm sát thương nhận (Đấu Pháp), +5% Giảm sát thương Lôi Kiếp
+  4. Thánh Huyết Bất Diệt: +5% Sinh mệnh, +40% Hồi Sinh Mệnh
+  5. Thiên Nhân Hợp Nhất: +5% Tỉ lệ Ngộ đạo, +6% Hấp thu linh khí (Cảm Ngộ / Linh Mạch), +2% Tỉ lệ Đột Phá, +2% Tốc độ tu luyện
+  6. Hồng Mông Sơ Khai: +6% Thu hoạch Bí Cảnh / Cơ duyên, +8% Hấp thu linh khí (Cảm Ngộ / Linh Mạch), +1.5% Tỉ lệ Đột Phá
+  7. Hỗn Độn Diễn Sinh: +2% Cơ hội Tu Luyện nhân đôi, +2% Tốc độ tu luyện, +1.5% Công kích, +1.5% Phòng ngự, +1.5% Sinh mệnh
+  8. Vô Cực Vô Tận: +2.5% Công kích, +2.5% Phòng ngự, +2.5% Sinh mệnh, +3% Tốc độ tu luyện, +1% Bạo kích (Đấu Pháp), +1% Giữ tu vi khi Đột Phá thất bại
+  Biến dị (tiến hóa Thể Chất):
+  - Bất Diệt Chiến Thể (từ phẩm cấp #1): +6% Sinh mệnh, +50% Hồi Sinh Mệnh, +2% Giảm sát thương nhận (Đấu Pháp)
+  - Thiên Sát Chiến Thể (từ phẩm cấp #1): +6% Công kích, +3% Bạo kích (Đấu Pháp), +10% Sát thương bạo kích
+  - Cửu Âm Tuyệt Thể (từ phẩm cấp #2): +6% Phòng ngự, +3% Giảm sát thương nhận (Đấu Pháp), +12% Giảm sát thương Lôi Kiếp
+  - Cửu Dương Thần Thể (từ phẩm cấp #2): +5% Công kích, +30% Hồi Sinh Mệnh, +2% Hút máu (Đấu Pháp)
+  - Thái Sơ Đạo Thể (từ phẩm cấp #5): +6% Tốc độ tu luyện, +3% Tỉ lệ Đột Phá, +3% Tỉ lệ Ngộ đạo
+  - Luân Hồi Tiên Thể (từ phẩm cấp #5): +5% Giữ tu vi khi Đột Phá thất bại, +10% Giảm sát thương Lôi Kiếp, +20% Hồi Sinh Mệnh
+  - Không Gian Đạo Thể (từ phẩm cấp #6): +5% Né tránh (Đấu Pháp), +8% Thu hoạch Bí Cảnh / Cơ duyên, +1% Giảm sát thương nhận (Đấu Pháp)
+  - Thời Gian Thần Thể (từ phẩm cấp #7): +8% Tốc độ tu luyện, +10% Hấp thu linh khí (Cảm Ngộ / Linh Mạch), +1% Cơ hội Tu Luyện nhân đôi
+
+5) LINH CĂN — THUỘC TÍNH & TIẾN HÓA
+  Kim: +4% Công kích, -2% Sinh mệnh  ->  Canh Kim Linh Căn: +8% Công kích, +10% Xuyên giáp (Đấu Pháp)
+  Mộc: +30% Hồi Sinh Mệnh, -1.5% Công kích  ->  Thanh Đế Mộc Linh Căn: +60% Hồi Sinh Mệnh, +6% Hút máu (Đấu Pháp)
+  Thủy: +3% Tốc độ tu luyện, -1.5% Phòng ngự  ->  Cửu U Hàn Thủy Linh Căn: +6% Tốc độ tu luyện, +5% Giảm sát thương nhận (Đấu Pháp)
+  Hỏa: +3% Bạo kích (Đấu Pháp), -15% Hồi Sinh Mệnh  ->  Thái Dương Linh Căn: +6% Bạo kích (Đấu Pháp), +4% Công kích, +15% Sát thương bạo kích
+  Thổ: +4% Phòng ngự, -1.5% Né tránh (Đấu Pháp)  ->  Hậu Thổ Linh Căn: +5% Phòng ngự, +8% Sinh mệnh
+  Phong: +4% Né tránh (Đấu Pháp), -1.5% Phòng ngự  ->  Cửu Thiên Cương Phong Linh Căn: +8% Né tránh (Đấu Pháp), +2% Bạo kích (Đấu Pháp)
+  Lôi: +12% Giảm sát thương Lôi Kiếp, +1.5% Bạo kích (Đấu Pháp), -1.5% Sinh mệnh  ->  Tử Tiêu Thần Lôi Linh Căn: +30% Giảm sát thương Lôi Kiếp, +6% Né Lôi Kiếp, +3% Bạo kích (Đấu Pháp)
+  Băng: +3% Phòng ngự, +1% Né tránh (Đấu Pháp), -2% Tốc độ tu luyện  ->  Huyền Băng Linh Căn: +6% Giảm sát thương nhận (Đấu Pháp), +4% Giữ tu vi khi Đột Phá thất bại
+  Quang: +2% Tỉ lệ Đột Phá, +15% Hồi Sinh Mệnh, -1.5% Công kích  ->  Thánh Quang Linh Căn: +4% Tỉ lệ Đột Phá, +30% Hồi Sinh Mệnh, +3% Giữ tu vi khi Đột Phá thất bại
+  Ám: +3% Công kích, +2% Bạo kích (Đấu Pháp), -1% Tỉ lệ Đột Phá  ->  Minh Ám Linh Căn: +6% Công kích, +4% Hút máu (Đấu Pháp), +2% Bạo kích (Đấu Pháp)
+  Không Gian: +3% Né tránh (Đấu Pháp), +5% Thu hoạch Bí Cảnh / Cơ duyên, -2% Sinh mệnh  ->  Hư Không Linh Căn: +6% Né tránh (Đấu Pháp), +10% Thu hoạch Bí Cảnh / Cơ duyên
+  Thời Gian: +4% Tốc độ tu luyện, -2% Công kích  ->  Thời Quang Linh Căn: +8% Tốc độ tu luyện, +3% Cơ hội Tu Luyện nhân đôi
+  Sinh Mệnh: +4% Sinh mệnh, +35% Hồi Sinh Mệnh, -2% Công kích  ->  Thương Sinh Linh Căn: +8% Sinh mệnh, +80% Hồi Sinh Mệnh
+  Hủy Diệt: +5% Công kích, +3% Bạo kích (Đấu Pháp), -3% Phòng ngự  ->  Diệt Thế Linh Căn: +8% Công kích, +20% Sát thương bạo kích, -2% Phòng ngự
+  Hỗn Độn: +2% Công kích, +2% Phòng ngự, +2% Sinh mệnh, +2% Tốc độ tu luyện, -1% Tỉ lệ Đột Phá  ->  Hỗn Độn Nguyên Linh Căn: +4% Công kích, +4% Phòng ngự, +4% Sinh mệnh, +4% Tốc độ tu luyện, +5% Thu hoạch Bí Cảnh / Cơ duyên
+  Cộng hưởng:
+  - Thiên Nhân Cộng Hưởng (Tiên Thiên Đạo Thể (≥ Đại Thành) + Thiên Linh Căn (đã thức tỉnh)): +5% Tỉ lệ Ngộ đạo, +6% Hấp thu linh khí (Cảm Ngộ / Linh Mạch), +2% Tỉ lệ Đột Phá
+  - Kim Thân Bất Hoại (Hoang Cổ Thánh Thể (≥ Đại Thành) + linh căn hành Kim (đã thức tỉnh)): +4% Phòng ngự, +3% Sinh mệnh
+  - Hỗn Độn Cộng Hưởng (Hỗn Độn Thần Thể (≥ Đại Thành) + Hỗn Độn Linh Căn (đã thức tỉnh)): +3% Cơ hội Tu Luyện nhân đôi, +4% Tốc độ tu luyện
+  - Hồng Mông Tiên Duyên (Hồng Mông Đạo Thể (≥ Đại Thành) + Tiên Linh Căn (đã thức tỉnh)): +6% Thu hoạch Bí Cảnh / Cơ duyên, +2% Tỉ lệ Đột Phá
+  - Vô Cực Hỗn Nguyên (Vô Cực Đạo Thể (Viên Mãn) + Hỗn Độn Linh Căn (thức tỉnh Lần III)): +2% Công kích, +2% Phòng ngự, +2% Sinh mệnh, +4% Tốc độ tu luyện
+  - Phàm Tâm Thiên Căn (Phàm Thể (≥ Tiểu Thành) + Thiên Linh Căn (đã thức tỉnh)): +3% Tốc độ tu luyện, +1% Tỉ lệ Đột Phá
+
+6) THỨC TỈNH / TIẾN HÓA (lệnh /thechat va /linhcan: xem | thuctinh | tienhoa | doi)
+  Thể Chất thức tỉnh:
+   -> Thức Tỉnh: cảnh giới>=2, tiến độ>=10, 1 Thiên Bảo, 0 Truyền Thừa, 100000 Linh Thạch, tỉ lệ 90%
+   -> Tiểu Thành: cảnh giới>=4, tiến độ>=40, 2 Thiên Bảo, 0 Truyền Thừa, 500000 Linh Thạch, tỉ lệ 75%
+   -> Đại Thành: cảnh giới>=6, tiến độ>=100, 3 Thiên Bảo, 1 Truyền Thừa, 3000000 Linh Thạch, tỉ lệ 60%
+   -> Viên Mãn: cảnh giới>=8, tiến độ>=200, 5 Thiên Bảo, 2 Truyền Thừa, 10000000 Linh Thạch, tỉ lệ 45%
+  Linh Căn thức tỉnh:
+   -> Thức Tỉnh Lần I: cảnh giới>=1, tiến độ>=20, 1 Thiên Bảo, 0 Truyền Thừa, 50000 Linh Thạch, tỉ lệ 95%, tinh khiết +10
+   -> Thức Tỉnh Lần II: cảnh giới>=3, tiến độ>=80, 2 Thiên Bảo, 0 Truyền Thừa, 300000 Linh Thạch, tỉ lệ 80%, tinh khiết +12
+   -> Thức Tỉnh Lần III: cảnh giới>=5, tiến độ>=200, 3 Thiên Bảo, 1 Truyền Thừa, 2000000 Linh Thạch, tỉ lệ 65%, tinh khiết +15
+  Tiến hóa Thể Chất (Biến Dị): Viên Mãn, cảnh giới>=7 (Hợp Thể, cần đã phi thăng), 10 Thiên Bảo, 5 Truyền Thừa, 20000000 Linh Thạch, tỉ lệ 15% (+3%/lần thất bại, tối đa 30%).
+  Tiến hóa Linh Căn: Thức Tỉnh III, tinh khiết>=85, tiến độ>=500, cảnh giới>=7, 8 Thiên Bảo, 3 Truyền Thừa, 10000000 Linh Thạch, tỉ lệ 20% (+3%/lần thất bại, tối đa 30%).
+  Thất bại: mất Linh Thạch + một nửa Thiên Bảo; Truyền Thừa và tiến độ được giữ. Thành công: trừ đủ tài nguyên. Trừ tài nguyên nguyên tử (không trừ nếu số dư đã đổi).
+  Đổi: 40 Thiên Đạo Thạch -> 1 Thiên Bảo Thể Chất; 40 Đạo Nguyên Tinh -> 1 Thiên Bảo Linh Căn.
+
+7) NGUỒN TIẾN ĐỘ & VẬT PHẨM
+  Tiến độ Thể Chất: đột phá (+1, đại cảnh giới +5), vượt Thiên Kiếp (+10), Bí Cảnh (+1/+2), Boss (+2).
+  Tiến độ Linh Căn: Tu Luyện (+1), Bế Quan (+3), Bí Cảnh (+2/+3), Boss (+1 mỗi đòn, +5 khi hạ Boss). Bế Quan Treo không cộng tiến độ.
+  Rơi: Bí Cảnh thường 3% Thiên Bảo + 0.4% Truyền Thừa (Bí Cảnh Đặc Biệt x2); Boss bị hạ (đóng góp >=2%) 12% Thiên Bảo + 4% Truyền Thừa; đột phá đại cảnh giới 10% Thiên Bảo; vượt Thiên Kiếp chắc chắn 1 Truyền Thừa. Hệ số thu hoạch từ Thể Chất/Linh Căn (tối đa +30%) nhân tỉ lệ rơi.
+
+8) ĐÃ ĐO BẰNG MÔ PHỎNG (cùng chỉ số gốc, 5 hiệp Đấu Pháp)
+  Gương Ngũ/Phàm vs Ngũ/Phàm: ~50%. Thiên Linh Căn + Tiên Thiên Đạo Thể (Đại Thành): ~45-48% (thiên về tu luyện/ngộ đạo, không mạnh PvP). Hỗn Độn + Hỗn Độn Thần Thể (Viên Mãn): ~53%.
+  Tổ hợp CỰC ĐOAN (Hỗn Độn + Vô Cực + Viên Mãn + Biến dị + Tiến hóa + TT III): mạnh nhất ~75-77% thắng, yếu nhất ~42-45%. Nghĩa là rất mạnh nhưng không bất bại; đáng đầu tư chứ không bắt buộc.
+  Lưu ý: Ngũ Linh Căn/Phàm Thể có thể lệch -1% công/thủ do hành loãng (ghi trong ELEMENT_TRAITS).
+
+
+================================================================
+V13.7 — LỆNH ADMIN MỚI (chỉ admin trong ADMIN_CODE_APPROVER_IDS dùng được)
+================================================================
+  /fullexp thanh_vien                 Đặt tu vi = mức cần để đột phá tầng kế (không giảm nếu đã cao hơn).
+  /tangthechat thanh_vien pham_cap    Tặng Thể Chất chỉ định (hồ sơ thức tỉnh/biến dị đặt lại).
+  /tanglinhcan thanh_vien pham_cap    Tặng Linh Căn chỉ định (hành + độ tinh khiết roll mới, thức tỉnh/tiến hóa đặt lại).
+  /rolltuchat thanh_vien loai         Roll lại ngẫu nhiên theo xác suất game (miễn phí); loai = Thể Chất | Linh Căn | Cả hai (chọn trong danh sách).
+  /thuhoituchat thanh_vien loai       Thu hồi: trả Thể Chất/Linh Căn về BẢN GỐC trước khi admin tặng/roll (kể cả hành & tinh khiết).
+                                      Bản gốc lưu ở bảng admin_grants (giữ bản sớm nhất nên tặng/roll nhiều lần vẫn thu hồi về đúng gốc).
+                                      Tiến độ thức tỉnh đạt được SAU khi tặng sẽ mất khi thu hồi.
+  /tangtoctuluyen he_so so_phut       Sự kiện tăng tốc TOÀN server: nhân thêm lên Tu Luyện, Bế Quan, Bế Quan Treo (hệ số 0.1–50,
+                                      so_phut = tự hết hạn; he_so "tat" hoặc 1 = tắt; bỏ trống = xem). Lưu ở bảng bot_settings,
+                                      còn nguyên sau khi khởi động lại. Chỉ nhân tu vi — KHÔNG nhân Linh Thạch Bế Quan, không đổi exp đột phá.
+
+
+================================================================
+V13.8
+================================================================
+  - /huongdantuchat: hướng dẫn đầy đủ (8 trang, dropdown): tổng quan, tiến độ, Thiên Bảo & Truyền Thừa, thức tỉnh Thể Chất,
+    thức tỉnh Linh Căn, tiến hóa/Biến Dị, chiến đấu & cộng hưởng, lộ trình gợi ý. Số liệu lấy thẳng từ game/talent.js.
+  - /tangtoctuluyen: bật/tắt thủ công sẽ đăng thông báo ra kênh thế giới (/datkenhthegioi), hoặc kênh đang gõ lệnh nếu chưa cài.
+    Hết hạn tự động (so_phut) thì KHÔNG đăng thông báo (hệ số tự về x1).
+
+
+==================== v13.9 ====================
+• SỬA LỖI: Linh Phù không rơi ở Hóa Thần Viên Mãn. Điều kiện cũ so stage_index với 3 (Tầng 4), nhưng Viên Mãn Hóa Thần là tầng 20 (index K.HOATHAN_VIENMAN_STAGE = 19). Nay: Hóa Thần (K.HOATHAN_REALM_IDX) và stage_index >= K.HOATHAN_VIENMAN_STAGE, hoặc đã Phi Thăng.
+  Tỉ lệ rơi Linh Phù/Tiên Phù (bicanh.js LINHPHU_RATE): Bí Cảnh thường 30%/lượt, Bí Cảnh Linh Giới 35%/lượt; tối đa K.PHITHANG_LINH_PHU_CAN cái.
+• Thiên Đạo Thạch: chỉ rơi chắc chắn ở Bí Cảnh Hợp Thể (Linh Giới), 1–3 / 1–4 / 2–7 theo bậc I / II / III. 40 Thiên Đạo Thạch → 1 Thiên Bảo Thể Chất.
+• 13 emoji pixel mới (assets/emoji, KHÔNG đổi emoji cũ): bao_thechat, bao_linhcan, truyenthua, thuctinh, tienhoa, conghuong, tinhkhiet, hanh_kim, hanh_moc, hanh_thuy, hanh_hoa, hanh_tho, tangtoc (fallback Unicode trong data/emoji_fallback.json). Gắn vào /thechat, /linhcan, /huongdantuchat, vật phẩm Thiên Bảo/Truyền Thừa, sự kiện tăng tốc.
+• /huongdantuchat thêm 2 trang: "Nguồn Thiên Đạo Thạch & Linh Phù" (số liệu đọc thẳng từ code) và "Sự kiện tăng tốc & Admin" (tổng 10 trang).

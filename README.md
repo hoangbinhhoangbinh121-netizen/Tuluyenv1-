@@ -1,4 +1,6 @@
-# Tiên Giới Bot v14.4 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v15 — Node.js + discord.js + SQLite
+
+> **v15** — Bế Quan Treo đổi: treo = 10% tốc độ Tu Luyện bấm tay (TREO_EFFICIENCY 5% → 10%), KHÔNG nhân đôi (bỏ cơ hội x2 của thiên phú khi treo), tu vi tích lũy dần đều theo thời gian. Bấm tay không đổi.
 
 > **v14.4** — Sửa lỗi `cd72` (menu chọn thú hiến tế ở mục Huyết Mạch `/linhthu`: `default` bị null thay vì true/false). Test giả lập discord.js nay kiểm tra chặt như thư viện thật + bấm thử mọi nút/menu của `/linhthu`.
 > **v14.3** — Sửa lỗi `65dd` của `/linhthu` (ô embed vượt 1024 ký tự khi dùng emoji tùy chỉnh; menu chọn dùng emoji sai kiểu) + chặn lỗi tương tự ở Tông Môn Chiến, Kho Đồ.
