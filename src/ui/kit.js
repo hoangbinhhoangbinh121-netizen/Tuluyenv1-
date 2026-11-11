@@ -113,7 +113,7 @@ async function routeComponent(interaction) {
   const sh = staticHandlers.get(cid.slice(0, idx));
   if (sh) {
     try { await sh(interaction, cid.slice(idx + 1).split('|')); }
-    catch (e) { const code = logError('nút tĩnh', e); await safeReply(interaction, { content: `❌ Có lỗi xảy ra (mã lỗi \`${code}\`), vui lòng thử lại.`, flags: EPHEMERAL }); }
+    catch (e) { const code = logError('nút tĩnh', e); if (code === 'het-han') return true; await safeReply(interaction, { content: `❌ Có lỗi xảy ra (mã lỗi \`${code}\`), vui lòng thử lại.`, flags: EPHEMERAL }); }
     return true;
   }
   const view = registry.get(cid.slice(0, idx));
@@ -137,6 +137,7 @@ async function routeComponent(interaction) {
     await item.handler(interaction, values, view);
   } catch (e) {
     const code = logError(`nút/menu "${item.key}"`, e);
+    if (code === 'het-han') return true;
     await safeReply(interaction, { embeds: [require('./notifications').systemError(code)], flags: EPHEMERAL });
   }
   return true;

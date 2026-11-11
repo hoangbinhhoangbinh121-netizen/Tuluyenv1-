@@ -98,7 +98,7 @@ function attack(guildId, userId, action = 'atk') {
       if (mp < SKILL_COST) return { ok: false, code: 'E009', error: `Không đủ Linh Lực để thi triển Thần Thông (cần ${SKILL_COST}%, hiện có ${mp}%).`, boss };
       mp -= SKILL_COST; mult = 2; crit = random() < 0.15; if (crit) mult *= 1.5;
     }
-    const dmg = Math.max(1, int((Cu.effectiveAtk(row) * randUniform(0.8, 1.3) + row.realm_index * 5) * mult * T.bossElemMult(row, boss.tier)));   // v13.6: tương khắc hành linh căn ↔ nguyên tố Boss (±5%)
+    const dmg = Math.max(1, int((Cu.effectiveAtk(row) * randUniform(0.8, 1.3) + row.realm_index * 5) * mult * T.bossElemMult(row, boss.tier) * (1 + require('./cpfx').bossBonus(row))));   // v16: công pháp mới tăng sát thương lên Boss   // v13.6: tương khắc hành linh căn ↔ nguyên tố Boss (±5%)
     const hpBefore = boss.hp;
     const dealt = Math.min(dmg, hpBefore);
     D.run('UPDATE wb7_boss SET hp = hp - ? WHERE boss_id = ? AND status = ?', dealt, boss.boss_id, 'alive');
@@ -146,6 +146,7 @@ function finish(bossId, reason, killerId = null) {
         const dr = TO.rollDropItems(c.user_id, 'boss', TO.lootMultOf(crow));
         if (dr.text) out.drops.push({ user_id: c.user_id, kind: 'talent', text: `nhận ${dr.text} từ xác Boss!` });
         TO.addProg(c.user_id, { lc: 5, tc: 2 });
+        try { for (const text of require('./congphapV16').rollBossContrib(c.user_id, crow, boss.tier)) out.drops.push({ user_id: c.user_id, kind: 'frag', text }); } catch (e) { console.error('⚠️ rơi mảnh bí tịch Boss:', e.message); }   // v16
       }
     }
     // Phần thưởng đặc biệt cho người kết liễu (giữ nguyên luật cũ: công pháp độc quyền 0,5% + thưởng đặc biệt 10%)
@@ -158,6 +159,11 @@ function finish(bossId, reason, killerId = null) {
           Cu.updateCultivator(killerId, { cong_phap_owned: [...owned].sort((a, b) => a - b).join(',') });
           out.drops.push({ user_id: killerId, kind: 'congphap', text: `cảm ngộ **[Tầng ${K.BOSS_CONGPHAP_DROP_TIER}] ${CP.currentName(K.BOSS_CONGPHAP_DROP_TIER)}** — công pháp độc quyền của Boss Thế Giới!` });
         }
+        try {   // v16: công pháp độc quyền mới của Boss Thế Giới (tỉ lệ riêng, cấp cao hơn mới rơi quyển cao cấp)
+          const k0 = Cu.getCultivator(killerId); const upk = {};
+          const got = require('./congphapV16').rollBossKiller(killerId, k0, upk, boss.tier);
+          if (upk.cong_phap_owned !== undefined) { Cu.updateCultivator(killerId, upk); for (const text of got) out.drops.push({ user_id: killerId, kind: 'congphap', text }); }
+        } catch (e) { console.error('⚠️ rơi công pháp Boss:', e.message); }
         if (random() < K.BOSS_SPECIAL_DROP_CHANCE) {
           const chain = K.CONGPHAP_SPECIAL_CHAIN;
           const k2 = Cu.getCultivator(killerId);

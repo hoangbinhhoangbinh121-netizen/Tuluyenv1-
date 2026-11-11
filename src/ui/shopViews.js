@@ -13,63 +13,16 @@ const { int, fmtNum } = require('../util');
 
 const eph = (i, content, extra = {}) => i.reply({ content, flags: EPHEMERAL, ...extra });
 
-// ---------- Công Pháp ----------
-function addTechniqueSelects(v, userId, rowStart = 0) {
-  const row = Cu.getCultivator(userId);
-  const owned = Cu.ownedCongphapTiers(row); const levels = Cu.congphapLevelsMap(row); const equipped = Cu.equippedCongphapTiers(row);
-  const options = CP.getCurrentCongphapList().map((t) => {
-    const lvl = levels[t.tier] || 0; const tdef = CP.tierDef(t.tier);
-    const isEq = equipped.includes(t.tier);
-    const label = `[Tầng ${t.tier}] ${t.name}${lvl ? ` (Cấp ${lvl})` : ''}${owned.has(t.tier) ? '' : ' 🔒 (chưa mua)'}${isEq ? ' ✅ đang trang bị' : ''}`;
-    const desc = `${t.desc} (+${int(CP.totalBonus(tdef, lvl, row) * 100)}% chỉ số/HP, buff+${int(CP.totalPvpBuff(tdef, lvl) * 100)}%/debuff-${int(CP.totalPvpDebuff(tdef, lvl) * 100)}%)`;
-    return { label, description: desc, value: String(t.tier), default: isEq };
-  });
-  v.select({
-    key: 'congphap', row: rowStart, min: 0, max: Math.min(K.CONGPHAP_MAX_EQUIP_SLOTS, options.length) || 1, options,
-    placeholder: `📜 Trang bị TỐI ĐA ${K.CONGPHAP_MAX_EQUIP_SLOTS} Công Pháp cùng lúc (đã mua ở Cửa Hàng)...`,
-  }, async (i, values) => {
-    const r = Cu.getCultivator(userId); const own = Cu.ownedCongphapTiers(r);
-    const chosen = values.map(Number);
-    const invalid = chosen.filter((t) => !own.has(t));
-    if (invalid.length) return eph(i, `🔒 Bạn chưa MUA công pháp ${invalid.map((t) => `Tầng ${t}`).join(', ')} — hãy mua ở **Cửa Hàng** trước khi trang bị.`);
-    const picked = chosen.slice(0, K.CONGPHAP_MAX_EQUIP_SLOTS);
-    Cu.updateCultivator(userId, { cong_phap_slots: picked.join(',') });
-    CP.recomputeEquippedCongphap(userId);
-    if (!picked.length) return eph(i, '📜 Đã THÁO toàn bộ công pháp đang trang bị.');
-    await i.deferReply({ flags: EPHEMERAL });
-    const blocks = [];
-    for (const tier of picked) {
-      const skills = CP.getLockedSkills(tier) || await CP.lockSkillsForTier(tier);
-      blocks.push(`**[Tầng ${tier}] ${CP.currentName(tier)}**:\n${skills.map((s) => `　• ${s}`).join('\n')}`);
-    }
-    const nr = Cu.getCultivator(userId);
-    await i.followUp({
-      content: `📜 Đã trang bị ĐỒNG THỜI **${picked.length}/${K.CONGPHAP_MAX_EQUIP_SLOTS}** công pháp — TỔNG cộng dồn: +${int(Cu.effectiveCongPhapBonus(nr) * 100)}% chỉ số/HP/tu vi, buff tự thân +${int(Cu.pvpBuffPct(nr) * 100)}%, debuff đối thủ -${int(Cu.pvpDebuffPct(nr) * 100)}% — áp dụng ngay cho Lực Chiến, Tu Luyện, Bế Quan, PvP, Bí Cảnh, Boss Thế Giới, Thiên Kiếp...\n\n⚔️ Chiêu PvP đã khoá của từng tầng:\n${blocks.join('\n\n')}`, flags: EPHEMERAL,
-    });
-  });
+// ---------- Công Pháp (v16: Tàng Kinh Các — ui/congphapViews.js) ----------
+// Menu chọn/nâng cấp cũ chỉ biết 11 công pháp cũ và sẽ ghi đè ô trang bị của công pháp mới → đã thay bằng Tàng Kinh Các (kho có lọc/phân trang, chi tiết, trang bị, nâng cấp).
+const CPV = () => require('./congphapViews');
+const openTangKinh = (i, userId, st) => CPV().open(i, userId, st);
+/** Giữ tên cũ cho tương thích: view 1 nút mở Tàng Kinh Các. */
+function congPhapView(userId) {
+  const v = new View({ ownerId: userId, timeout: 120 });
+  v.button({ key: 'tk', label: 'Mở Tàng Kinh Các', emoji: E.congphap, style: 'blurple' }, (i) => openTangKinh(i, userId));
+  return v;
 }
-function addUpgradeSelect(v, userId, rowNum = 1) {
-  const row = Cu.getCultivator(userId);
-  const owned = [...Cu.ownedCongphapTiers(row)].sort((a, b) => a - b); const levels = Cu.congphapLevelsMap(row);
-  let options;
-  if (!owned.length) options = [{ label: 'Chưa sở hữu công pháp nào', description: 'Hãy mua công pháp ở Cửa Hàng trước khi nâng cấp.', value: 'none' }];
-  else options = owned.map((tier) => {
-    const tdef = CP.tierDef(tier); const lvl = levels[tier] || 0; const maxed = lvl >= K.CONGPHAP_MAX_UPGRADE_LEVEL;
-    let desc; let cost = 0; let cur = '';
-    if (maxed) desc = 'Đã đạt cấp nâng tối đa.';
-    else {
-      cost = CP.tierUpgradeCost(tdef, lvl, row); cur = CP.tierUpgradeCurrency(tdef, row);
-      desc = `Nâng lên Cấp ${lvl + 1}: +${int(CP.totalBonus(tdef, lvl + 1, row) * 100)}% chỉ số/HP — tốn ${fmtNum(cost)} ${cur === 'linh_tinh' ? '🌠' : '💎'}`;
-    }
-    return { label: `[Tầng ${tier}] ${CP.currentName(tier)} — Cấp ${lvl}/${K.CONGPHAP_MAX_UPGRADE_LEVEL}`, description: desc, value: `${tier}:${cost}:${cur}` };
-  });
-  v.select({ key: 'upgrade', row: rowNum, options, placeholder: '🔺 Nâng cấp công pháp đã mua (giá tuỳ tầng, xem mô tả từng dòng)...' }, (i, values) => {
-    if (values[0] === 'none') return eph(i, '🔒 Bạn chưa sở hữu công pháp nào — hãy mua ở **Cửa Hàng** trước.');
-    const [t, c, cur] = values[0].split(':');
-    return eph(i, CP.upgradeCongPhap(userId, Number(t), [Number(c), cur]));
-  });
-}
-function congPhapView(userId) { const v = new View({ ownerId: userId, timeout: 120 }); addTechniqueSelects(v, userId, 0); addUpgradeSelect(v, userId, 1); return v; }
 
 // ---------- Pháp Bảo ----------
 function phapBaoView(userId) {
@@ -163,6 +116,7 @@ function shopView(userId) {
   }));
   v.button({ key: 'quay', label: 'Quay Ngẫu Nhiên Công Pháp', emoji: E.sk_ngaunhien, style: 'green', row: 4 }, (i) => eph(i, CP.doRandomCongphap(userId)));
   v.button({ key: 'pgd', label: `Mua Đan Dược Phá Giới (${fmtNum(K.DAN_PHA_GIOI_COST_LINH_THACH)} 💎)`, emoji: E.phagioidan, style: 'blurple', row: 4 }, (i) => eph(i, Dan.buyDanPhaGioi(userId)));
+  v.button({ key: 'tangkinh', label: 'Tàng Kinh Các (Công Pháp)', emoji: E.congphap, style: 'blurple', row: 4 }, (i) => openTangKinh(i, userId, { m: 'shop', g: 'nhan', c: 'all', p: 0, t: 0, r: 'shop' }));
   v.button({ key: 'linhthu', label: 'Cửa Hàng Linh Thú', emoji: E.dongthanh, style: 'green', row: 4 }, async (i) => i.reply({ ...require('./petViews').render(userId, 'sh', 0, ''), flags: EPHEMERAL }));
   return v;
 }
@@ -170,9 +124,9 @@ function shopView(userId) {
 // ---------- Nhóm menu ----------
 function tuHanhGroupView(userId) {
   const v = new View({ ownerId: userId, timeout: 120 });
-  addTechniqueSelects(v, userId, 0); addUpgradeSelect(v, userId, 1);
-  v.button({ key: 'linhmach', label: 'Linh Mạch', emoji: E.linhmach, style: 'grey', row: 2 }, (i) => eph(i, A.doLinhmach(userId)));
-  v.button({ key: 'phapbao', label: 'Pháp Bảo', emoji: E.phapbao, style: 'blurple', row: 2 }, (i) =>
+  v.button({ key: 'tk', label: 'Công Pháp (Tàng Kinh Các)', emoji: E.congphap, style: 'blurple', row: 0 }, (i) => openTangKinh(i, userId));
+  v.button({ key: 'linhmach', label: 'Linh Mạch', emoji: E.linhmach, style: 'grey', row: 1 }, (i) => eph(i, A.doLinhmach(userId)));
+  v.button({ key: 'phapbao', label: 'Pháp Bảo', emoji: E.phapbao, style: 'blurple', row: 1 }, (i) =>
     i.reply({ content: `${E.phapbao} Chọn Pháp Bảo muốn trang bị (mua ở **Cửa Hàng** nếu chưa có):`, components: phapBaoView(userId).components(), flags: EPHEMERAL }));
   return v;
 }

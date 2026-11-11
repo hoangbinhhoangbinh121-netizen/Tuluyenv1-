@@ -18,7 +18,7 @@ SIZE, FIT = 128, 116
 COLS, ROWS = 9, 7
 
 
-def cut_cell(cell, disc=False):
+def cut_cell(cell, disc=False, mode=None):
     """cell: ndarray RGB (h,w,3) -> Image RGBA đã tách nền, đã cắt sát + căn giữa 128x128."""
     h, w = cell.shape[:2]
     pad = 10                                                   # đệm để hào quang không dính mép ô
@@ -69,6 +69,15 @@ def cut_cell(cell, disc=False):
         if n:
             sizes = ndi.sum(fg, lab, range(1, n + 1)); big = max(sizes)
             fg = np.isin(lab, [i + 1 for i, z in enumerate(sizes) if z >= max(30, big * 0.04)])
+    if mode == 'fill':      # v16: biển/huy hiệu đặc — lấp kín phần ruột tối (chữ rune/biểu tượng tối bị GrabCut coi là nền)
+        fg = ndi.binary_closing(fg, iterations=7)
+        fg = ndi.binary_fill_holes(fg)
+    elif mode == 'hull':    # v16: tinh thể — lấy bao lồi của thân chính
+        pts = cv2.findNonZero(fg.astype(np.uint8))
+        if pts is not None:
+            hm = np.zeros(fg.shape, np.uint8)
+            cv2.fillConvexPoly(hm, cv2.convexHull(pts), 1)
+            fg = hm.astype(bool)
     a = fg.astype(np.float32)
     a = cv2.GaussianBlur(a, (0, 0), 0.8)
     a = np.clip((a - 0.25) / 0.5, 0, 1)

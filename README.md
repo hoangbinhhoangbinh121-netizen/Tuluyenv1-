@@ -1,7 +1,7 @@
-# Tiên Giới Bot v15 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v16.0 — Node.js + discord.js + SQLite
 
-> **v15** — Bế Quan Treo đổi: treo = 10% tốc độ Tu Luyện bấm tay (TREO_EFFICIENCY 5% → 10%), KHÔNG nhân đôi (bỏ cơ hội x2 của thiên phú khi treo), tu vi tích lũy dần đều theo thời gian. Bấm tay không đổi.
-
+> **v16.0** — Tàng Kinh Các: +40 Công Pháp mới (Nhân/Linh/Tiên Giới + 10 độc quyền), 4 chiêu thức thật trong Đấu Pháp, nâng cấp tới Cấp 100, mảnh bí tịch, Kỳ Ngộ (module mới). Gộp Bế Quan Treo V15 (10%, không nhân đôi, không giới hạn giờ). EXP đột phá giảm mạnh, nerf nhẹ Tu Luyện bấm dồn dập, công pháp cộng nhẹ tốc độ tu luyện. 72 emoji Công Pháp bằng tranh người dùng cung cấp (`assets/source/congphap_sheet_v16.png`, cắt bằng `scripts/build_congphap_emoji_from_sheet_v16.py`). Migration tự backup (`db_backups/`) + `migrateV16.rollback()`. Chi tiết: `CAN_BANG_V16.txt`.
+> **v14.5** — Lỗi `Unknown interaction (10062)`: không còn bị tính là lỗi code/spam kênh admin; thêm đo độ trễ nhận lượt bấm + cảnh báo vòng lặp bị chặn để tìm nguyên nhân bot trả lời chậm.
 > **v14.4** — Sửa lỗi `cd72` (menu chọn thú hiến tế ở mục Huyết Mạch `/linhthu`: `default` bị null thay vì true/false). Test giả lập discord.js nay kiểm tra chặt như thư viện thật + bấm thử mọi nút/menu của `/linhthu`.
 > **v14.3** — Sửa lỗi `65dd` của `/linhthu` (ô embed vượt 1024 ký tự khi dùng emoji tùy chỉnh; menu chọn dùng emoji sai kiểu) + chặn lỗi tương tự ở Tông Môn Chiến, Kho Đồ.
 > **v14.2** — Sửa Bế Quan Treo (treo đúng 5% tốc độ Tu Luyện bấm tay — trước đó tính thiếu nên xuất quan gần như không nhận tu vi), bỏ giới hạn 4 giờ, tách `/xuatquan` khỏi `/treoquan`; thêm `/baotri` bảo trì toàn bộ bot.

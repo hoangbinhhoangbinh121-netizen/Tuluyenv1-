@@ -235,7 +235,12 @@ function bundle(row) {
   const hit = cache.get(row); if (hit && hit.bundle) return hit.bundle;
   const p = profile(row);
   const out = {}; const sources = [];
-  if (!p) return { sources, raw: {}, ...Object.fromEntries(Object.keys(CAPS).map((k) => [k, 0])) };
+  const cpx = require('./cpfx').routeFx(row);      // v16: hiệu ứng công pháp mới (absorb/ngo/regen/loot/bt/dodge/dr/pierce/crit/critMult/lifesteal) — dùng chung trần với Thể Chất/Linh Căn
+  if (!p) {
+    const z = { sources, raw: {}, ...Object.fromEntries(Object.keys(CAPS).map((k) => [k, 0])) };
+    for (const [k, v] of Object.entries(cpx)) if (k in CAPS) z[k] = Math.min(CAPS[k], v);
+    return z;
+  }
   const S = STAGE_MULT[p.tc.stage]; const awF = LC_AWAKEN_MULT[p.lc.awaken]; const pS = purityScale(p.lc.purity);
   // 1) thiên phú thể chất
   const talent = THECHAT_TALENTS[p.tc.idx];
@@ -250,6 +255,8 @@ function bundle(row) {
   if (ev) { const fx = {}; for (const [k, v] of Object.entries(ev[1].fx)) fx[k] = v * pS; add(out, null, fx); sources.push({ kind: 'Tiến hóa', name: ev[1].name, fx }); }
   // 5) cộng hưởng
   for (const r of RESONANCES) if (r.test(p)) { add(out, null, r.fx); sources.push({ kind: 'Cộng hưởng', name: r.name, fx: r.fx }); }
+  // 5b) v16: công pháp mới đang trang bị
+  if (Object.keys(cpx).length) { add(out, null, cpx); sources.push({ kind: 'Công Pháp', name: 'Công Pháp V16 đang trang bị', fx: { ...cpx } }); }
   // 6) độ tinh khiết: dùng trực tiếp ở tuluyenFactor / absorb — không cộng vào mọi chỉ số.
   const b = { sources, raw: { ...out } };
   for (const k of Object.keys(CAPS)) {
@@ -278,7 +285,12 @@ function combatMods(row) {
   const b = bundle(row);
   return { crit: b.crit, critMult: b.critMult, dodge: b.dodge, dr: b.dr, pierce: b.pierce, lifesteal: b.lifesteal };
 }
-const congphapElement = (tier) => NGU_HANH[((Number(tier) || 1) - 1 + 5) % 5];
+// v16: công pháp mới (tier ≥ 1001) có hành CỐ ĐỊNH theo loại (data/congphap_v16.js); công pháp cũ giữ công thức cũ.
+const congphapElement = (tier) => {
+  const nb = require('../data/congphap_v16').BY_TIER.get(Number(tier));
+  if (nb) return nb.element;
+  return NGU_HANH[((Number(tier) || 1) - 1 + 5) % 5];
+};
 /** Độ hợp công pháp đang trang bị với linh căn: nhân lên tổng bonus công pháp (0.92 – 1.12). */
 function cpAffinity(row, tiers) {
   const p = profile(row); if (!p) return 1;
@@ -289,7 +301,8 @@ function cpAffinity(row, tiers) {
       const e = congphapElement(t); let best = -0.5;
       for (const r of p.lc.roots) {
         let sc = 0;
-        if (r === e) sc = 1; else if (SINH[r] === e || SINH[e] === r) sc = 0.5; else if (KHAC[e] === r) sc = -0.5;
+        if (e === 'Ngũ Hành') sc = 0.7; else if (e === 'Hỗn Nguyên') sc = 0.3;     // v16: quyển Ngũ Hành hợp mọi linh căn, quyển Toàn diện hợp vừa phải
+        else if (r === e) sc = 1; else if (SINH[r] === e || SINH[e] === r) sc = 0.5; else if (KHAC[e] === r) sc = -0.5;
         else if (r === 'Hỗn Độn') sc = 0.3;
         if (sc > best) best = sc;
       }

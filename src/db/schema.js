@@ -80,7 +80,18 @@ const CREATE_TABLES = [
   "\n        CREATE TABLE IF NOT EXISTS pvp_history (\n            battle_id INTEGER PRIMARY KEY AUTOINCREMENT,\n            winner_id INTEGER NOT NULL,\n            loser_id INTEGER NOT NULL,\n            stake INTEGER DEFAULT 0,\n            winner_sect_id INTEGER,\n            loser_sect_id INTEGER,\n            rounds INTEGER DEFAULT 0,\n            ended_at REAL DEFAULT 0\n        )\n        ",
   "\n        CREATE TABLE IF NOT EXISTS event_daiphu (\n            guild_id INTEGER PRIMARY KEY,\n            event_id TEXT,\n            status TEXT DEFAULT 'NOT_STARTED',\n            start_time REAL,\n            end_time REAL,\n            market_prices TEXT,\n            market_history TEXT,\n            current_cycle INTEGER DEFAULT 0,\n            last_market_update REAL,\n            final_prices TEXT,\n            final_rankings TEXT,\n            reward_status TEXT DEFAULT 'pending'\n        )\n        ",
   "\n        CREATE TABLE IF NOT EXISTS event_daiphu_players (\n            guild_id INTEGER,\n            user_id INTEGER,\n            cash REAL DEFAULT 0,\n            assets TEXT DEFAULT '{}',\n            joined_at REAL,\n            last_transaction_at REAL,\n            highest_assets REAL DEFAULT 0,\n            PRIMARY KEY (guild_id, user_id)\n        )\n        ",
-  "\n        CREATE TABLE IF NOT EXISTS event_daiphu_tx_log (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            guild_id INTEGER,\n            user_id INTEGER,\n            tx_id TEXT,\n            type TEXT,\n            asset TEXT,\n            quantity INTEGER,\n            price REAL,\n            amount REAL,\n            timestamp REAL\n        )\n        "
+  "\n        CREATE TABLE IF NOT EXISTS event_daiphu_tx_log (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            guild_id INTEGER,\n            user_id INTEGER,\n            tx_id TEXT,\n            type TEXT,\n            asset TEXT,\n            quantity INTEGER,\n            price REAL,\n            amount REAL,\n            timestamp REAL\n        )\n        ",
+  `
+        CREATE TABLE IF NOT EXISTS congphap_fragments (
+            user_id TEXT NOT NULL,
+            frag_id TEXT NOT NULL,
+            qty INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY (user_id, frag_id)
+        )
+        `,
+  `
+        CREATE TABLE IF NOT EXISTS bot_flags (key TEXT PRIMARY KEY, value TEXT)
+        `
 ];
 const ADD_COLUMNS = {
   "cultivators": {

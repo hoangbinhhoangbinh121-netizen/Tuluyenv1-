@@ -33,6 +33,8 @@ const B = {
   DONGQUAN_PCT: 0.12,            // một lần Bế Quan = 12% tu vi cần cho tầng kế (tư chất chuẩn)
   // ---- Bế Quan Treo Máy (v12.4.2) ----
   TULUYEN_SPEED_MULT: 3,         // v13.5: tăng tốc độ Tu Luyện + Bế Quan bấm tay x3 (KHÔNG áp dụng cho Bế Quan Treo, Bí Cảnh, Động Phủ... và Linh Thạch)
+  // v16: Tu Luyện bấm tay dồn dập bị giảm NHẸ. Trong 60 phút: ≤ FREE lần bấm → không giảm; từ FREE đến 360 lần (bấm kín mỗi 10 giây) giảm dần tuyến tính, tối đa MAX (−15%). Không đụng Bế Quan Treo.
+  TULUYEN_FATIGUE_WINDOW: 3600, TULUYEN_FATIGUE_FREE: 120, TULUYEN_FATIGUE_MAX: 0.15,
   TREO_EFFICIENCY: 0.10, // v15: treo = 10% tốc độ Tu Luyện bấm tay, KHÔNG nhân đôi, tích lũy tuyến tính theo thời gian. Chỉnh số này để đổi độ mạnh của treo.         // v14.2: ĐÚNG 5% tốc độ Tu Luyện bấm tay ở mọi cảnh giới (đã sửa lỗi tính thiếu). v13.3: treo máy chỉ bằng 5% tốc độ Tu Luyện bấm tay (giảm từ 10%); bấm tay không đổi
   TREO_MAX_HOURS: 0,             // v14.2: KHÔNG giới hạn thời gian treo (trước: 4 giờ rồi xuất quan cưỡng chế). Đặt >0 để bật lại giới hạn.
   CHUOI_DAILY_PCT: 0.04,         // v12.5 Chuỗi Đồng Tu: thưởng mỗi ngày hoàn thành = 4% tu vi gốc của tầng hiện tại, x(1 + min(chuỗi,30)/15) => tối đa 12%

@@ -9,8 +9,18 @@ const LOG_FILE = path.join(LOG_DIR, 'error.log');
 const recent = [];
 let reporter = null;   // (code, where, msg) => void — bot.js gắn để gửi lỗi vào kênh/DM admin
 
+/** v14.5: lượt bấm đã hết hạn (Discord chỉ cho 3 giây để phản hồi lần đầu) — KHÔNG phải lỗi code, chỉ do bot/host trả lời chậm. */
+const stale = { count: 0, last: 0 };
+const isStale = (err) => !!err && (err.code === 10062 || err.code === 40060 || /Unknown interaction|already been acknowledged/i.test(String(err.message || '')));
+const getStale = () => ({ ...stale });
+
 /** @returns mã lỗi ngắn (hiện cho người dùng để báo admin) */
 function logError(where, err) {
+  if (isStale(err)) {            // không sinh mã lỗi/không báo vào kênh admin → tránh spam; chỉ đếm + cảnh báo gọn
+    stale.count += 1; stale.last = Date.now();
+    console.warn(`⏱️ Lượt bấm hết hạn tại ${where} (${err.code || ''} ${String(err.message || '').slice(0, 40)}) — bot trả lời chậm >3s. Tổng ${stale.count} lần từ lúc khởi động.`);
+    return 'het-han';
+  }
   const code = crypto.randomBytes(2).toString('hex');
   const msg = String((err && err.stack) || err);
   recent.push({ code, where, msg: msg.slice(0, 1500), at: Date.now() });
@@ -26,4 +36,4 @@ function logError(where, err) {
 }
 const setReporter = (fn) => { reporter = fn; };
 const getRecent = () => recent.slice().reverse();
-module.exports = { logError, getRecent, setReporter, LOG_FILE };
+module.exports = { logError, getRecent, setReporter, isStale, getStale, LOG_FILE };

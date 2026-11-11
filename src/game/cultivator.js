@@ -1,6 +1,7 @@
 'use strict';
 const K = require('../game/constants');
 const T = require('./talent');
+const CPX = require('./cpfx');
 const R = require('./realm');
 const D = require('../db');
 const { now, int } = require('../util');
@@ -119,13 +120,17 @@ function ngusuyStatMult(row) {
 }
 
 // ---------- chỉ số hiệu dụng ----------
-const cpScale = (row) =>
-  (1 + effectiveCongPhapBonus(row) * 0.4 + effectivePhapBaoBonus(row) * 0.4 + specialCongphapBonus(row) * 0.4) * ngusuyStatMult(row);
+// v16: hệ số công pháp CỘNG THÊM theo từng chỉ số của 40 công pháp mới (game/cpfx.js) — cộng TRONG cùng ngoặc với cpScale cũ nên mỗi hiệu ứng chỉ tính 1 lần.
+const cpScaleFor = (row, stat) =>
+  (1 + effectiveCongPhapBonus(row) * 0.4 + effectivePhapBaoBonus(row) * 0.4 + specialCongphapBonus(row) * 0.4 + CPX.statBonus(row, stat)) * ngusuyStatMult(row);
+const cpScale = (row) => cpScaleFor(row, null);
+/** Hệ số nhân tu vi nhận được từ công pháp: công pháp cũ (bonus) + công pháp mới (fx.tu). Thay cho `1 + effectiveCongPhapBonus` ở mọi nơi tính tu vi. */
+const cpTuMult = (row) => 1 + effectiveCongPhapBonus(row) + CPX.tuBonus(row);
 // v13.6: Thể Chất + Linh Căn nhân thêm công/thủ/sinh mệnh (đã chặn trần ≤ +15% mỗi loại — xem game/talent.js CAPS)
-const effectiveAtk = (row) => int(row.atk * cpScale(row) * T.statMult(row, 'atk')) + int(row.ruong_bonus_atk || 0);
-const effectiveDef = (row) => int(row.def_ * cpScale(row) * T.statMult(row, 'def')) + int(row.ruong_bonus_def || 0);
-const effectiveSpd = (row) => int(row.spd * cpScale(row)) + int(row.ruong_bonus_spd || 0);
-const hpScale = (row) => cpScale(row) * T.statMult(row, 'hp');
+const effectiveAtk = (row) => int(row.atk * cpScaleFor(row, 'atk') * T.statMult(row, 'atk')) + int(row.ruong_bonus_atk || 0);
+const effectiveDef = (row) => int(row.def_ * cpScaleFor(row, 'def') * T.statMult(row, 'def')) + int(row.ruong_bonus_def || 0);
+const effectiveSpd = (row) => int(row.spd * cpScaleFor(row, 'spd')) + int(row.ruong_bonus_spd || 0);
+const hpScale = (row) => cpScaleFor(row, 'hp') * T.statMult(row, 'hp');
 const effectiveMaxHp = (row) => int(row.hp * hpScale(row)) + int(row.ruong_bonus_hp || 0);
 const pvpBuffPct = (row) => Number(row.cong_phap_pvp_buff || 0);
 const pvpDebuffPct = (row) => Number(row.cong_phap_pvp_debuff || 0);
@@ -161,7 +166,7 @@ module.exports = {
   parseIntSet, ownedPhapbaoTiers, equippedPhapbaoTier, effectivePhapBaoBonus, effectiveCongPhapBonus,
   ownedCongphapTiers, congphapLevelsMap, congphapLevelOf, saveCongphapLevels,
   specialCongphapCurrent, specialCongphapBonus, ngusuyActive, ngusuyStatMult,
-  cpScale, hpScale, effectiveAtk, effectiveDef, effectiveSpd, effectiveMaxHp, pvpBuffPct, pvpDebuffPct,
+  cpScale, cpScaleFor, cpTuMult, hpScale, effectiveAtk, effectiveDef, effectiveSpd, effectiveMaxHp, pvpBuffPct, pvpDebuffPct,
   calcLucChien, syncHpRegen, lucChienMocAt, HP_REGEN_PER_MINUTE,
 };
 

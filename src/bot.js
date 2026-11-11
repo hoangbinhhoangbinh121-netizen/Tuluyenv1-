@@ -95,6 +95,8 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
   });
   client.on(Events.InteractionCreate, async (i) => {
     try {
+      // v14.5: đo độ trễ nhận lượt bấm (Discord cho đúng 3 giây). Trễ nhiều = host/mạng chậm hoặc vòng lặp bị chặn.
+      { const age = Date.now() - i.createdTimestamp; if (age > 2000) console.warn(`⏱️ Nhận lượt bấm trễ ${age}ms (${i.isChatInputCommand() ? '/' + i.commandName : i.customId || i.type}) — host/mạng chậm hoặc bot đang bận.`); }
       wrapInteraction(i);   // v7: phản hồi luôn đi qua lớp đồng bộ giao diện + chống lỗi "đã trả lời"
       if (i.isChatInputCommand()) await F.handleSlash(i);
       else if ((i.isModalSubmit() || i.isMessageComponent()) && require('./game/maintenance').isOn()) {
@@ -125,7 +127,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v15 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v16.0 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);
@@ -135,6 +137,7 @@ async function main() {
   console.log(`🗄️ SQLite: ${D.DB_PATH} (driver: ${driver})`);
   try { const m = require('./game/talentOps').migrateAll(); console.log(`🧬 Thể Chất/Linh Căn v13.9: ${m.total} nhân vật, đã đồng bộ hồ sơ cho ${m.written} người.`); } catch (e) { console.error('⚠️ migrate Thể Chất/Linh Căn:', e); }
   try { const n = require('./game/pets').migrateAll(); console.log(`🐾 Linh Thú v14.0: đã chuyển đổi ${n} Linh Thú kiểu cũ sang hệ thống mới.`); } catch (e) { console.error('⚠️ migrate Linh Thú:', e.message); }
+  try { const m = require('./game/migrateV16').run(); console.log(m.skipped ? '📜 Công Pháp v16: đã migrate trước đó.' : `📜 Công Pháp v16: chuẩn hoá ${m.fixed}/${m.players} người có công pháp (bỏ ô lỗi: ${m.cleaned}). Sao lưu: ${m.backup || 'KHÔNG sao lưu được — xem log'}`); } catch (e) { console.error('⚠️ migrate Công Pháp v16:', e.message); }
   await syncPixelEmoji();
 
   process.on('unhandledRejection', (e) => console.error('⚠️ unhandledRejection:', e));

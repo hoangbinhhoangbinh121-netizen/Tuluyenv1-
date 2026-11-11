@@ -264,7 +264,7 @@
   {
     "key": "khodo",
     "label": "🎁 Kho Đồ & Code",
-    "desc": "Xem vật phẩm, nhập code và mở rương.",
+    "desc": "Xem vật phẩm, nhập code và mở rương. Nút Công Pháp mở Tàng Kinh Các (V16): kho + cửa hàng 5 nhóm, 40 công pháp mới, mảnh bí tịch.",
     "commands": [
       [
         "khodo",
@@ -288,6 +288,10 @@
       [
         "mokhoacode",
         "[Admin] Gỡ khoá nhập code cho 1 thành viên bị khoá."
+      ],
+      [
+        "phatcongphap",
+        "[Admin] Sự Kiện Đặc Biệt: cấp 1 Công Pháp V16 (mã 1001–1040, mặc định 1039) cho 1 thành viên."
       ],
       [
         "thuhoilinhthach",

@@ -36,6 +36,7 @@ function result(r) {
   fields.push({ name: `${E.tuvi || E.linhngo} Tiến độ đột phá`, value: `${progressBar(row.tu_vi, required, { kind: 'tuvi' })}\n**${exp(row.tu_vi, required)}** EXP`, inline: false });
   const notes = [];
   if (r.sectBuff) notes.push(`${E.tongmon} Đã gồm buff +5% EXP Tông Môn Chiến.`);
+  if (r.fatigue !== undefined && r.fatigue < 0.995) notes.push(`😮‍💨 Tu luyện dồn dập — linh khí hấp thụ kém đi −${Math.round((1 - r.fatigue) * 100)}% (nghỉ bớt để hồi lại).`);
   if (r.buff) notes.push('✨ Đang có buff Tu Luyện — hấp thụ linh khí nhanh hơn hẳn.');
   if (ready) notes.push(`${E.dotpha} **Đã đủ tu vi — có thể Đột Phá!**`);
   return createEmbed({

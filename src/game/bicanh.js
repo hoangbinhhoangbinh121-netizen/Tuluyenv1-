@@ -6,6 +6,7 @@ const K = require('./constants');
 const CD = require('./cooldowns');
 const R = require('./realm');
 const BAL = require('./balance');
+const CP16 = { rollBicanhThuong: (...a) => require('./congphapV16').rollBicanhThuong(...a), rollBicanhDacBiet: (...a) => require('./congphapV16').rollBicanhDacBiet(...a), rollBicanhLinhgioi: (...a) => require('./congphapV16').rollBicanhLinhgioi(...a) };
 const Cu = require('./cultivator');
 const TO = require('./talentOps');
 const F = require('./format');
@@ -51,7 +52,7 @@ function doBicanh(userId, tierIdx = 0) {
   const remain = CD.COOLDOWN_BICANH - (t - row.last_bicanh);
   if (remain > 0) return `⏳ Còn ${F.fmtTime(remain)} nữa mới khám phá bí cảnh tiếp được.`;
   const realmIdx = row.realm_index;
-  const cpBonus = 1 + Cu.effectiveCongPhapBonus(row);
+  const cpBonus = Cu.cpTuMult(row);
   const PF = BAL.paceFactor(row);
   const lootM = TO.lootMultOf(row);           // v13.6: Thể Chất/Linh Căn tăng thu hoạch tu vi Bí Cảnh (tối đa +30%) — Linh Thạch giữ nguyên
   const tuViBase = int(rr(tier.tu_vi_range) * (1 + realmIdx * 0.25) * cpBonus * PF);
@@ -103,6 +104,7 @@ function doBicanh(userId, tierIdx = 0) {
       }
     }
   }
+  try { msg += CP16.rollBicanhThuong(userId, row, up, tierIdx); } catch (e) { console.error('⚠️ rơi công pháp Bí Cảnh:', e.message); }   // v16: công pháp Nhân Giới
   Cu.updateCultivator(userId, up);
   return msg + TO.rollDrops(userId, 'bicanh', lootM) + Pets.onBicanh(userId, PB.SOURCE_IDX.thuong(tierIdx));   // v14.0: Linh Thú — trứng/thú hoang/vật phẩm/EXP
 }
@@ -116,7 +118,7 @@ function doBicanhDacBiet(userId, group) {
   if (ve <= 0) return `❌ Bạn không có ${E.vebicanhdacbiet} Vé Bí Cảnh Đặc Biệt nào — hạ gục Boss Thế Giới (ra đòn kết liễu) để có 10% cơ hội rơi ra.`;
   const ri = row.realm_index;
   if (!(g.min_realm <= ri && ri <= g.max_realm)) return `🔒 **${g.label}** chỉ dành cho người tu luyện từ ${K.REALMS[g.min_realm].name} đến ${K.REALMS[g.max_realm].name}.`;
-  const cpBonus = 1 + Cu.effectiveCongPhapBonus(row);
+  const cpBonus = Cu.cpTuMult(row);
   const PFD = group === 'linh_gioi' ? 1 : BAL.paceFactor(row);
   const tuVi = int(rr(g.base_tu_vi) * (1 + ri * 0.25) * cpBonus * K.BICANH_DACBIET_MULT * PFD);
   const lt = int(tuVi / PFD * 200);
@@ -132,6 +134,7 @@ function doBicanhDacBiet(userId, group) {
       msg += `\n📜✨ Trong Bí Cảnh Đặc Biệt, bạn cảm ngộ được **[Tầng ${won.tier}] ${cpName(CP, won.tier)}** — đã tự động thêm vào kho công pháp sở hữu, vào menu **Công Pháp** để trang bị miễn phí!`;
     }
   }
+  try { msg += CP16.rollBicanhDacBiet(userId, row, up); } catch (e) { console.error('⚠️ rơi công pháp Bí Cảnh Đặc Biệt:', e.message); }   // v16
   Cu.updateCultivator(userId, up);
   return msg + TO.rollDrops(userId, 'bicanh', TO.lootMultOf(row) * 2) + Pets.onBicanh(userId, PB.SOURCE_IDX.dacbiet());   // Bí Cảnh Đặc Biệt: cơ duyên gấp đôi
 }
@@ -235,8 +238,10 @@ function doBicanhLinhgioi(userId, subKey) {
     const n = row.bicanh_thuongco_count + 1; up.bicanh_thuongco_count = n;
     tc = `\n${E.bicanh} Bí Cảnh Thượng Cổ: đã hoàn thành **${n}/${BICANH_THUONGCO_CAN}** lần (điều kiện Phi Thăng Tiên Giới).`;
   }
+  let cpDrop = '';
+  try { cpDrop = CP16.rollBicanhLinhgioi(userId, row, up, chain.key); } catch (e) { console.error('⚠️ rơi công pháp Bí Cảnh Linh Giới:', e.message); }   // v16
   Cu.updateCultivator(userId, up);
-  return `${E.bicanhlinhgioi} Khám phá **${subName}** (${chain.name}): nhận ${loot.join(', ')}.${bossNote}${ach}${tc}${allDone}${Pets.onBicanh(userId, PB.SOURCE_IDX.linhgioi[chain.key] || 6)}`;
+  return `${E.bicanhlinhgioi} Khám phá **${subName}** (${chain.name}): nhận ${loot.join(', ')}.${bossNote}${ach}${tc}${cpDrop}${allDone}${Pets.onBicanh(userId, PB.SOURCE_IDX.linhgioi[chain.key] || 6)}`;
 }
 
 module.exports = {

@@ -33,8 +33,8 @@ function buildKhodoEmbed(user, row) {
   try { const ps = require('../game/pets').inventorySummary(row.user_id); if (ps.text) f(`${E.dongthanh} Linh Thú & Trứng`, ps.text.slice(0, 1024), false); } catch (_) { /* bỏ qua */ }
   const owned = [...Cu.ownedCongphapTiers(row)].sort((a, b) => a - b);
   if (owned.length) {
-    const names = Object.fromEntries(CP.getCurrentCongphapList().map((c) => [c.tier, c.name]));
-    let v = owned.map((t) => `Tầng ${t} — ${names[t] || '???'}`).join('\n');
+    const names = require('../game/congphapV16').nameMap();
+    let v = owned.map((t) => `${t >= 1000 ? `Mã ${t}` : `Tầng ${t}`} — ${names[t] || '???'}`).join('\n');
     const stars = row.ruong_star_count || 0;
     if (stars > 0) v += `\n${Inv.starIconLine(stars, row.ruong_bonus_lucchien, row.ruong_bonus_hp, row.ruong_bonus_atk)}`;
     f(`${E.congphap} Công Pháp sở hữu`, v.slice(0, 1024), false);
@@ -106,8 +106,7 @@ function khoDoView(userId) {
   const eph = (i, c) => i.reply({ content: c, flags: EPHEMERAL });
   v.button({ key: 'code', label: 'Nhập Code', emoji: E.nhapcode, style: 'green', row: 0 }, (i) => codeModal(i, userId));
   v.button({ key: 'ruong', label: 'Mở Rương', emoji: E.ruong, style: 'blurple', row: 0 }, (i) => eph(i, Inv.openRuongThanBi(userId)));
-  v.button({ key: 'cp', label: 'Công Pháp', emoji: E.congphap, style: 'secondary', row: 0 }, (i) =>
-    i.reply({ content: `${E.congphap} Chọn Công Pháp muốn trang bị (mua ở **Cửa Hàng** nếu chưa có):`, components: SV.congPhapView(userId).components(), flags: EPHEMERAL }));
+  v.button({ key: 'cp', label: 'Công Pháp', emoji: E.congphap, style: 'secondary', row: 0 }, (i) => require('./congphapViews').open(i, userId));
   v.button({ key: 'pb', label: 'Pháp Bảo', emoji: E.phapbao, style: 'secondary', row: 0 }, (i) =>
     i.reply({ content: `${E.phapbao} Chọn Pháp Bảo muốn trang bị (mua ở **Cửa Hàng** nếu chưa có):`, components: SV.phapBaoView(userId).components(), flags: EPHEMERAL }));
   v.button({ key: 'tt', label: 'Đan Tẩy Tủy', emoji: E.taytuydan, style: 'secondary', row: 0 }, (i) => eph(i, require('../game/dan').doTaytuyReroll(userId)));

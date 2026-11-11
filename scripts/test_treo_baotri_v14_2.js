@@ -11,7 +11,7 @@ const t0 = () => Math.floor(Date.now() / 1000);
 
 (async () => {
   // ---- cấu hình ----
-  assert.strictEqual(BAL.B.TREO_MAX_HOURS, 0, 'không còn giới hạn 4h'); assert.strictEqual(BAL.B.TREO_EFFICIENCY, 0.05);
+  assert.strictEqual(BAL.B.TREO_MAX_HOURS, 0, 'không còn giới hạn 4h'); assert.strictEqual(BAL.B.TREO_EFFICIENCY, 0.10);   // v15: 10% tay, KHÔNG nhân đôi
   assert.ok(F.registry.has('treoquan') && F.registry.has('xuatquan') && F.registry.has('baotri'));
   assert.ok(!(F.registry.get('treoquan').options || []).length, '/treoquan không còn đối số xuất quan');
   assert.ok(F.registry.get('baotri').anyAdmin && F.registry.get('baotri').maintenanceExempt);
@@ -23,8 +23,8 @@ const t0 = () => Math.floor(Date.now() / 1000);
     const row = Cu.getCultivator(id);
     const hand = A.tuluyenExpectedPerClick(id, row);
     const r = T.rateOf(id, row);
-    const ratio = r.rate / (hand / 10);
-    assert.ok(Math.abs(ratio - 0.05) < 1e-9, `realm ${realm}: treo/tay = ${ratio}`);
+    const ratio = r.rate / (A.tuluyenExpectedPerClick(id, row, { noProc: true }) / 10);
+    assert.ok(Math.abs(ratio - 0.10) < 1e-9, `realm ${realm}: treo/tay(không x2) = ${ratio}`);
     // thực nghiệm: trung bình 400 lần bấm tay thật vs kỳ vọng (sai số 12%)
     let sum = 0; for (let i = 0; i < 400; i += 1) { D.run('UPDATE cultivators SET last_tuluyen = 0 WHERE user_id = ?', id); sum += A.tuluyenR(id).gained; }
     assert.ok(Math.abs(sum / 400 / hand - 1) < 0.12, `kỳ vọng tay lệch: realm ${realm} ${(sum / 400 / hand).toFixed(3)}`);

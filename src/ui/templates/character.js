@@ -78,11 +78,11 @@ function canhgioi(user, row) {
 function trangbi(user, row) {
   const pb = K.PHAP_BAO_TIER_DEF.find((t) => t.tier === Cu.equippedPhapbaoTier(row));
   const tiers = Cu.equippedCongphapTiers(row);
-  const names = Object.fromEntries(CP.getCurrentCongphapList().map((c) => [c.tier, c.name]));
+  const names = require('../../game/congphapV16').nameMap();
   return createEmbed({
     cat: 'vatpham', status: 'Trang bị', title: nameOf(user),
     fields: [
-      section(`Công pháp đang dùng (${tiers.length}/${K.CONGPHAP_MAX_EQUIP_SLOTS})`, tiers.length ? tiers.map((t) => `${E.congphap} Tầng ${t} — ${names[t] || '???'}`) : ['Chưa trang bị'], { }),
+      section(`Công pháp đang dùng (${tiers.length}/${K.CONGPHAP_MAX_EQUIP_SLOTS})`, tiers.length ? tiers.map((t) => `${E.congphap} ${t >= 1000 ? `Mã ${t}` : `Tầng ${t}`} — ${names[t] || '???'}`) : ['Chưa trang bị'], { }),
       section('Pháp bảo', [pb ? `${E.phapbao} **${pb.name}**` : 'Chưa trang bị']),
       section('Linh thú', [`${E.dongthanh} ${require('../../game/pets').profileLine(row.user_id)}`]),
     ],
@@ -91,9 +91,9 @@ function trangbi(user, row) {
 
 function congphap(user, row) {
   const owned = [...Cu.ownedCongphapTiers(row)].sort((a, b) => a - b);
-  const names = Object.fromEntries(CP.getCurrentCongphapList().map((c) => [c.tier, c.name]));
+  const names = require('../../game/congphapV16').nameMap();
   const lv = Cu.congphapLevelsMap(row);
-  const lines = owned.map((t) => `${E.congphap} Tầng ${t} — ${names[t] || '???'}${lv[t] ? ` · Lv ${lv[t]}` : ''}`);
+  const lines = owned.map((t) => `${E.congphap} ${t >= 1000 ? `Mã ${t}` : `Tầng ${t}`} — ${names[t] || '???'}${lv[t] ? ` · Lv ${lv[t]}` : ''}`);
   return createEmbed({
     cat: 'vatpham', status: 'Công pháp sở hữu', title: `${num(owned.length)} công pháp`,
     description: lines.length ? lines.slice(0, 25).join('\n') + (lines.length > 25 ? `\n*…và ${lines.length - 25} công pháp khác*` : '') : 'Chưa sở hữu — mua ở Cửa Hàng.',

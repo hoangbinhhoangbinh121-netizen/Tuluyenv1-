@@ -23,7 +23,7 @@ const talentMult = (row) => BAL.talentMult(row);
 
 /** Hệ số nhân tu vi của Tu Luyện thường: tư chất × công pháp × thế giới × đạo lữ × buff Tông Môn × buff Tu Luyện. Bế Quan Treo dùng chung. */
 function tuluyenMultFor(userId, row) {
-  const cpBonus = 1 + Cu.effectiveCongPhapBonus(row);
+  const cpBonus = Cu.cpTuMult(row);
   const wt = R.worldMult(row.world_tier);
   const st = 1.0 + daoLuBonusFromRow(row);
   const sectBuff = getSectExpBuffMult(row);
@@ -51,6 +51,18 @@ function tuluyenExpectedPerClick(userId, row, opts = {}) {
   return Math.max(1, base * mult * BAL.B.TULUYEN_SPEED_MULT) * (opts.noProc ? 1 : (1 + T.bundle(row).proc));
 }
 
+// v16: "tu luyện quá nhanh" → giảm nhẹ. Bộ đếm theo bộ nhớ (khởi động lại bot = đếm lại, chỉ có lợi cho người chơi).
+const _tuTimes = new Map();
+function tuluyenFatigue(userId, t, record = true) {
+  const W = BAL.B.TULUYEN_FATIGUE_WINDOW; const key = String(userId);
+  const arr = (_tuTimes.get(key) || []).filter((x) => t - x < W);
+  const n = arr.length;                                   // số lần đã bấm trong cửa sổ (chưa tính lần này)
+  if (record) { arr.push(t); _tuTimes.set(key, arr); }
+  const full = Math.max(BAL.B.TULUYEN_FATIGUE_FREE + 1, Math.floor(W / CD.COOLDOWN_TULUYEN));
+  const over = Math.max(0, n - BAL.B.TULUYEN_FATIGUE_FREE);
+  return 1 - BAL.B.TULUYEN_FATIGUE_MAX * Math.min(1, over / (full - BAL.B.TULUYEN_FATIGUE_FREE));
+}
+
 /** Tu luyện — trả dữ liệu có cấu trúc (UI v7 dựng Embed từ đây). */
 function tuluyenR(userId) {
   const row = Cu.getCultivator(userId);
@@ -62,17 +74,19 @@ function tuluyenR(userId) {
   const need = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier); // mốc GỐC: tốc độ không đổi khi tăng exp đột phá
   const oldBase = randInt(8, 15) * COMPENSATION * R.realmSpeedMult(row.realm_index);   // công thức cũ làm sàn (Phàm Nhân)
   const base = Math.max(oldBase, BAL.tuluyenBase(need, row.realm_index, row.stage_index, CD.COOLDOWN_TULUYEN) * randUniform(0.85, 1.15));
-  let gained = Math.max(1, int(base * mult * BAL.B.TULUYEN_SPEED_MULT));
+  const fatigue = tuluyenFatigue(userId, t);
+  let gained = Math.max(1, int(base * mult * BAL.B.TULUYEN_SPEED_MULT * fatigue));
   const proc = random() < T.bundle(row).proc;      // v13.6: Hỗn Độn Diễn Sinh / Thời Quang...: cơ hội nhận gấp đôi
   if (proc) gained *= 2;
   Cu.updateCultivator(userId, { tu_vi: row.tu_vi + gained, last_tuluyen: t, ...TO.progFields(row, { lc: 1 }) });
-  return { ok: true, kind: 'tuluyen', proc, gained, mult, sectBuff: sectBuff > 1, buff: buff > 1, before: row.tu_vi, after: row.tu_vi + gained, row: Cu.getCultivator(userId), cooldown: CD.COOLDOWN_TULUYEN };
+  return { ok: true, kind: 'tuluyen', proc, fatigue, gained, mult, sectBuff: sectBuff > 1, buff: buff > 1, before: row.tu_vi, after: row.tu_vi + gained, row: Cu.getCultivator(userId), cooldown: CD.COOLDOWN_TULUYEN };
 }
 function doTuluyen(userId) {
   const r = tuluyenR(userId);
   if (!r.ok) return `⏳ Còn ${F.fmtTime(r.remain)} nữa mới tu luyện tiếp được.`;
   let note = r.sectBuff ? ' (đã gồm buff +5% EXP Tông Môn Chiến)' : '';
   if (r.buff) note += ' (✨ đang có buff Tu Luyện, hấp thụ linh khí nhanh hơn hẳn)';
+  if (r.fatigue < 0.995) note += ` (😮‍💨 tu luyện dồn dập nên linh khí hấp thụ kém đi −${Math.round((1 - r.fatigue) * 100)}%)`;
   if (r.proc) note += ' (🌀 Thiên phú diễn sinh — nhận **gấp đôi** tu vi!)';
   return `${E.tuluyen} Tu luyện thành công, nhận được **${fmtNum(r.gained)}** tu vi${note}.`;
 }
@@ -82,7 +96,7 @@ function dongquanR(userId) {
   const t = now();
   const remain = CD.COOLDOWN_DONGQUAN - (t - row.last_dongquan);
   if (remain > 0) return { ok: false, kind: 'dongquan', remain };
-  const cpBonus = 1 + Cu.effectiveCongPhapBonus(row);
+  const cpBonus = Cu.cpTuMult(row);
   const sectBuff = getSectExpBuffMult(row);
   const worldDao = R.worldMult(row.world_tier) * (1.0 + daoLuBonusFromRow(row)) * sectBuff;
   const mult = talentMult(row) * T.tuluyenPurity(row) * (1 + T.bundle(row).tu) * cpBonus * worldDao;
@@ -101,6 +115,9 @@ function doDongquan(userId) {
   return `${E.bequan} Bế quan xong, nhận được **${fmtNum(r.gained)}** tu vi và **${fmtNum(r.linhThachGain)}** ${E.linhthach} Linh Thạch${note}.`;
 }
 
+/** v16: Kỳ Ngộ (module mới, độc lập) — mỗi lần Cảm Ngộ có cơ hội rất nhỏ gặp kỳ ngộ nhận công pháp / mảnh bí tịch. Lỗi ở đây không được làm hỏng Cảm Ngộ. */
+function kyNgo(userId, row) { try { return require('./congphapV16').rollKyNgo(userId, row); } catch (e) { console.error('⚠️ Kỳ Ngộ:', e.message); return ''; } }
+
 function doCanngo(userId) {
   const row = Cu.getCultivator(userId);
   const t = now();
@@ -110,10 +127,10 @@ function doCanngo(userId) {
   if (random() < Math.min(0.6, 0.35 + fxN.ngo)) {     // v13.6: Thể Chất/Linh Căn tăng tỉ lệ Ngộ đạo (tối đa +12%)
     const gained = Math.max(1, Math.round(randInt(1, 3) * Math.min(1.4, T.absorbMult(row))));
     Cu.updateCultivator(userId, { ngo_tinh: row.ngo_tinh + gained, last_canngo: t });
-    return `${E.linhngo} Ngộ đạo! Nhận thêm **${gained}** Độ Lĩnh Ngộ.`;
+    return `${E.linhngo} Ngộ đạo! Nhận thêm **${gained}** Độ Lĩnh Ngộ.${kyNgo(userId, row)}`;
   }
   Cu.updateCultivator(userId, { last_canngo: t });
-  return `${E.linhngo} Cảm ngộ nhưng chưa lĩnh hội được gì, thử lại sau.`;
+  return `${E.linhngo} Cảm ngộ nhưng chưa lĩnh hội được gì, thử lại sau.${kyNgo(userId, row)}`;
 }
 
 function doLinhmach(userId) {
@@ -141,4 +158,4 @@ function doHoiHp(userId) {
   return `💚 **Hồi HP** — đang hồi phục dần theo thời gian (0.5% Sinh Mệnh tối đa/phút), không cần làm gì thêm, chỉ cần chờ:\n${bar}\n${fmtNum(curHp)}/${fmtNum(maxHp)}\n⏳ Còn khoảng **${F.fmtTime(minutesLeft * 60)}** nữa là hồi ĐẦY 100%.`;
 }
 
-module.exports = { tuluyenExpectedPerClick, tuluyenR, dongquanR, doTuluyen, doDongquan, doCanngo, doLinhmach, doHoiHp, tuluyenBuffMult, tuluyenMultFor };
+module.exports = { tuluyenFatigue, tuluyenExpectedPerClick, tuluyenR, dongquanR, doTuluyen, doDongquan, doCanngo, doLinhmach, doHoiHp, tuluyenBuffMult, tuluyenMultFor };

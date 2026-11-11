@@ -179,18 +179,32 @@ defineCommand({
 });
 
 defineCommand({
+  name: 'phatcongphap', description: '[Admin] Sự Kiện Đặc Biệt: cấp 1 Công Pháp V16 (mã 1001–1040, mặc định 1039 Càn Khôn Trấn Giới Kinh) cho 1 thành viên', admin: true,
+  options: [{ name: 'thanh_vien', type: 'user', required: true, description: 'Thành viên nhận' }, { name: 'ma', type: 'int', description: 'Mã công pháp 1001–1040 (bỏ trống = 1039)' }],
+  async run(ctx) {
+    const u = ctx.args.thanh_vien; const tier = ctx.args.ma || 1039;
+    if (!u || !Cu.getCultivator(u.id)) return ctx.send(`❌ <@${u?.id}> chưa bắt đầu tu tiên.`);
+    const CP16 = require('../game/congphapV16');
+    if (!CP16.isNew(tier)) return ctx.send('❌ Mã công pháp phải nằm trong 1001–1040.');
+    return ctx.send(`${CP16.grantEvent(u.id, tier)} (người nhận: <@${u.id}>)`);
+  },
+});
+
+defineCommand({
   name: 'loigannhat', description: '[Admin] Xem các lỗi gần nhất của bot (kèm mã lỗi người chơi báo)', admin: true,
   options: [{ name: 'ma_loi', type: 'string', description: 'Mã lỗi cần xem chi tiết (bỏ trống = danh sách)' }],
   async run(ctx) {
     const { getRecent } = require('../errorlog');
     const list = getRecent();
-    if (!list.length) return ctx.send('✅ Chưa ghi nhận lỗi nào kể từ lần khởi động gần nhất.');
+    const st = require('../errorlog').getStale();   // v14.5: lượt bấm hết hạn (10062) — không tính là lỗi code
+    const staleNote = st.count ? `\n⏱️ Có **${st.count}** lượt bấm bị hết hạn (bot trả lời >3s, lần cuối <t:${Math.trunc(st.last / 1000)}:R>) — do host/mạng chậm hoặc vòng lặp bị chặn; xem console để biết "🐢 Vòng lặp bị chặn".` : '';
+    if (!list.length) return ctx.send(`✅ Chưa ghi nhận lỗi nào kể từ lần khởi động gần nhất.${staleNote}`);
     const code = (ctx.args.ma_loi || '').trim().toLowerCase();
     if (code) {
       const e = list.find((x) => x.code === code);
       return ctx.send(e ? `**[${e.code}]** ${e.where}\n\`\`\`\n${e.msg.slice(0, 1700)}\n\`\`\`` : '❌ Không có lỗi mang mã này (chỉ giữ 20 lỗi gần nhất).');
     }
-    return ctx.send(`🧾 **${list.length} lỗi gần nhất** (mới nhất trước):\n` + list.slice(0, 10).map((e) => `• \`${e.code}\` — ${e.where} — <t:${Math.trunc(e.at / 1000)}:R>`).join('\n') + '\nDùng `/loigannhat ma_loi:<mã>` để xem chi tiết. File đầy đủ: `logs/error.log`.');
+    return ctx.send(`🧾 **${list.length} lỗi gần nhất** (mới nhất trước):\n` + list.slice(0, 10).map((e) => `• \`${e.code}\` — ${e.where} — <t:${Math.trunc(e.at / 1000)}:R>`).join('\n') + staleNote + '\nDùng `/loigannhat ma_loi:<mã>` để xem chi tiết. File đầy đủ: `logs/error.log`.');
   },
 });
 

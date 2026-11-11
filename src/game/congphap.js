@@ -6,10 +6,12 @@ const R = require('./realm');
 const Cu = require('./cultivator');
 const D = require('../db');
 const F = require('./format');
+const CPX = require('./cpfx');
 const { E } = require('./emoji');
 const { geminiGenerate } = require('./ai');
 const { now, int, choice, fmtNum } = require('../util');
 
+const D16 = require('../data/congphap_v16');
 const { Delta } = Cu;
 const TIERS = K.CONG_PHAP_TIER_DEF;
 const tierDef = (t) => TIERS.find((x) => x.tier === t);
@@ -50,6 +52,8 @@ async function lockSkillsForTier(tier) {
 function pvpActionListFor(row) {
   const tier = Cu.equippedCongphapTier(row);
   if (tier <= 0) return [ATTACK_NORMAL];
+  const nb = D16.BY_TIER.get(tier);
+  if (nb) return [ATTACK_NORMAL, ...nb.skills.map((s) => s.name)];      // v16: 4 chiêu CỐ ĐỊNH của công pháp mới (có hiệu ứng thật — xem game/cpfx.js)
   let skills = getLockedSkills(tier);
   if (!skills) skills = K._SKILL_NAME_PREFIX.slice(0, 4).map((p, i) => `${p} ${K._SKILL_NAME_SUFFIX[i]}`);
   return [ATTACK_NORMAL, ...skills];
@@ -88,7 +92,7 @@ function getCurrentCongphapList() {
     require_realm: t.require_realm, require_world: t.require_world,
   }));
 }
-const currentName = (tier) => { const c = getCurrentCongphapList().find((t) => t.tier === tier); return c ? c.name : `Công Pháp Tầng ${tier}`; };
+const currentName = (tier) => { const nb = D16.BY_TIER.get(Number(tier)); if (nb) return nb.name; const c = getCurrentCongphapList().find((t) => t.tier === tier); return c ? c.name : `Công Pháp Tầng ${tier}`; };
 
 // ---------- giá ----------
 const currencyLabel = (c) => (c === 'linh_tinh' ? `${E.linhtinh} Linh Tinh` : `${E.linhthach} Linh Thạch`);
@@ -130,6 +134,13 @@ function recomputeEquippedCongphap(userId) {
   const levels = Cu.congphapLevelsMap(row);
   let tb = 0; let buff = 0; let debuff = 0; const names = [];
   for (const tier of tiers) {
+    const nb = D16.BY_TIER.get(tier);
+    if (nb) {          // v16: công pháp mới KHÔNG cộng vào cong_phap_bonus (hiệu ứng tính riêng ở cpfx.js) — chỉ buff/debuff đấu pháp dùng chung cột cũ
+      const lvl = Math.min(D16.MAX_LEVEL, levels[tier] || 0);
+      buff += CPX.pvpBuffAt(nb, lvl); debuff += CPX.pvpDebuffAt(nb, lvl);
+      names.push(`[${tier}] ${nb.name}${lvl ? ` (Cấp ${lvl})` : ''}`);
+      continue;
+    }
     const tdef = tierDef(tier); if (!tdef) continue;
     const lvl = levels[tier] || 0;
     tb += totalBonus(tdef, lvl, row); buff += totalPvpBuff(tdef, lvl); debuff += totalPvpDebuff(tdef, lvl);
@@ -196,5 +207,5 @@ function doRandomCongphap(userId) {
 module.exports = {
   tierDef, getLockedSkills, lockSkillsForTier, pvpActionListFor, refreshRotatingCongphap, getCurrentCongphapList, currentName,
   currencyLabel, tierCurrency, tierCost, tierUpgradeCost, tierUpgradeCurrency, totalBonus, totalPvpBuff, totalPvpDebuff,
-  recomputeEquippedCongphap, upgradeCongPhap, buyCongPhap, doRandomCongphap, priceChangedMsg,
+  recomputeEquippedCongphap, balanceLine, upgradeCongPhap, buyCongPhap, doRandomCongphap, priceChangedMsg,
 };

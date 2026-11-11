@@ -70,6 +70,10 @@ function roundAction(attackerTag, defenderTag, atkStat, defStat, powerAtk, power
     lines.push(...pr.lines);
     if (pr.skip) { record.skipped = pr.stunned ? 'stun' : 'down'; record.hp_a = hpPool.A; record.hp_b = hpPool.B; return { lines, record }; }
   }
+  // v16: chiêu của công pháp mới có hiệu ứng thật (game/cpfx.js) — cùng vòng 5 hiệp, không phải hệ thống chiến đấu riêng
+  const CPX = require('./cpfx'); const eff = CPX.skillEffect(action);
+  const cpSt = CPX.battleState(hpPool); const stAtk = cpSt[atkKey]; const stDef = cpSt[defenderKey];
+  if (eff) record.cp_skill = action;
   if (action === ATTACK_NORMAL) lines.push(`${attackerTag} tung ra ${action}.`);
   else if (action === PVP_ACTION_KILLMOVE) lines.push(`${attackerTag} tung ra đòn **${action}** quyết định!`);
   else lines.push(`${attackerTag} sử dụng **${action}**.`);
@@ -77,21 +81,26 @@ function roundAction(attackerTag, defenderTag, atkStat, defStat, powerAtk, power
   // ---- v12.3: sát thương tính theo % thanh sinh mệnh (100), không còn one-shot theo chỉ số tuyệt đối ----
   const rp = Math.min(3, Math.max(0.33, powerAtk / Math.max(1.0, powerDef)));       // sức mạnh tổng (đã gồm chênh cảnh giới + công pháp)
   let dodge = 0.07 + Math.min(0.18, Math.max(0.0, ((powerDef - powerAtk) / Math.max(1.0, powerAtk)) * 0.10));
-  dodge = Math.max(0.02, Math.min(0.30, dodge) + (dm.dodge || 0) + (pc ? PC.dynDodge(pc.arena, defenderKey) : 0));
+  dodge = Math.max(0.02, Math.min(0.30, dodge) + (dm.dodge || 0) + (pc ? PC.dynDodge(pc.arena, defenderKey) : 0) + CPX.incomingBuffs(stDef).dodge);
+  const inBuff = CPX.incomingBuffs(stDef); const outWeak = CPX.outgoingWeak(stAtk);     // đọc TRƯỚC khi trừ lượt
   if (random() < dodge) {
     lines.push(`🌪️ ${defenderTag} né tránh thành công.`);
     record.dodge = true;
+    CPX.tickDefender(stDef); CPX.tickAttacker(stAtk);
+    lines.push(...CPX.applySkill(eff, stAtk, stDef, hpPool, atkKey, attackerTag));
     if (pc) PC.post(pc.arena, atkKey, hpPool, lines, record);
     record.hp_a = hpPool.A; record.hp_b = hpPool.B;
     return { lines, record };
   }
-  const armor = atkStat / (atkStat + defStat * (1 - (am.pierce || 0)) * 0.7 + 1);                              // 0..1 (ngang nhau ≈ 0.588)
+  const armor = atkStat / (atkStat + defStat * (1 - Math.min(0.6, (am.pierce || 0) + ((eff && eff.pierce) || 0))) * 0.7 + 1);                              // 0..1 (ngang nhau ≈ 0.588)
   let pct = BAL.B.PVP_BASE_HIT * ((armor / 0.588) ** BAL.B.PVP_ARMOR_EXP) * (rp ** BAL.B.PVP_POWER_EXP) * randUniform(1 - BAL.B.PVP_ROLL, 1 + BAL.B.PVP_ROLL);
-  if (action !== ATTACK_NORMAL && action !== PVP_ACTION_DEFEND) pct *= action === PVP_ACTION_KILLMOVE ? 1.5 : 1.15;
+  if (action !== ATTACK_NORMAL && action !== PVP_ACTION_DEFEND) pct *= action === PVP_ACTION_KILLMOVE ? 1.5 : (eff ? eff.dmg : 1.15);
   let damage = Math.max(1, Math.round(pct));
   if (isDefending) { damage = Math.max(1, int(damage * randUniform(0.5, 0.6))); record.defended = true; }
   if (dm.dr) damage = Math.max(1, Math.round(damage * (1 - dm.dr)));
-  const isCrit = forceCrit ? true : random() < Math.min(0.32, 0.10 + Math.max(0.0, rp - 1) * 0.10) + (am.crit || 0);
+  if (inBuff.guard) damage = Math.max(1, Math.round(damage * (1 - inBuff.guard)));        // v16: chiêu hộ thể của bên đỡ
+  if (outWeak) damage = Math.max(1, Math.round(damage * (1 - outWeak)));                   // v16: bên ra đòn đang bị suy yếu
+  const isCrit = forceCrit ? true : random() < Math.min(0.32, 0.10 + Math.max(0.0, rp - 1) * 0.10) + (am.crit || 0) + ((eff && eff.crit) || 0);
   if (isCrit) damage = Math.max(1, Math.round(damage * 1.5 * (1 + (am.critMult || 0))));
   if (pc) {
     damage = PC.outgoing(pc.arena, atkKey, damage, hpPool);
@@ -123,6 +132,8 @@ function roundAction(attackerTag, defenderTag, atkStat, defStat, powerAtk, power
   }
   if (pc) PC.post(pc.arena, atkKey, hpPool, lines, record);
   else if (petName && random() < 0.2) { lines.push(`🐉 ${petName} phát động hiệu quả.`); record.spirit_beast_triggered = petName; }
+  CPX.tickDefender(stDef); CPX.tickAttacker(stAtk);
+  if (eff) lines.push(...CPX.applySkill(eff, stAtk, stDef, hpPool, atkKey, attackerTag));
   record.hp_a = hpPool.A; record.hp_b = hpPool.B;
   return { lines, record };
 }

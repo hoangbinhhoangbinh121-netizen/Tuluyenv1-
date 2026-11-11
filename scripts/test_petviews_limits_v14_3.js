@@ -70,3 +70,14 @@ const kit = require('../src/ui/kit');
   console.log(`✅ ${clicks} lượt bấm nút/menu tĩnh không lỗi`);
 })().catch((e) => { console.error('❌', e.message); process.exit(1); });
 console.log(`✅ test_petviews_limits_v14_3 OK (${count} màn hình, ${all.length} thú, emoji ${MODE})`);
+
+// ---- đường lệnh tiền tố `!linhthu` (ctx.send(render)) với dữ liệu xấu nhất ----
+(async () => {
+  const F = require('../src/commands/framework'); require('../src/commands/pets');
+  const sent = [];
+  const msg = { author: { id: String(uid), bot: false }, content: '!linhthu', guild: { id: 'g1' }, channel: {}, mentions: { users: new Map() }, member: { permissions: { has: () => false } }, attachments: new Map(), reply: async (p) => { sent.push(p); return p; } };
+  await F.handlePrefix(msg, ['!']);
+  assert.ok(sent.length === 1, 'không có phản hồi'); const p = sent[0];
+  assert.ok(!/Có lỗi xảy ra|⚠️/.test(JSON.stringify(p).slice(0, 400)), JSON.stringify(p).slice(0, 300));
+  check('!linhthu', p); console.log('✅ !linhthu (lệnh tiền tố) không lỗi');
+})().catch((e) => { console.error('❌', e.message); process.exit(1); });

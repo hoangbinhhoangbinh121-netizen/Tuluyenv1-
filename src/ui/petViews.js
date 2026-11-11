@@ -338,4 +338,4 @@ registerStatic('lt', async (i, parts) => {
   }
 });
 
-module.exports = { open, render, TABS };
+module.exports = { open, render, TABS, fit, listFit, EmbedBuilder, optEmoji, btn, rowOf };

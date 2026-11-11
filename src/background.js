@@ -7,6 +7,13 @@ const D = require('./db');
 const AUTO_BACKUP_HOURS = Number(process.env.AUTO_BACKUP_HOURS || 6);   // 0 = tắt
 
 function startBackground(client) {
+  // v14.5: giám sát độ trễ vòng lặp sự kiện. Nếu bị chặn >1 giây (VACUUM backup, truy vấn nặng, host quá tải) → cảnh báo kèm số liệu,
+  // giúp biết vì sao lượt bấm hết hạn (lỗi 10062). Chỉ cảnh báo tối đa 1 lần / 30 giây.
+  { let last = Date.now(); let lastWarn = 0;
+    setInterval(() => { const now = Date.now(); const lag = now - last - 500; last = now;
+      if (lag > 1000 && now - lastWarn > 30000) { lastWarn = now; const m = process.memoryUsage();
+        console.warn(`🐢 Vòng lặp bị chặn ~${lag}ms (RAM ${(m.rss / 1048576).toFixed(0)}MB, heap ${(m.heapUsed / 1048576).toFixed(0)}MB) — lượt bấm trong lúc này có thể báo "Unknown interaction".`); } }, 500).unref(); }
+
   // Một Ngày Đại Phú: kiểm tra mở/khoá event + cập nhật giá theo chu kỳ.
   const DP = require('./game/daiphu');
   const MT = require('./game/maintenance');   // v14.2: bảo trì toàn bot → các vòng nền làm đổi dữ liệu game tạm dừng

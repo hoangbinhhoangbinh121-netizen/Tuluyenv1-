@@ -73,6 +73,7 @@ function rewardLinesForCode(c) {
   if (c.dan_taytuy_nuaban) r.push(`🧪 **${c.dan_taytuy_nuaban}** × ${E.taytuydan} Đan Tẩy Tủy Nửa Tác Dụng (tự chọn reroll ${E.linhcan} Linh Căn HOẶC ${E.thechat} Thể Chất — giá trị cửa hàng ${fmtNum(K.TAYTUY_NUABAN_LINH_THACH_COST)} Linh Thạch)`);
   if (c.dan_duoc) r.push(`💊 **${c.dan_duoc}** × ${E.danduoc} Đan Dược (cắn ngay nhận 60~120 tu vi)`);
   if (c.dan_pha_gioi) r.push(`⚗️ **${c.dan_pha_gioi}** × ${E.phagioidan} Đan Dược Phá Giới (bỏ bớt cooldown Đột Phá thất bại)`);
+  if (c.cong_phap && require('./congphapV16').isNew(c.cong_phap)) r.push(`📜 Công Pháp **${require('./congphapV16').nameOf(c.cong_phap)}**`);
   if (c.ruong_than_bi) r.push(`📦 **${c.ruong_than_bi}** × ${E.ruong} Rương Thần Bí`);
   return r;
 }
@@ -83,6 +84,7 @@ function grantCodeRewards(userId, code, c) {
   const redeemed = redeemedCodeSet(row); const up = {};
   if (c.linh_thach) up.linh_thach = row.linh_thach + c.linh_thach;
   for (const col of ['dan_taytuy_trongsinh', 'dan_taytuy_nuaban', 'dan_duoc', 'dan_pha_gioi', 'ruong_than_bi']) if (c[col]) up[col] = (row[col] || 0) + c[col];
+  if (c.cong_phap && require('./congphapV16').isNew(c.cong_phap)) require('./congphapV16').grantInto(up, row, Number(c.cong_phap));   // v16: mã code có thể tặng 1 công pháp mới
   redeemed.add(code);
   up.redeemed_codes = [...redeemed].sort().join(',');
   Cu.updateCultivator(userId, up);
