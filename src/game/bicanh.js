@@ -58,7 +58,7 @@ function doBicanh(userId, tierIdx = 0) {
   const tuViBase = int(rr(tier.tu_vi_range) * (1 + realmIdx * 0.25) * cpBonus * PF);
   const tuViGain = int(tuViBase * lootM);
   const nlGain = rr(tier.nl_range);
-  const ltGain = int(tuViBase / PF * 200);   // linh thạch giữ công thức cũ (không lạm phát)
+  const ltGain = int(tuViBase / PF * 200 * (1 + require('./talent').bundle(row).thach));   // linh thạch giữ công thức cũ (không lạm phát); v16.2: + hiệu ứng 'thach' của công pháp mới
   const up = { tu_vi: row.tu_vi + tuViGain, nguyen_lieu: row.nguyen_lieu + nlGain, linh_thach: row.linh_thach + ltGain, last_bicanh: t, ...TO.progFields(row, { lc: 2, tc: 1 }) };
   const cpNote = cpBonus > 1 ? ` (đã gồm +${int((cpBonus - 1) * 100)}% công pháp)` : '';
   const isVLC = !!tier.van_linh_coc; let isBoss = false; let enc = '';
@@ -180,7 +180,7 @@ function doBicanhLinhgioi(userId, subKey) {
   if (remain > 0) return `⏳ Còn ${F.fmtTime(remain)} nữa mới khám phá Bí Cảnh Linh Giới tiếp được.`;
 
   const scale = BICANH_LINHGIOI_SCALE[subIdx];
-  const tuVi = int(rr(chain.tu_vi) * scale); const lt = int(rr(chain.linh_thach) * scale);
+  const tuVi = int(rr(chain.tu_vi) * scale); const lt = int(rr(chain.linh_thach) * scale * (1 + require('./talent').bundle(row).thach));
   const up = { tu_vi: row.tu_vi + tuVi, linh_thach: row.linh_thach + lt, last_bicanh_linhgioi: t };
   const loot = [`**${fmtNum(tuVi)}** tu vi`, `**${fmtNum(lt)}** ${E.linhthach} Linh Thạch`];
   const pc = R.phuCol(row.world_tier);

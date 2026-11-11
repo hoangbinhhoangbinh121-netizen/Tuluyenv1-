@@ -203,7 +203,17 @@ function renderDetail(uid, st, row, note) {
     if (f) row1.push(btn(cid(uid, 'nav', { ...st, m: 'fr', t: D16.FRAGMENTS.indexOf(f) + 1 }), `Mảnh bí tịch (${C16.fragCount(uid, f.id)}/${f.need})`.slice(0, 80), '🧩', ButtonStyle.Primary));
   }
   row1.push(btn(cid(uid, 'nav', stBack), 'Quay lại', '↩️', ButtonStyle.Secondary));
-  return { embeds: [e], components: [rowOf(...row1)] };
+  const comps = [rowOf(...row1)];
+  if (x.owned && x.up) {      // v16.4: nâng nhanh nhiều cấp trong 1 lần bấm
+    const u = x.up; const exp = `${u[0]}:${u[1]}`;
+    const pMax = C16.planUpgrade(row, x.tier, Infinity); const p10 = C16.planUpgrade(row, x.tier, 10);
+    const lt = (p) => Object.entries(p.spent).map(([c, v]) => `${fmtNum(v)} ${c === 'linh_tinh' ? 'LT' : 'LThạch'}`).join('+');
+    comps.push(rowOf(
+      btn(cid(uid, 'u10', st, exp), p10.levels ? `Nâng +${p10.levels} cấp (${lt(p10)})`.slice(0, 80) : 'Nâng +10 cấp (thiếu tiền)', '⏩', ButtonStyle.Primary, !p10.levels),
+      btn(cid(uid, 'umax', st, exp), pMax.levels ? `Nâng Tối Đa → Cấp ${pMax.to} (${lt(pMax)})`.slice(0, 80) : 'Nâng Tối Đa (thiếu tiền)', '⏫', ButtonStyle.Success, !pMax.levels),
+    ));
+  }
+  return { embeds: [e], components: comps };
 }
 function renderConfirm(uid, st, row) {
   const x = info(row, st.t); if (!x) return renderShop(uid, { ...st, m: 'shop' }, row);
@@ -262,6 +272,11 @@ registerStatic('tk', async (i, parts) => {
     case 'eq': { const r = C16.toggleEquip(uid, st.t); return upd({ ...st, m: 'dt' }, r.msg); }
     case 'pr': { const r = C16.makePrimary(uid, st.t); return upd({ ...st, m: 'dt' }, r.msg); }
     case 'up': { const [c, cur] = String(x || '').split(':'); const msg = C16.upgradeAny(uid, st.t, c ? [Number(c), cur] : null); return upd({ ...st, m: 'dt' }, msg); }
+    case 'u10': case 'umax': {
+      const [c, cur] = String(x || '').split(':');
+      const msg = C16.upgradeMany(uid, st.t, act === 'u10' ? 10 : Infinity, c ? [Number(c), cur] : null);
+      return upd({ ...st, m: 'dt' }, msg);
+    }
     case 'buy': return upd({ ...st, m: 'cf' });
     case 'ok': {
       const [c, cur] = String(x || '').split(':'); const exp = [Number(c), cur];

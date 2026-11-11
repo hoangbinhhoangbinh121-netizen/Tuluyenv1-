@@ -61,7 +61,7 @@ function buy(userId, tier, expect = null) {
 const pct = (v) => `${Math.round(v * 1000) / 10}%`;
 function effectLines(b, level) {
   const fx = CPX.fxAt(b, level); const out = [];
-  for (const k of [...D16.STAT_KEYS, 'tu', 'boss', ...D16.ROUTE_KEYS]) if (fx[k]) out.push(`+${pct(fx[k])} ${D16.FX_LABEL[k]}`);
+  for (const k of [...D16.STAT_KEYS, 'tu', 'luc', 'boss', ...D16.ROUTE_KEYS]) if (fx[k]) out.push(`+${pct(fx[k])} ${D16.FX_LABEL[k]}`);
   return out;
 }
 function skillLines(b) {
@@ -107,13 +107,61 @@ function upgradeAny(userId, tier, expect = null) {
   const exp = expect || [CP.tierUpgradeCost(tdef, lvl, row), CP.tierUpgradeCurrency(tdef, row)];
   return CP.upgradeCongPhap(userId, Number(tier), exp);
 }
-/** [chi phí, tiền tệ] nâng tiếp của 1 công pháp (cũ/mới); null nếu đã tối đa. */
-function nextUpgrade(row, tier) {
-  const lvl = Cu.congphapLevelsMap(row)[tier] || 0;
+/** [chi phí, tiền tệ] để nâng từ cấp `lvl` lên `lvl+1` (cũ hoặc mới); null nếu đã tối đa. */
+function costAt(row, tier, lvl) {
   if (lvl >= D16.MAX_LEVEL) return null;
-  if (isNew(tier)) { const b = book(tier); return [upgradeCost(b, lvl), b.up_currency]; }
+  if (isNew(tier)) { const b = book(tier); return b ? [upgradeCost(b, lvl), b.up_currency] : null; }
   const tdef = CP.tierDef(Number(tier)); if (!tdef) return null;
   return [CP.tierUpgradeCost(tdef, lvl, row), CP.tierUpgradeCurrency(tdef, row)];
+}
+const levelOf = (row, tier) => Math.min(D16.MAX_LEVEL, Cu.congphapLevelsMap(row)[tier] || 0);
+/** [chi phí, tiền tệ] nâng tiếp của 1 công pháp (cũ/mới); null nếu đã tối đa. */
+function nextUpgrade(row, tier) { return costAt(row, Number(tier), levelOf(row, tier)); }
+/** Mô phỏng (không ghi DB): với số dư hiện có, nâng liên tiếp tối đa `steps` cấp được bao nhiêu. → { levels, from, to, spent:{tiền tệ: số}, stop:'cap'|'money'|'steps', need } */
+function planUpgrade(row, tier, steps = Infinity) {
+  tier = Number(tier); const from = levelOf(row, tier); const bal = { linh_thach: row.linh_thach, linh_tinh: row.linh_tinh };
+  const spent = {}; let lvl = from; let stop = 'steps'; let need = null;
+  while (lvl - from < steps) {
+    const c = costAt(row, tier, lvl);
+    if (!c) { stop = 'cap'; break; }
+    if ((bal[c[1]] || 0) < c[0]) { stop = 'money'; need = c; break; }
+    bal[c[1]] -= c[0]; spent[c[1]] = (spent[c[1]] || 0) + c[0]; lvl += 1;
+  }
+  return { levels: lvl - from, from, to: lvl, spent, stop, need };
+}
+const spentText = (spent) => Object.entries(spent).filter(([, v]) => v > 0).map(([c, v]) => `${fmtNum(v)} ${curLabel(c)}`).join(' + ') || '0';
+/**
+ * v16.3 — Nâng NHANH nhiều cấp trong 1 lần bấm (công pháp cũ hoặc mới): nâng liên tục tới khi hết tiền thì TỰ DỪNG ở cấp đó
+ * (hoặc đủ `steps` cấp, hoặc đạt Cấp 100). Mỗi cấp vẫn là 1 lần trừ tiền có bảo vệ số dư (an toàn khi bấm đồng thời).
+ */
+function upgradeMany(userId, tier, steps = Infinity, expect = null) {
+  tier = Number(tier);
+  let row = Cu.getCultivator(userId);
+  if (!row) return '❌ Bạn chưa bắt đầu tu tiên, dùng `/batdau` trước.';
+  const nm = isNew(tier) ? nameOf(tier) : `[Tầng ${tier}] ${CP.currentName(tier)}`;
+  if (!isNew(tier) && !CP.tierDef(tier)) return '❌ Công pháp này không tồn tại.';
+  if (!Cu.ownedCongphapTiers(row).has(tier)) return `🔒 Bạn chưa sở hữu **${nm}**.`;
+  const from = levelOf(row, tier); const spent = {}; let done = 0; let stop = 'steps'; let need = null; let failMsg = null; let ex = expect;
+  while (done < steps) {
+    row = Cu.getCultivator(userId);
+    const c = nextUpgrade(row, tier);
+    if (!c) { stop = 'cap'; break; }
+    if (row[c[1]] < c[0]) { stop = 'money'; need = [c, row[c[1]]]; break; }
+    const before = levelOf(row, tier);
+    const msg = upgradeAny(userId, tier, ex || c); ex = null;
+    if (levelOf(Cu.getCultivator(userId), tier) <= before) { stop = 'fail'; failMsg = msg; break; }
+    spent[c[1]] = (spent[c[1]] || 0) + c[0]; done += 1;
+  }
+  const now = from + done;
+  if (!done) return failMsg || (stop === 'cap' ? `❌ **${nm}** đã đạt cấp nâng tối đa (**Cấp ${D16.MAX_LEVEL}**).`
+    : `❌ Không đủ ${curLabel(need[0][1])} để nâng cấp (cần ${fmtNum(need[0][0])}, hiện có ${fmtNum(need[1])}).`);
+  const why = stop === 'cap' ? `🏁 Đã đạt **cấp tối đa ${D16.MAX_LEVEL}**.`
+    : stop === 'money' ? `⏹️ Dừng ở **Cấp ${now}** vì hết ${curLabel(need[0][1])} (cấp tiếp cần ${fmtNum(need[0][0])}, còn ${fmtNum(need[1])}).`
+      : stop === 'fail' ? `⏹️ Dừng ở **Cấp ${now}**: ${String(failMsg || '').split('\n')[0]}`
+        : `✅ Đã nâng đủ **${done}** cấp theo yêu cầu.`;
+  const fin = Cu.getCultivator(userId);
+  const detail = isNew(tier) ? `📈 ${effectLines(book(tier), now).join(' · ')} · ${pvpText(book(tier), now)}.` : '📈 Chỉ số đã tự cập nhật nếu công pháp đang trang bị.';
+  return `⏫ Nâng nhanh **${nm}**: **Cấp ${from} → Cấp ${now}/${D16.MAX_LEVEL}** (+${done} cấp, tốn ${spentText(spent)}).\n${why}\n${detail}\n⚔️ Lực chiến hiện tại: **${fmtNum(Cu.calcLucChien(fin))}**`;
 }
 
 // ---------------------------------------------------------------- trang bị
@@ -309,7 +357,7 @@ function listOwned(row) {
 }
 
 module.exports = {
-  D16, book, isNew, nameOf, fullName, nameMap, unmetReason, reqText, buy, upgrade, upgradeAny, upgradeCost, upgradeTotal, nextUpgrade,
+  D16, book, isNew, nameOf, fullName, nameMap, unmetReason, reqText, buy, upgrade, upgradeAny, upgradeCost, upgradeTotal, nextUpgrade, costAt, planUpgrade, upgradeMany,
   effectLines, skillLines, pvpText, pct, setEquipped, toggleEquip, makePrimary, grantInto, grantDirect, grantEvent,
   fragCount, allFragCounts, addFrag, mergeFrag, fragLine, rollBicanhThuong, rollBicanhDacBiet, rollBicanhLinhgioi, rollBossKiller, rollBossContrib,
   rollKyNgo, kyngoLevels, listShop, listOwned, MAX_EQUIP,

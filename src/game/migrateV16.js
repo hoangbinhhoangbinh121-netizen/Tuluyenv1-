@@ -27,10 +27,24 @@ function backup() {
   return dest;
 }
 
+/** v16.2: chỉ số công pháp mới đã đổi → buff/debuff Đấu Pháp lưu trong cột cũ phải tính lại 1 lần (chỉ số/tu vi tính tức thời nên không cần). Không ghi gì khác. */
+function recalcV162() {
+  const F2 = 'cp16_2_recalc';
+  try {
+    if (D.get('SELECT value FROM bot_flags WHERE key = ?', F2)) return 0;
+    let n = 0;
+    for (const { user_id } of D.all("SELECT user_id FROM cultivators WHERE cong_phap_slots LIKE '%10__%'")) {
+      try { CP.recomputeEquippedCongphap(user_id); n += 1; } catch (e) { console.error(`⚠️ recalc v16.2 người ${user_id}:`, e.message); }
+    }
+    D.run("INSERT OR REPLACE INTO bot_flags (key, value) VALUES (?, ?)", F2, String(Date.now()));
+    return n;
+  } catch (e) { console.error('⚠️ recalc v16.2:', e.message); return 0; }
+}
+
 function run({ force = false } = {}) {
   D.run('CREATE TABLE IF NOT EXISTS bot_flags (key TEXT PRIMARY KEY, value TEXT)');
   D.run('CREATE TABLE IF NOT EXISTS congphap_fragments (user_id TEXT NOT NULL, frag_id TEXT NOT NULL, qty INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, frag_id))');
-  if (!force && flagGet()) return { skipped: true };
+  if (!force && flagGet()) { recalcV162(); return { skipped: true }; }     // đã migrate v16 từ trước → chỉ tính lại buff Đấu Pháp cho bản 16.2 (1 lần)
   let bk = null; let bkErr = null;
   try { bk = backup(); } catch (e) { bkErr = e.message; console.error('⚠️ Không sao lưu được trước migration v16:', e.message); }
   const rows = D.all("SELECT user_id FROM cultivators WHERE (cong_phap_slots IS NOT NULL AND cong_phap_slots != '') OR (cong_phap IS NOT NULL AND cong_phap != '')");
@@ -47,6 +61,7 @@ function run({ force = false } = {}) {
     } catch (e) { console.error(`⚠️ migration v16 người ${user_id}:`, e.message); }
   }
   D.run('INSERT OR REPLACE INTO bot_flags (key, value) VALUES (?, ?)', FLAG, JSON.stringify({ at: Math.floor(Date.now() / 1000), backup: bk, backupError: bkErr, players: rows.length, fixed, cleaned }));
+  D.run('INSERT OR REPLACE INTO bot_flags (key, value) VALUES (?, ?)', 'cp16_2_recalc', String(Date.now()));     // vừa tính lại toàn bộ theo số liệu mới → không cần recalc v16.2 nữa
   return { skipped: false, backup: bk, players: rows.length, fixed, cleaned };
 }
 

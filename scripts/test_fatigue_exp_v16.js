@@ -15,8 +15,8 @@ ok(A.tuluyenFatigue('f1', t0 + 100000) === 1, 'nghỉ đủ lâu → hết giả
 ok(A.tuluyenFatigue('f2', t0) === 1, 'mỗi người đếm riêng');
 // bấm đều đặn mỗi 30 giây (người chơi bình thường) không bao giờ bị giảm
 let worst = 1; for (let i = 0; i < 400; i += 1) worst = Math.min(worst, A.tuluyenFatigue('f3', t0 + i * 30)); ok(worst === 1, 'bấm mỗi 30 giây không bị giảm');
-// EXP đột phá giảm mạnh so với v14.x (0,90/0,65)
-ok(K.EXP_GATE_MINOR_MULT <= 0.4 && K.EXP_GATE_MAJOR_MULT <= 0.25, 'hệ số mới');
+// EXP đột phá giảm mạnh so với v14.x (0,90/0,65; v16.0: 0,40/0,25; v16.1: 0,20/0,12)
+ok(K.EXP_GATE_MINOR_MULT <= 0.2 && K.EXP_GATE_MAJOR_MULT <= 0.12, 'hệ số mới');
 const cut = (r, s) => R.tuViRequired(r, s, 0) / (R.tuViRequiredBase(r, s, 0) * K.EXP_REQUIRED_MULT);
 for (const [r, s] of [[0, 0], [2, 4], [5, 9]]) console.log(`   cảnh giới ${r}-${s}: cần = ${R.tuViRequired(r, s, 0).toLocaleString('en')}  (gốc ×${K.EXP_REQUIRED_MULT})`);
 ok(R.tuViRequired(0, 1, 0) > 0, 'vẫn dương');

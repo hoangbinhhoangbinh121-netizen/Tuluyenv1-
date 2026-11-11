@@ -1,23 +1,31 @@
-CÂN BẰNG V16 (= V14.5 + Bế Quan Treo V15 + Công Pháp V16 + EXP giảm mạnh + nerf nhẹ tu luyện dồn dập)
+CÂN BẰNG V16.4 (= V14.5 + Bế Quan Treo V15 + Công Pháp V16 + EXP giảm mạnh + nerf nhẹ tu luyện dồn dập)
 ====================================================================================================
 
 1. THAY ĐỔI CHÍNH
-  • EXP đột phá GIẢM MẠNH: hệ số cổng tầng nhỏ 0,90 → 0,40; cổng đại cảnh giới 0,65 → 0,25 (≈ giảm 55–60%). Tốc độ tu luyện/treo/bế quan KHÔNG đổi (tính từ mốc gốc) nên số lần bấm để lên cảnh giới giảm tương ứng.
+  • EXP đột phá GIẢM MẠNH: hệ số cổng tầng nhỏ 0,90 → 0,20; cổng đại cảnh giới 0,65 → 0,12 (≈ giảm 78–82% so với v14.x; v16.1 giảm thêm một nửa so với v16.0). Tốc độ tu luyện/treo/bế quan KHÔNG đổi (tính từ mốc gốc) nên số lần bấm để lên cảnh giới giảm tương ứng.
     Lưu ý: nếu host có đặt biến môi trường EXP_GATE_MINOR_MULT / EXP_GATE_MAJOR_MULT / EXP_REQUIRED_MULT thì giá trị đó vẫn ĐÈ lên mặc định mới.
   • NERF NHẸ khi Tu Luyện bấm tay dồn dập: trong 60 phút, ≤ 120 lần bấm → không giảm; từ lần 121 giảm dần tuyến tính, tối đa −15% ở mức bấm kín (360 lần/giờ). Bấm mỗi 30 giây không bao giờ bị giảm. Không áp cho Bế Quan, Bế Quan Treo, Bí Cảnh. Chỉnh ở balance.js: TULUYEN_FATIGUE_FREE / _MAX / _WINDOW.
   • Bế Quan Treo V15 giữ nguyên: 10% tốc độ Tu Luyện bấm tay, không nhân đôi, không giới hạn giờ.
-  • 40 Công Pháp mới (xem mục 2–8). Mỗi quyển đều cộng nhẹ "Tu vi nhận được" (+4% → +28%) nên mọi công pháp đều hỗ trợ tăng tốc tu luyện.
+  • 40 Công Pháp mới (xem mục 2–8). V16.2 TĂNG MẠNH: chỉ số ×1,9–2,2 (quyển cộng đều ≥3 chỉ số nhân thêm ×2,8), tu vi nhận được ×2,2–3,2 (quyển đa chỉ số ×3; quyển chuyên 1 chỉ số kèm tu vi ×1,6), buff/debuff Đấu Pháp ×2,2–2,6, chiêu thức +0,08 sức mạnh.
+    So với công pháp CŨ (chỉ số = bonus×0,4; tu vi = bonus): Tầng 7 = +44% chỉ số / +110% tu vi · Tầng 101 = +52% / +130% · Tầng 102 = +62% / +155% · Tầng 201 = +80% / +200%. Quyển Tiên Giới đa chỉ số (1025/1028/1030) vượt Tầng 101 ở MỌI chỉ số; 1040 vượt cả Tầng 201 (chỉ số lẫn tu vi); quyển Nhân Giới vượt Tầng 3 cũ; quyển Tu Luyện vượt công pháp cũ cùng bậc. Số liệu này nằm trong test_buff_v16_2.js.
+  • 5 KIỂU HIỆU ỨNG MỚI (đều có hook thật, tính qua talent.bundle nên dùng chung trần với Thể Chất/Linh Căn): Cơ hội Tu Luyện nhân đôi (proc, tối đa +8%) · Giữ tu vi khi Đột Phá thất bại (failKeep, tối đa +10%) · Giảm sát thương Lôi Kiếp (kiepDmg, tối đa 45%) · Né Lôi Kiếp (kiepDodge, tối đa +12%) · Linh Thạch thu từ Bí Cảnh thường & Linh Giới (thach, tối đa +60%).
+  • V16.3 — SÀN SỨC MẠNH (FLOORS trong congphap_v16.js): ĐỘC QUYỀN: mỗi chỉ số ≥ 0,88 + 0,05×phẩm + 0,03×thứ tự (> Tầng 201 = 0,80), tu vi ≥ 2,15 + 0,1×phẩm + 0,05×thứ tự (> 2,00), buff/debuff Đấu Pháp > 201 (0,55/0,42); 1040 mạnh nhất. TIÊN GIỚI: chỉ số ≥ 0,66 + 0,035×thứ tự (> Tầng 102; nửa trên ≥ Tầng 201), buff ≥ Tầng 7. LINH GIỚI phẩm Thiên trở lên: chỉ số > Tầng 6.
+  • V16.4 — NÂNG NHANH: trong Tàng Kinh Các (chi tiết 1 quyển) có thêm nút "Nâng +10 cấp" và "Nâng Tối Đa": nâng liên tục từng cấp (mỗi cấp 1 lần trừ tiền có bảo vệ số dư, y hệt nâng tay) tới khi HẾT Linh Thạch / Linh Tinh thì TỰ DỪNG ở cấp đạt được, hoặc tới Cấp 100. Nút hiện trước số cấp & tổng tiền sẽ tốn. Dùng được cho cả công pháp cũ lẫn mới. Bấm tiếp khi có thêm tiền sẽ nâng tiếp.
+  • V16.4 — LỰC CHIẾN: mỗi quyển mới có hiệu ứng "+% Lực Chiến" (≈ 0,5 × trung bình chỉ số quyển cộng; độc quyền ×1,25, Tiên Giới ×1,1; quyển Tu Luyện thuần tính theo tu vi). Tính đúng 1 lần ngay trong Cu.calcLucChien (chỉ số × (1 + luc)), tháo quyển là hết. Lực chiến được dùng cho mốc Thiên Kiếp và ước lượng sức mạnh Đấu Pháp.
+  • V16.4 — TẦNG CAO: hệ số theo cấp tăng từ ×2,2 lên ×2,8 ở Cấp 100 (nâng càng cao càng đã) và trần tổng nâng: Công/Thủ 4,5 · Sinh mệnh 5,4 · Tốc 4,0 · Tu vi 8,0 · Boss 2,5 · Lực Chiến 3,0.
+  • Trần tổng 3 quyển (v16.1 → v16.3): Công/Thủ 1,0→3,0 · Sinh mệnh 1,2→3,6 · Tốc 0,9→2,7 · Tu vi 2,5→7,0 · Boss 0,8→1,8. Chỉnh trong congphap_v16.js: GROUP_SCALE / MULTI_STAT_BONUS / FLOORS / FX_CAP.
 
 2. CÁCH TÍNH HIỆU ỨNG (đúng một lần, không cộng đôi)
+  • (Số trong bảng mục 6 đã gồm hệ số v16.2.)
   • Công pháp CŨ: giữ nguyên (cong_phap_bonus → cpScale ×0,4 cho chỉ số; ×1 cho tu vi).
   • Công pháp MỚI không ghi vào cong_phap_bonus. Hiệu ứng được TÍNH TỪ ô trang bị + cấp mỗi lần cần (game/cpfx.js):
       atk/def/hp/spd → cộng vào hệ số chỉ số RIÊNG từng chỉ số (cùng ngoặc với cpScale, Cu.cpScaleFor)
       tu → nhân tu vi nhận được (Tu Luyện, Bế Quan, Treo, Bí Cảnh) · boss → sát thương lên Boss Thế Giới
-      absorb/ngo/regen/loot/bt/dodge/dr/pierce/crit/critMult/lifesteal → gộp vào talent.bundle (dùng chung trần với Thể Chất/Linh Căn)
+      absorb/ngo/regen/loot/bt/dodge/dr/pierce/crit/critMult/lifesteal/proc/failKeep/kiepDmg/kiepDodge/thach → gộp vào talent.bundle (dùng chung trần với Thể Chất/Linh Căn)
   • Tháo công pháp = hiệu ứng biến mất ngay (không lưu số dư). Trang bị 3 quyển: mỗi quyển cộng 1 lần rồi chặn trần tổng (FX_CAP). Không trang bị trùng 1 quyển.
-  • Nâng cấp: hiệu ứng × (1 + 0.012 × cấp) → tối đa ×2.2 ở Cấp 100; buff/debuff Đấu Pháp +0.0015/cấp.
+  • Nâng cấp: hiệu ứng × (1 + 0.018 × cấp) → tối đa ×2.8 ở Cấp 100; buff/debuff Đấu Pháp +0.0025/cấp.
   • Tương hợp Linh Căn: nhân các hiệu ứng chính (chỉ số/tu vi/boss) theo hành của quyển (quyển Ngũ Hành khuếch đại ×2,5 chênh lệch). Hành cố định theo loại, không xoay vòng.
-  • Trần tổng hiệu ứng: atk 1 · def 1 · hp 1.2 · spd 0.9 · tu 2.5 · boss 0.8 · absorb 0.3 · ngo 0.06 · regen 1.2 · loot 0.15 · bt 0.04 · dodge 0.08 · dr 0.08 · pierce 0.1 · crit 0.07 · critMult 0.15 · lifesteal 0.06
+  • Trần tổng hiệu ứng: atk 4.5 · def 4.5 · hp 5.4 · spd 4 · tu 8 · boss 2.5 · luc 3 · absorb 0.3 · ngo 0.06 · regen 1.2 · loot 0.15 · bt 0.04 · dodge 0.08 · dr 0.08 · pierce 0.1 · crit 0.07 · critMult 0.15 · lifesteal 0.06 · proc 0.08 · failKeep 0.1 · kiepDmg 0.45 · kiepDodge 0.12 · thach 0.6
 
 3. CHIÊU THỨC ĐẤU PHÁP (cùng vòng 5 hiệp của Đấu Pháp, KHÔNG có hệ thống chiến đấu riêng)
   • 4 chiêu mỗi quyển, tên cố định. Chiêu thức lấy từ quyển ở Ô 1 (nút "Đặt ô 1" trong Tàng Kinh Các).
@@ -45,560 +53,560 @@ CÂN BẰNG V16 (= V14.5 + Bế Quan Treo V15 + Công Pháp V16 + EXP giảm m�
   Nhóm: Công Pháp Nhân Giới · Loại: Tu luyện (hành Mộc) · Hoàng Phẩm
   Mô tả: Dẫn khí trời đất vào đan điền, dễ nhập môn — tu vi nhận được tăng ổn định ở giai đoạn đầu.
   Yêu cầu: Phàm Nhân · Phàm Giới   Giá: 30.000 Linh Thạch
-  Hiệu ứng Cấp 0: +18% Tu vi nhận được · +4% Hấp thu linh khí
-  Hiệu ứng Cấp 100 (trước trần): +39.6% Tu vi nhận được · +8.8% Hấp thu linh khí
-  Đấu Pháp: Cấp 0 buff tự thân +3%, debuff đối thủ −2% · Cấp 100 buff tự thân +18%, debuff đối thủ −17%
+  Hiệu ứng Cấp 0: +50.4% Tu vi nhận được · +9.1% Lực Chiến · +6% Hấp thu linh khí · +1.8% Cơ hội Tu Luyện nhân đôi · +9% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +141.1% Tu vi nhận được · +25.5% Lực Chiến · +16.8% Hấp thu linh khí · +5% Cơ hội Tu Luyện nhân đôi · +25.2% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +6.6%, debuff đối thủ −4.4% · Cấp 100 buff tự thân +31.6%, debuff đối thủ −29.4%
   Nâng cấp: 1.800 → 27.324 Linh Thạch/cấp; tổng 0→100 = 1.104.911
-  Chiêu 1: Thanh Nguyên Dẫn Khí — sát thương ×1.13, hồi ~3 sinh lực
-  Chiêu 2: Dưỡng Khí Hộ Thân — sát thương ×1,00, giảm 17% sát thương nhận (2 đòn)
-  Chiêu 3: Nguyên Khí Hồi Xuân — sát thương ×1.13, hồi ~6 sinh lực
-  Chiêu 4: Thanh Nguyên Quy Tàng — sát thương ×1.21, hồi ~5 sinh lực, giảm 12.8% sát thương nhận (1 đòn)
+  Chiêu 1: Thanh Nguyên Dẫn Khí — sát thương ×1.14, hồi ~4 sinh lực
+  Chiêu 2: Dưỡng Khí Hộ Thân — sát thương ×1,00, giảm 18.6% sát thương nhận (2 đòn)
+  Chiêu 3: Nguyên Khí Hồi Xuân — sát thương ×1.14, hồi ~7 sinh lực
+  Chiêu 4: Thanh Nguyên Quy Tàng — sát thương ×1.23, hồi ~6 sinh lực, giảm 14% sát thương nhận (1 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1002] Huyền Dương Luyện Thể Công  (id cp_huyen_duong_luyen_the)
   Nhóm: Công Pháp Nhân Giới · Loại: Luyện thể (hành Thổ) · Hoàng Phẩm
   Mô tả: Lấy dương khí tôi luyện xương thịt, thiên về sức chống chịu: HP và phòng ngự tăng vững chắc.
   Yêu cầu: Luyện Khí · Phàm Giới   Giá: 45.000 Linh Thạch
-  Hiệu ứng Cấp 0: +10% Phòng ngự · +12% Sinh mệnh · +4% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +22% Phòng ngự · +26.4% Sinh mệnh · +8.8% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +3%, debuff đối thủ −2% · Cấp 100 buff tự thân +18%, debuff đối thủ −17%
+  Hiệu ứng Cấp 0: +22% Phòng ngự · +26.4% Sinh mệnh · +17.9% Tu vi nhận được · +12.1% Lực Chiến · +1.8% Giữ tu vi khi Đột Phá thất bại · +6% Giảm sát thương Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +61.6% Phòng ngự · +73.9% Sinh mệnh · +50.1% Tu vi nhận được · +33.9% Lực Chiến · +5% Giữ tu vi khi Đột Phá thất bại · +16.8% Giảm sát thương Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +6.6%, debuff đối thủ −4.4% · Cấp 100 buff tự thân +31.6%, debuff đối thủ −29.4%
   Nâng cấp: 2.700 → 40.986 Linh Thạch/cấp; tổng 0→100 = 1.657.350
-  Chiêu 1: Huyền Dương Hộ Thể — sát thương ×1,00, giảm 17% sát thương nhận (2 đòn)
-  Chiêu 2: Kim Thân Trấn Mạch — sát thương ×1.13, giảm 21.3% sát thương nhận (2 đòn)
-  Chiêu 3: Bất Động Như Sơn — sát thương ×1.17, hồi ~4 sinh lực
-  Chiêu 4: Huyền Dương Bất Diệt — sát thương ×1,00, hồi ~7 sinh lực, giảm 29.8% sát thương nhận (2 đòn)
+  Chiêu 1: Huyền Dương Hộ Thể — sát thương ×1,00, giảm 18.6% sát thương nhận (2 đòn)
+  Chiêu 2: Kim Thân Trấn Mạch — sát thương ×1.14, giảm 23.3% sát thương nhận (2 đòn)
+  Chiêu 3: Bất Động Như Sơn — sát thương ×1.19, hồi ~4 sinh lực
+  Chiêu 4: Huyền Dương Bất Diệt — sát thương ×1,00, hồi ~7 sinh lực, giảm 32.6% sát thương nhận (2 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1003] Tử Tiêu Dẫn Lôi Quyết  (id cp_tu_tieu_dan_loi)
   Nhóm: Công Pháp Nhân Giới · Loại: Lôi pháp (hành Kim) · Hoàng Phẩm
   Mô tả: Dẫn tử lôi từ chín tầng mây giáng xuống, thiên về công kích và hiệu quả đấu pháp.
   Yêu cầu: Luyện Khí · Phàm Giới   Giá: 60.000 Linh Thạch
-  Hiệu ứng Cấp 0: +12% Công kích · +4% Tu vi nhận được · +1% Bạo kích (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +26.4% Công kích · +8.8% Tu vi nhận được · +2.2% Bạo kích (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +5%, debuff đối thủ −2% · Cấp 100 buff tự thân +20%, debuff đối thủ −17%
+  Hiệu ứng Cấp 0: +26.4% Công kích · +17.9% Tu vi nhận được · +13.2% Lực Chiến · +1.5% Bạo kích (Đấu Pháp) · +4.5% Giảm sát thương Lôi Kiếp · +7.5% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +73.9% Công kích · +50.1% Tu vi nhận được · +37% Lực Chiến · +4.2% Bạo kích (Đấu Pháp) · +12.6% Giảm sát thương Lôi Kiếp · +21% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +11%, debuff đối thủ −4.4% · Cấp 100 buff tự thân +36%, debuff đối thủ −29.4%
   Nâng cấp: 3.600 → 54.648 Linh Thạch/cấp; tổng 0→100 = 2.209.787
-  Chiêu 1: Tử Tiêu Lôi Châm — sát thương ×1.21
-  Chiêu 2: Dẫn Lôi Nhập Thể — sát thương ×1.17, bạo kích +12.8%
-  Chiêu 3: Cửu Thiên Lôi Động — sát thương ×1.25, xuyên giáp +8.5%
-  Chiêu 4: Tử Tiêu Diệt Thế — sát thương ×1.38, xuyên giáp +12.8%, bạo kích +8.5%
+  Chiêu 1: Tử Tiêu Lôi Châm — sát thương ×1.23
+  Chiêu 2: Dẫn Lôi Nhập Thể — sát thương ×1.19, bạo kích +14%
+  Chiêu 3: Cửu Thiên Lôi Động — sát thương ×1.28, xuyên giáp +9.3%
+  Chiêu 4: Tử Tiêu Diệt Thế — sát thương ×1.42, xuyên giáp +14%, bạo kích +9.3%
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1004] Cửu Chuyển Ngưng Khí Quyết  (id cp_cuu_chuyen_nguong_khi)
   Nhóm: Công Pháp Nhân Giới · Loại: Tu luyện (hành Mộc) · Hoàng Phẩm
   Mô tả: Chín lần vận chuyển ngưng tụ linh khí — tập trung vào tốc độ phát triển, tích lũy tu vi nhanh.
   Yêu cầu: Trúc Cơ · Phàm Giới   Giá: 90.000 Linh Thạch
-  Hiệu ứng Cấp 0: +28% Tu vi nhận được · +0.5% Tỉ lệ Đột Phá
-  Hiệu ứng Cấp 100 (trước trần): +61.6% Tu vi nhận được · +1.1% Tỉ lệ Đột Phá
-  Đấu Pháp: Cấp 0 buff tự thân +3%, debuff đối thủ −2% · Cấp 100 buff tự thân +18%, debuff đối thủ −17%
+  Hiệu ứng Cấp 0: +78.4% Tu vi nhận được · +14.1% Lực Chiến · +0.8% Tỉ lệ Đột Phá · +1.8% Cơ hội Tu Luyện nhân đôi · +9% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +219.5% Tu vi nhận được · +39.5% Lực Chiến · +2.2% Tỉ lệ Đột Phá · +5% Cơ hội Tu Luyện nhân đôi · +25.2% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +6.6%, debuff đối thủ −4.4% · Cấp 100 buff tự thân +31.6%, debuff đối thủ −29.4%
   Nâng cấp: 5.400 → 81.972 Linh Thạch/cấp; tổng 0→100 = 3.314.664
-  Chiêu 1: Cửu Chuyển Khai Mạch — sát thương ×1.14, hồi ~4 sinh lực
-  Chiêu 2: Ngưng Khí Thành Cương — sát thương ×1,00, giảm 18% sát thương nhận (2 đòn)
-  Chiêu 3: Chu Thiên Vận Hành — sát thương ×1.14, hồi ~6 sinh lực
-  Chiêu 4: Cửu Chuyển Công Thành — sát thương ×1.23, hồi ~5 sinh lực, giảm 13.5% sát thương nhận (1 đòn)
+  Chiêu 1: Cửu Chuyển Khai Mạch — sát thương ×1.15, hồi ~4 sinh lực
+  Chiêu 2: Ngưng Khí Thành Cương — sát thương ×1,00, giảm 19.6% sát thương nhận (2 đòn)
+  Chiêu 3: Chu Thiên Vận Hành — sát thương ×1.15, hồi ~7 sinh lực
+  Chiêu 4: Cửu Chuyển Công Thành — sát thương ×1.25, hồi ~6 sinh lực, giảm 14.7% sát thương nhận (1 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1005] Huyền Băng Ngọc Tâm Kinh  (id cp_huyen_bang_ngoc_tam)
   Nhóm: Công Pháp Nhân Giới · Loại: Băng pháp (hành Thủy) · Huyền Phẩm
   Mô tả: Tâm như băng ngọc: tăng phòng ngự và làm đối thủ chậm chạp, suy yếu trong đấu pháp.
   Yêu cầu: Trúc Cơ · Phàm Giới   Giá: 130.000 Linh Thạch
-  Hiệu ứng Cấp 0: +12% Phòng ngự · +4% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +26.4% Phòng ngự · +8.8% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +3%, debuff đối thủ −6% · Cấp 100 buff tự thân +18%, debuff đối thủ −21%
+  Hiệu ứng Cấp 0: +26.4% Phòng ngự · +17.9% Tu vi nhận được · +13.2% Lực Chiến · +5.9% Giảm sát thương Lôi Kiếp · +2.3% Né Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +73.9% Phòng ngự · +50.1% Tu vi nhận được · +37% Lực Chiến · +16.5% Giảm sát thương Lôi Kiếp · +6.4% Né Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +6.6%, debuff đối thủ −13.2% · Cấp 100 buff tự thân +31.6%, debuff đối thủ −38.2%
   Nâng cấp: 7.800 → 118.404 Linh Thạch/cấp; tổng 0→100 = 4.787.830
-  Chiêu 1: Huyền Băng Phong Thủ — sát thương ×1.14, đối thủ gây ít hơn 10.8% (2 đòn)
-  Chiêu 2: Ngọc Tâm Hộ Pháp — sát thương ×1,00, giảm 18% sát thương nhận (2 đòn)
-  Chiêu 3: Hàn Khí Tỏa Hồn — sát thương ×1.14, đối thủ gây ít hơn 18% (2 đòn)
-  Chiêu 4: Băng Phong Vạn Lý — sát thương ×1.27, đối thủ gây ít hơn 22.5% (3 đòn)
+  Chiêu 1: Huyền Băng Phong Thủ — sát thương ×1.15, đối thủ gây ít hơn 11.8% (2 đòn)
+  Chiêu 2: Ngọc Tâm Hộ Pháp — sát thương ×1,00, giảm 19.6% sát thương nhận (2 đòn)
+  Chiêu 3: Hàn Khí Tỏa Hồn — sát thương ×1.15, đối thủ gây ít hơn 19.6% (2 đòn)
+  Chiêu 4: Băng Phong Vạn Lý — sát thương ×1.29, đối thủ gây ít hơn 24.5% (3 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1006] Thiên Phong Thân Pháp  (id cp_thien_phong_than_phap)
   Nhóm: Công Pháp Nhân Giới · Loại: Thân pháp (hành Mộc) · Huyền Phẩm
   Mô tả: Thân nhẹ như gió: tăng tốc độ và khả năng né tránh.
   Yêu cầu: Kết Đan · Phàm Giới   Giá: 180.000 Linh Thạch
-  Hiệu ứng Cấp 0: +16% Thân pháp (tốc độ) · +4% Tu vi nhận được · +1% Né tránh (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +35.2% Thân pháp (tốc độ) · +8.8% Tu vi nhận được · +2.2% Né tránh (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +4%, debuff đối thủ −3% · Cấp 100 buff tự thân +19%, debuff đối thủ −18%
+  Hiệu ứng Cấp 0: +35.2% Thân pháp (tốc độ) · +17.9% Tu vi nhận được · +17.6% Lực Chiến · +1.5% Né tránh (Đấu Pháp) · +2.9% Né Lôi Kiếp · +7.8% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +98.6% Thân pháp (tốc độ) · +50.1% Tu vi nhận được · +49.3% Lực Chiến · +4.2% Né tránh (Đấu Pháp) · +8.1% Né Lôi Kiếp · +21.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +8.8%, debuff đối thủ −6.6% · Cấp 100 buff tự thân +33.8%, debuff đối thủ −31.6%
   Nâng cấp: 10.800 → 163.944 Linh Thạch/cấp; tổng 0→100 = 6.629.292
-  Chiêu 1: Phong Hành Bộ — sát thương ×1.14, né +13.5% (2 đòn)
-  Chiêu 2: Thiên Phong Ảnh — sát thương ×1.18, bạo kích +13.5%
-  Chiêu 3: Loạn Phong Bộ — sát thương ×1,00, né +22.5% (2 đòn)
-  Chiêu 4: Thiên Phong Vô Ảnh — sát thương ×1.32, bạo kích +9%, né +18% (2 đòn)
+  Chiêu 1: Phong Hành Bộ — sát thương ×1.15, né +14.7% (2 đòn)
+  Chiêu 2: Thiên Phong Ảnh — sát thương ×1.20, bạo kích +14.7%
+  Chiêu 3: Loạn Phong Bộ — sát thương ×1,00, né +24.5% (2 đòn)
+  Chiêu 4: Thiên Phong Vô Ảnh — sát thương ×1.34, bạo kích +9.8%, né +19.6% (2 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1007] Ngũ Hành Quy Nguyên Công  (id cp_ngu_hanh_quy_nguyen)
   Nhóm: Công Pháp Nhân Giới · Loại: Ngũ Hành (hành Ngũ Hành) · Huyền Phẩm
   Mô tả: Quy nguyên ngũ hành: cộng đều các chỉ số, phát huy mạnh khi linh căn tương hợp.
   Yêu cầu: Kết Đan · Phàm Giới   Giá: 260.000 Linh Thạch
-  Hiệu ứng Cấp 0: +5% Công kích · +5% Phòng ngự · +5% Sinh mệnh · +5% Thân pháp (tốc độ) · +8% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +11% Công kích · +11% Phòng ngự · +11% Sinh mệnh · +11% Thân pháp (tốc độ) · +17.6% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +5%, debuff đối thủ −4% · Cấp 100 buff tự thân +20%, debuff đối thủ −19%
+  Hiệu ứng Cấp 0: +30.8% Công kích · +30.8% Phòng ngự · +30.8% Sinh mệnh · +30.8% Thân pháp (tốc độ) · +67.2% Tu vi nhận được · +15.4% Lực Chiến · +0.8% Tỉ lệ Đột Phá · +2.3% Giữ tu vi khi Đột Phá thất bại · +11.7% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +86.2% Công kích · +86.2% Phòng ngự · +86.2% Sinh mệnh · +86.2% Thân pháp (tốc độ) · +188.2% Tu vi nhận được · +43.1% Lực Chiến · +2.2% Tỉ lệ Đột Phá · +6.4% Giữ tu vi khi Đột Phá thất bại · +32.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +11%, debuff đối thủ −8.8% · Cấp 100 buff tự thân +36%, debuff đối thủ −33.8%
   Nâng cấp: 15.600 → 236.808 Linh Thạch/cấp; tổng 0→100 = 9.575.626
-  Chiêu 1: Ngũ Hành Tương Sinh — sát thương ×1.18
-  Chiêu 2: Quy Nguyên Hộ Thể — sát thương ×1,00, hồi ~3 sinh lực, giảm 13.5% sát thương nhận (2 đòn)
-  Chiêu 3: Ngũ Hành Tương Khắc — sát thương ×1.23, xuyên giáp +7.2%
-  Chiêu 4: Ngũ Hành Hợp Nhất — sát thương ×1.32, giảm 13.5% sát thương nhận (1 đòn), đối thủ gây ít hơn 10.8% (1 đòn)
+  Chiêu 1: Ngũ Hành Tương Sinh — sát thương ×1.20
+  Chiêu 2: Quy Nguyên Hộ Thể — sát thương ×1,00, hồi ~3 sinh lực, giảm 14.7% sát thương nhận (2 đòn)
+  Chiêu 3: Ngũ Hành Tương Khắc — sát thương ×1.25, xuyên giáp +7.8%
+  Chiêu 4: Ngũ Hành Hợp Nhất — sát thương ×1.34, giảm 14.7% sát thương nhận (1 đòn), đối thủ gây ít hơn 11.8% (1 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1008] Xích Viêm Phần Thiên Quyết  (id cp_xich_viem_phan_thien)
   Nhóm: Công Pháp Nhân Giới · Loại: Hỏa pháp (hành Hỏa) · Huyền Phẩm
   Mô tả: Xích viêm thiêu đốt trời đất: tăng công kích và buff tự thân khi đấu pháp.
   Yêu cầu: Nguyên Anh · Phàm Giới   Giá: 360.000 Linh Thạch
-  Hiệu ứng Cấp 0: +16% Công kích · +4% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +35.2% Công kích · +8.8% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +8%, debuff đối thủ −3% · Cấp 100 buff tự thân +23%, debuff đối thủ −18%
+  Hiệu ứng Cấp 0: +35.2% Công kích · +17.9% Tu vi nhận được · +17.6% Lực Chiến · +1.6% Cơ hội Tu Luyện nhân đôi · +7.8% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +98.6% Công kích · +50.1% Tu vi nhận được · +49.3% Lực Chiến · +4.5% Cơ hội Tu Luyện nhân đôi · +21.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +17.6%, debuff đối thủ −6.6% · Cấp 100 buff tự thân +42.6%, debuff đối thủ −31.6%
   Nâng cấp: 21.600 → 327.888 Linh Thạch/cấp; tổng 0→100 = 13.258.548
-  Chiêu 1: Xích Viêm Phá — sát thương ×1.24
-  Chiêu 2: Phần Thiên Hỏa Vũ — sát thương ×1.19, bạo kích +11.4%
-  Chiêu 3: Liệt Diễm Phần Tâm — sát thương ×1.29, xuyên giáp +7.6%
-  Chiêu 4: Xích Viêm Phần Thiên — sát thương ×1.43, xuyên giáp +9.5%, bạo kích +11.4%
+  Chiêu 1: Xích Viêm Phá — sát thương ×1.26
+  Chiêu 2: Phần Thiên Hỏa Vũ — sát thương ×1.21, bạo kích +12.4%
+  Chiêu 3: Liệt Diễm Phần Tâm — sát thương ×1.31, xuyên giáp +8.2%
+  Chiêu 4: Xích Viêm Phần Thiên — sát thương ×1.46, xuyên giáp +10.3%, bạo kích +12.4%
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1009] Thanh Mộc Trường Sinh Kinh  (id cp_thanh_moc_truong_sinh)
   Nhóm: Công Pháp Nhân Giới · Loại: Sinh cơ (hành Mộc) · Huyền Phẩm
   Mô tả: Sinh cơ vô tận của cây xanh: tăng HP và khả năng hồi phục.
   Yêu cầu: Nguyên Anh · Phàm Giới   Giá: 480.000 Linh Thạch
-  Hiệu ứng Cấp 0: +16% Sinh mệnh · +4% Tu vi nhận được · +15% Hồi Sinh Mệnh
-  Hiệu ứng Cấp 100 (trước trần): +35.2% Sinh mệnh · +8.8% Tu vi nhận được · +33% Hồi Sinh Mệnh
-  Đấu Pháp: Cấp 0 buff tự thân +4%, debuff đối thủ −2% · Cấp 100 buff tự thân +19%, debuff đối thủ −17%
+  Hiệu ứng Cấp 0: +35.2% Sinh mệnh · +17.9% Tu vi nhận được · +17.6% Lực Chiến · +22.5% Hồi Sinh Mệnh · +2.3% Giữ tu vi khi Đột Phá thất bại · +5.9% Giảm sát thương Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +98.6% Sinh mệnh · +50.1% Tu vi nhận được · +49.3% Lực Chiến · +63% Hồi Sinh Mệnh · +6.4% Giữ tu vi khi Đột Phá thất bại · +16.5% Giảm sát thương Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +8.8%, debuff đối thủ −4.4% · Cấp 100 buff tự thân +33.8%, debuff đối thủ −29.4%
   Nâng cấp: 28.800 → 437.184 Linh Thạch/cấp; tổng 0→100 = 17.678.051
-  Chiêu 1: Thanh Mộc Hồi Xuân — sát thương ×1.14, hồi ~6 sinh lực
-  Chiêu 2: Sinh Cơ Bất Tuyệt — sát thương ×1,00, hồi ~4 sinh lực, giảm 14.3% sát thương nhận (2 đòn)
-  Chiêu 3: Mộc Linh Trị Thương — sát thương ×1,00, hồi ~8 sinh lực
-  Chiêu 4: Trường Sinh Đại Pháp — sát thương ×1.19, hồi ~10 sinh lực, giảm 19% sát thương nhận (2 đòn)
+  Chiêu 1: Thanh Mộc Hồi Xuân — sát thương ×1.15, hồi ~6 sinh lực
+  Chiêu 2: Sinh Cơ Bất Tuyệt — sát thương ×1,00, hồi ~4 sinh lực, giảm 15.5% sát thương nhận (2 đòn)
+  Chiêu 3: Mộc Linh Trị Thương — sát thương ×1,00, hồi ~9 sinh lực
+  Chiêu 4: Trường Sinh Đại Pháp — sát thương ×1.21, hồi ~10 sinh lực, giảm 20.6% sát thương nhận (2 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1010] Đại Địa Trấn Nguyên Công  (id cp_dai_dia_tran_nguyen)
   Nhóm: Công Pháp Nhân Giới · Loại: Thổ pháp (hành Thổ) · Huyền Phẩm
   Mô tả: Mượn sức đại địa trấn giữ nguyên khí: tăng phòng ngự và khả năng chống chịu.
   Yêu cầu: Hóa Thần · Phàm Giới   Giá: 650.000 Linh Thạch
-  Hiệu ứng Cấp 0: +16% Phòng ngự · +8% Sinh mệnh · +4% Tu vi nhận được · +1% Giảm sát thương nhận (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +35.2% Phòng ngự · +17.6% Sinh mệnh · +8.8% Tu vi nhận được · +2.2% Giảm sát thương nhận (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +4%, debuff đối thủ −3% · Cấp 100 buff tự thân +19%, debuff đối thủ −18%
+  Hiệu ứng Cấp 0: +35.2% Phòng ngự · +17.6% Sinh mệnh · +17.9% Tu vi nhận được · +13.2% Lực Chiến · +1.5% Giảm sát thương nhận (Đấu Pháp) · +9.8% Giảm sát thương Lôi Kiếp · +9.8% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +98.6% Phòng ngự · +49.3% Sinh mệnh · +50.1% Tu vi nhận được · +37% Lực Chiến · +4.2% Giảm sát thương nhận (Đấu Pháp) · +27.4% Giảm sát thương Lôi Kiếp · +27.4% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +8.8%, debuff đối thủ −6.6% · Cấp 100 buff tự thân +33.8%, debuff đối thủ −31.6%
   Nâng cấp: 39.000 → 592.020 Linh Thạch/cấp; tổng 0→100 = 23.938.993
-  Chiêu 1: Đại Địa Hộ Thân — sát thương ×1,00, giảm 20% sát thương nhận (2 đòn)
-  Chiêu 2: Thạch Giáp Thuật — sát thương ×1.15, giảm 20% sát thương nhận (2 đòn)
-  Chiêu 3: Trấn Nguyên Chấn — sát thương ×1,00, giảm 30% sát thương nhận (2 đòn), đối thủ gây ít hơn 10% (1 đòn)
-  Chiêu 4: Đại Địa Bất Động — sát thương ×1.25, giảm 30% sát thương nhận (2 đòn)
+  Chiêu 1: Đại Địa Hộ Thân — sát thương ×1,00, giảm 21.6% sát thương nhận (2 đòn)
+  Chiêu 2: Thạch Giáp Thuật — sát thương ×1.16, giảm 21.6% sát thương nhận (2 đòn)
+  Chiêu 3: Trấn Nguyên Chấn — sát thương ×1,00, giảm 32.4% sát thương nhận (2 đòn), đối thủ gây ít hơn 10.8% (1 đòn)
+  Chiêu 4: Đại Địa Bất Động — sát thương ×1.27, giảm 32.4% sát thương nhận (2 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh thường (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1011] Thái Hư Tụ Linh Quyết  (id cp_thai_hu_tu_linh)
   Nhóm: Công Pháp Linh Giới · Loại: Tu luyện (hành Mộc) · Địa Phẩm
   Mô tả: Thu nạp linh khí thiên địa chuyển hóa thành tu vi: tăng hiệu quả tu luyện rõ rệt.
   Yêu cầu: Trúc Cơ · Linh Giới   Giá: 3 Linh Tinh
-  Hiệu ứng Cấp 0: +40% Tu vi nhận được · +6% Hấp thu linh khí
-  Hiệu ứng Cấp 100 (trước trần): +88% Tu vi nhận được · +13.2% Hấp thu linh khí
-  Đấu Pháp: Cấp 0 buff tự thân +5%, debuff đối thủ −3% · Cấp 100 buff tự thân +20%, debuff đối thủ −18%
+  Hiệu ứng Cấp 0: +128% Tu vi nhận được · +23% Lực Chiến · +9% Hấp thu linh khí · +2.9% Cơ hội Tu Luyện nhân đôi · +14.4% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +358.4% Tu vi nhận được · +64.4% Lực Chiến · +25.2% Hấp thu linh khí · +8.1% Cơ hội Tu Luyện nhân đôi · +40.3% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +11%, debuff đối thủ −6.6% · Cấp 100 buff tự thân +36%, debuff đối thủ −31.6%
   Nâng cấp: 1 → 5 Linh Tinh/cấp; tổng 0→100 = 243
-  Chiêu 1: Thái Hư Dẫn Khí — sát thương ×1.15, hồi ~4 sinh lực
-  Chiêu 2: Tụ Linh Thành Hải — sát thương ×1,00, giảm 20% sát thương nhận (2 đòn)
-  Chiêu 3: Vạn Khí Quy Nguyên — sát thương ×1.15, hồi ~7 sinh lực
-  Chiêu 4: Thái Hư Vô Cực — sát thương ×1.25, hồi ~6 sinh lực, giảm 15% sát thương nhận (1 đòn)
+  Chiêu 1: Thái Hư Dẫn Khí — sát thương ×1.16, hồi ~4 sinh lực
+  Chiêu 2: Tụ Linh Thành Hải — sát thương ×1,00, giảm 21.6% sát thương nhận (2 đòn)
+  Chiêu 3: Vạn Khí Quy Nguyên — sát thương ×1.16, hồi ~8 sinh lực
+  Chiêu 4: Thái Hư Vô Cực — sát thương ×1.27, hồi ~6 sinh lực, giảm 16.2% sát thương nhận (1 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1012] Hư Không Kiếm Điển  (id cp_hu_khong_kiem_dien)
   Nhóm: Công Pháp Linh Giới · Loại: Kiếm đạo (hành Kim) · Địa Phẩm
   Mô tả: Kiếm ý xé rách hư không: tăng mạnh công kích, có hiệu quả đặc biệt xuyên giáp trong đấu pháp.
   Yêu cầu: Kết Đan · Linh Giới   Giá: 5 Linh Tinh
-  Hiệu ứng Cấp 0: +22% Công kích · +6% Tu vi nhận được · +1.5% Xuyên giáp (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +48.4% Công kích · +13.2% Tu vi nhận được · +3.3% Xuyên giáp (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +10%, debuff đối thủ −5% · Cấp 100 buff tự thân +25%, debuff đối thủ −20%
+  Hiệu ứng Cấp 0: +54% Công kích · +30.7% Tu vi nhận được · +27% Lực Chiến · +2.3% Xuyên giáp (Đấu Pháp) · +2.4% Né Lôi Kiếp · +9.6% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +151.2% Công kích · +86% Tu vi nhận được · +75.6% Lực Chiến · +6.4% Xuyên giáp (Đấu Pháp) · +6.7% Né Lôi Kiếp · +26.9% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +22%, debuff đối thủ −11% · Cấp 100 buff tự thân +47%, debuff đối thủ −36%
   Nâng cấp: 1 → 5 Linh Tinh/cấp; tổng 0→100 = 243
-  Chiêu 1: Hư Không Kiếm Khí — sát thương ×1.25, xuyên giáp +6%
-  Chiêu 2: Liệt Không Trảm — sát thương ×1.20, bạo kích +15%
-  Chiêu 3: Vạn Kiếm Xuyên Hư — sát thương ×1.30, xuyên giáp +12%
-  Chiêu 4: Nhất Kiếm Phá Hư — sát thương ×1.45, xuyên giáp +18%, bạo kích +10%
+  Chiêu 1: Hư Không Kiếm Khí — sát thương ×1.27, xuyên giáp +6.5%
+  Chiêu 2: Liệt Không Trảm — sát thương ×1.22, bạo kích +16.2%
+  Chiêu 3: Vạn Kiếm Xuyên Hư — sát thương ×1.32, xuyên giáp +13%
+  Chiêu 4: Nhất Kiếm Phá Hư — sát thương ×1.49, xuyên giáp +19.4%, bạo kích +10.8%
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1013] Cửu U Minh Thể Kinh  (id cp_cuu_u_minh_the)
   Nhóm: Công Pháp Linh Giới · Loại: Luyện thể (hành Thổ) · Địa Phẩm
   Mô tả: Lấy âm khí cửu u rèn thể: HP và phòng ngự dồi dào, thiên về sinh tồn.
   Yêu cầu: Nguyên Anh · Linh Giới   Giá: 8 Linh Tinh
-  Hiệu ứng Cấp 0: +18% Phòng ngự · +22% Sinh mệnh · +6% Tu vi nhận được · +20% Hồi Sinh Mệnh
-  Hiệu ứng Cấp 100 (trước trần): +39.6% Phòng ngự · +48.4% Sinh mệnh · +13.2% Tu vi nhận được · +44% Hồi Sinh Mệnh
-  Đấu Pháp: Cấp 0 buff tự thân +6%, debuff đối thủ −4% · Cấp 100 buff tự thân +21%, debuff đối thủ −19%
+  Hiệu ứng Cấp 0: +54% Phòng ngự · +54% Sinh mệnh · +30.7% Tu vi nhận được · +27% Lực Chiến · +30% Hồi Sinh Mệnh · +2.9% Giữ tu vi khi Đột Phá thất bại · +9.6% Giảm sát thương Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +151.2% Phòng ngự · +151.2% Sinh mệnh · +86% Tu vi nhận được · +75.6% Lực Chiến · +84% Hồi Sinh Mệnh · +8.1% Giữ tu vi khi Đột Phá thất bại · +26.9% Giảm sát thương Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +13.2%, debuff đối thủ −8.8% · Cấp 100 buff tự thân +38.2%, debuff đối thủ −33.8%
   Nâng cấp: 1 → 5 Linh Tinh/cấp; tổng 0→100 = 243
-  Chiêu 1: Minh Thể Hộ Thân — sát thương ×1,00, giảm 20% sát thương nhận (2 đòn)
-  Chiêu 2: U Minh Bất Diệt — sát thương ×1.15, giảm 25% sát thương nhận (2 đòn)
-  Chiêu 3: Cửu U Trấn Hồn — sát thương ×1.20, hồi ~5 sinh lực
-  Chiêu 4: Cửu U Minh Thể — sát thương ×1,00, hồi ~8 sinh lực, giảm 35% sát thương nhận (2 đòn)
+  Chiêu 1: Minh Thể Hộ Thân — sát thương ×1,00, giảm 21.6% sát thương nhận (2 đòn)
+  Chiêu 2: U Minh Bất Diệt — sát thương ×1.16, giảm 27% sát thương nhận (2 đòn)
+  Chiêu 3: Cửu U Trấn Hồn — sát thương ×1.22, hồi ~5 sinh lực
+  Chiêu 4: Cửu U Minh Thể — sát thương ×1,00, hồi ~9 sinh lực, giảm 37.8% sát thương nhận (2 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1014] Thiên Lôi Diệt Thế Kinh  (id cp_thien_loi_diet_the)
   Nhóm: Công Pháp Linh Giới · Loại: Lôi pháp (hành Kim) · Địa Phẩm
   Mô tả: Thiên lôi diệt thế: tăng công kích và đặc biệt tăng hiệu quả tấn công Boss Thế Giới.
   Yêu cầu: Hóa Thần · Linh Giới   Giá: 12 Linh Tinh
-  Hiệu ứng Cấp 0: +24% Công kích · +6% Tu vi nhận được · +18% Sát thương lên Boss · +1.5% Bạo kích (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +52.8% Công kích · +13.2% Tu vi nhận được · +39.6% Sát thương lên Boss · +3.3% Bạo kích (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +10%, debuff đối thủ −4% · Cấp 100 buff tự thân +25%, debuff đối thủ −19%
+  Hiệu ứng Cấp 0: +54% Công kích · +30.7% Tu vi nhận được · +27% Lực Chiến · +36% Sát thương lên Boss · +2.3% Bạo kích (Đấu Pháp) · +7.2% Giảm sát thương Lôi Kiếp · +12% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +151.2% Công kích · +86% Tu vi nhận được · +75.6% Lực Chiến · +100.8% Sát thương lên Boss · +6.4% Bạo kích (Đấu Pháp) · +20.2% Giảm sát thương Lôi Kiếp · +33.6% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +22%, debuff đối thủ −8.8% · Cấp 100 buff tự thân +47%, debuff đối thủ −33.8%
   Nâng cấp: 1 → 5 Linh Tinh/cấp; tổng 0→100 = 243
-  Chiêu 1: Thiên Lôi Hạ Phàm — sát thương ×1.26
-  Chiêu 2: Diệt Thế Lôi Ấn — sát thương ×1.21, bạo kích +15.8%
-  Chiêu 3: Lôi Đình Vạn Quân — sát thương ×1.31, xuyên giáp +10.5%
-  Chiêu 4: Thiên Lôi Diệt Thế — sát thương ×1.47, xuyên giáp +15.8%, bạo kích +10.5%
+  Chiêu 1: Thiên Lôi Hạ Phàm — sát thương ×1.28
+  Chiêu 2: Diệt Thế Lôi Ấn — sát thương ×1.23, bạo kích +16.9%
+  Chiêu 3: Lôi Đình Vạn Quân — sát thương ×1.34, xuyên giáp +11.3%
+  Chiêu 4: Thiên Lôi Diệt Thế — sát thương ×1.51, xuyên giáp +16.9%, bạo kích +11.3%
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1015] Vạn Linh Dưỡng Thần Quyết  (id cp_van_linh_duong_than)
   Nhóm: Công Pháp Linh Giới · Loại: Tu luyện (hành Mộc) · Địa Phẩm
   Mô tả: Nuôi dưỡng thần thức bằng vạn linh: tăng hiệu quả tu luyện, hấp thu linh khí và ngộ đạo.
   Yêu cầu: Luyện Hư · Linh Giới   Giá: 18 Linh Tinh
-  Hiệu ứng Cấp 0: +45% Tu vi nhận được · +10% Hấp thu linh khí · +1% Tỉ lệ Ngộ đạo
-  Hiệu ứng Cấp 100 (trước trần): +99% Tu vi nhận được · +22% Hấp thu linh khí · +2.2% Tỉ lệ Ngộ đạo
-  Đấu Pháp: Cấp 0 buff tự thân +5%, debuff đối thủ −4% · Cấp 100 buff tự thân +20%, debuff đối thủ −19%
+  Hiệu ứng Cấp 0: +144% Tu vi nhận được · +25.9% Lực Chiến · +15% Hấp thu linh khí · +1.5% Tỉ lệ Ngộ đạo · +2.9% Cơ hội Tu Luyện nhân đôi · +14.4% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +403.2% Tu vi nhận được · +72.5% Lực Chiến · +42% Hấp thu linh khí · +4.2% Tỉ lệ Ngộ đạo · +8.1% Cơ hội Tu Luyện nhân đôi · +40.3% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +11%, debuff đối thủ −8.8% · Cấp 100 buff tự thân +36%, debuff đối thủ −33.8%
   Nâng cấp: 1 → 9 Linh Tinh/cấp; tổng 0→100 = 438
-  Chiêu 1: Vạn Linh Tụ Thần — sát thương ×1.15, hồi ~4 sinh lực
-  Chiêu 2: Dưỡng Thần Hộ Thể — sát thương ×1,00, giảm 20% sát thương nhận (2 đòn)
-  Chiêu 3: Linh Hải Quy Tâm — sát thương ×1.15, hồi ~7 sinh lực
-  Chiêu 4: Vạn Linh Dưỡng Thần — sát thương ×1.25, hồi ~6 sinh lực, giảm 15% sát thương nhận (1 đòn)
+  Chiêu 1: Vạn Linh Tụ Thần — sát thương ×1.16, hồi ~4 sinh lực
+  Chiêu 2: Dưỡng Thần Hộ Thể — sát thương ×1,00, giảm 21.6% sát thương nhận (2 đòn)
+  Chiêu 3: Linh Hải Quy Tâm — sát thương ×1.16, hồi ~8 sinh lực
+  Chiêu 4: Vạn Linh Dưỡng Thần — sát thương ×1.27, hồi ~6 sinh lực, giảm 16.2% sát thương nhận (1 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1016] Thái Âm Ngưng Nguyệt Công  (id cp_thai_am_nguong_nguyet)
   Nhóm: Công Pháp Linh Giới · Loại: Âm pháp (hành Thủy) · Thiên Phẩm
   Mô tả: Ánh nguyệt thái âm ngưng tụ: tăng phòng ngự và làm đối thủ suy yếu trong đấu pháp.
   Yêu cầu: Luyện Hư · Linh Giới   Giá: 24 Linh Tinh
-  Hiệu ứng Cấp 0: +20% Phòng ngự · +8% Sinh mệnh · +6% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +44% Phòng ngự · +17.6% Sinh mệnh · +13.2% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +6%, debuff đối thủ −12% · Cấp 100 buff tự thân +21%, debuff đối thủ −27%
+  Hiệu ứng Cấp 0: +54% Phòng ngự · +54% Sinh mệnh · +30.7% Tu vi nhận được · +27% Lực Chiến · +2.3% Hút máu (Đấu Pháp) · +2.8% Cơ hội Tu Luyện nhân đôi
+  Hiệu ứng Cấp 100 (trước trần): +151.2% Phòng ngự · +151.2% Sinh mệnh · +86% Tu vi nhận được · +75.6% Lực Chiến · +6.4% Hút máu (Đấu Pháp) · +7.8% Cơ hội Tu Luyện nhân đôi
+  Đấu Pháp: Cấp 0 buff tự thân +13.2%, debuff đối thủ −26.4% · Cấp 100 buff tự thân +38.2%, debuff đối thủ −51.4%
   Nâng cấp: 1 → 9 Linh Tinh/cấp; tổng 0→100 = 438
-  Chiêu 1: Thái Âm Nguyệt Quang — sát thương ×1.21, hồi ~3 sinh lực
-  Chiêu 2: Ngưng Nguyệt Phong Ấn — sát thương ×1,00, đối thủ gây ít hơn 15.8% (2 đòn)
-  Chiêu 3: Âm Nguyệt Tỏa Hồn — sát thương ×1.26, hồi ~4 sinh lực, đối thủ gây ít hơn 18.9% (2 đòn)
-  Chiêu 4: Thái Âm Ngưng Nguyệt — sát thương ×1.42, hồi ~6 sinh lực, đối thủ gây ít hơn 26.3% (2 đòn)
+  Chiêu 1: Thái Âm Nguyệt Quang — sát thương ×1.23, hồi ~4 sinh lực
+  Chiêu 2: Ngưng Nguyệt Phong Ấn — sát thương ×1,00, đối thủ gây ít hơn 16.9% (2 đòn)
+  Chiêu 3: Âm Nguyệt Tỏa Hồn — sát thương ×1.28, hồi ~5 sinh lực, đối thủ gây ít hơn 20.3% (2 đòn)
+  Chiêu 4: Thái Âm Ngưng Nguyệt — sát thương ×1.45, hồi ~7 sinh lực, đối thủ gây ít hơn 28.3% (2 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1017] Kim Ô Phần Thiên Kinh  (id cp_kim_o_phan_thien)
   Nhóm: Công Pháp Linh Giới · Loại: Hỏa pháp (hành Hỏa) · Thiên Phẩm
   Mô tả: Kim ô hóa thân đốt cháy bầu trời: tăng công kích và hiệu quả buff tự thân.
   Yêu cầu: Hợp Thể · Linh Giới   Giá: 32 Linh Tinh
-  Hiệu ứng Cấp 0: +22% Công kích · +6% Sinh mệnh · +6% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +48.4% Công kích · +13.2% Sinh mệnh · +13.2% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +14%, debuff đối thủ −5% · Cấp 100 buff tự thân +29%, debuff đối thủ −20%
+  Hiệu ứng Cấp 0: +54% Công kích · +54% Sinh mệnh · +30.7% Tu vi nhận được · +27% Lực Chiến · +2.3% Cơ hội Tu Luyện nhân đôi · +11.4% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +151.2% Công kích · +151.2% Sinh mệnh · +86% Tu vi nhận được · +75.6% Lực Chiến · +6.4% Cơ hội Tu Luyện nhân đôi · +31.9% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +30.8%, debuff đối thủ −11% · Cấp 100 buff tự thân +55.8%, debuff đối thủ −36%
   Nâng cấp: 2 → 13 Linh Tinh/cấp; tổng 0→100 = 616
-  Chiêu 1: Kim Ô Hỏa Vũ — sát thương ×1.26
-  Chiêu 2: Thái Dương Chân Hỏa — sát thương ×1.21, bạo kích +12.6%
-  Chiêu 3: Kim Ô Phần Thiên — sát thương ×1.31, xuyên giáp +8.4%
-  Chiêu 4: Kim Ô Diệt Thế — sát thương ×1.47, xuyên giáp +10.5%, bạo kích +12.6%
+  Chiêu 1: Kim Ô Hỏa Vũ — sát thương ×1.28
+  Chiêu 2: Thái Dương Chân Hỏa — sát thương ×1.23, bạo kích +13.6%
+  Chiêu 3: Kim Ô Phần Thiên — sát thương ×1.34, xuyên giáp +9%
+  Chiêu 4: Kim Ô Diệt Thế — sát thương ×1.51, xuyên giáp +11.3%, bạo kích +13.6%
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1018] Huyền Thiên Trấn Ngục Quyết  (id cp_huyen_thien_tran_nguc)
   Nhóm: Công Pháp Linh Giới · Loại: Phòng ngự (hành Thổ) · Thiên Phẩm
   Mô tả: Trấn áp thiên ngục: tăng mạnh phòng ngự và HP.
   Yêu cầu: Đại Thừa · Linh Giới   Giá: 45 Linh Tinh
-  Hiệu ứng Cấp 0: +24% Phòng ngự · +22% Sinh mệnh · +6% Tu vi nhận được · +1.5% Giảm sát thương nhận (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +52.8% Phòng ngự · +48.4% Sinh mệnh · +13.2% Tu vi nhận được · +3.3% Giảm sát thương nhận (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +7%, debuff đối thủ −5% · Cấp 100 buff tự thân +22%, debuff đối thủ −20%
+  Hiệu ứng Cấp 0: +54% Phòng ngự · +54% Sinh mệnh · +30.7% Tu vi nhận được · +27% Lực Chiến · +2.3% Giảm sát thương nhận (Đấu Pháp) · +3.4% Giữ tu vi khi Đột Phá thất bại · +14.3% Giảm sát thương Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +151.2% Phòng ngự · +151.2% Sinh mệnh · +86% Tu vi nhận được · +75.6% Lực Chiến · +6.4% Giảm sát thương nhận (Đấu Pháp) · +9.5% Giữ tu vi khi Đột Phá thất bại · +40% Giảm sát thương Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +15.4%, debuff đối thủ −11% · Cấp 100 buff tự thân +40.4%, debuff đối thủ −36%
   Nâng cấp: 2 → 17 Linh Tinh/cấp; tổng 0→100 = 812
-  Chiêu 1: Huyền Thiên Hộ Giáp — sát thương ×1,00, giảm 24.2% sát thương nhận (2 đòn)
-  Chiêu 2: Trấn Ngục Ấn — sát thương ×1,00, hồi ~4 sinh lực, giảm 30.8% sát thương nhận (2 đòn)
-  Chiêu 3: Thiên Ngục Phong Tỏa — sát thương ×1.20, giảm 30.8% sát thương nhận (2 đòn), đối thủ gây ít hơn 13.2% (1 đòn)
-  Chiêu 4: Huyền Thiên Trấn Ngục — sát thương ×1,00, hồi ~8 sinh lực, giảm 41.8% sát thương nhận (3 đòn)
+  Chiêu 1: Huyền Thiên Hộ Giáp — sát thương ×1,00, giảm 26% sát thương nhận (2 đòn)
+  Chiêu 2: Trấn Ngục Ấn — sát thương ×1,00, hồi ~5 sinh lực, giảm 33% sát thương nhận (2 đòn)
+  Chiêu 3: Thiên Ngục Phong Tỏa — sát thương ×1.21, giảm 33% sát thương nhận (2 đòn), đối thủ gây ít hơn 14.2% (1 đòn)
+  Chiêu 4: Huyền Thiên Trấn Ngục — sát thương ×1,00, hồi ~8 sinh lực, giảm 44.8% sát thương nhận (3 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1019] Càn Khôn Na Di Công  (id cp_can_khon_na_di)
   Nhóm: Công Pháp Linh Giới · Loại: Thân pháp (hành Mộc) · Thiên Phẩm
   Mô tả: Dời càn khôn đổi vị trí: tăng mạnh tốc độ và khả năng né tránh.
   Yêu cầu: Đại Thừa · Linh Giới   Giá: 60 Linh Tinh
-  Hiệu ứng Cấp 0: +28% Thân pháp (tốc độ) · +6% Tu vi nhận được · +2% Né tránh (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +61.6% Thân pháp (tốc độ) · +13.2% Tu vi nhận được · +4.4% Né tránh (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +7%, debuff đối thủ −5% · Cấp 100 buff tự thân +22%, debuff đối thủ −20%
+  Hiệu ứng Cấp 0: +56% Thân pháp (tốc độ) · +30.7% Tu vi nhận được · +28% Lực Chiến · +3% Né tránh (Đấu Pháp) · +4.3% Né Lôi Kiếp · +11.4% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +156.8% Thân pháp (tốc độ) · +86% Tu vi nhận được · +78.4% Lực Chiến · +8.4% Né tránh (Đấu Pháp) · +12% Né Lôi Kiếp · +31.9% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +15.4%, debuff đối thủ −11% · Cấp 100 buff tự thân +40.4%, debuff đối thủ −36%
   Nâng cấp: 3 → 21 Linh Tinh/cấp; tổng 0→100 = 988
-  Chiêu 1: Càn Khôn Na Di — sát thương ×1.17, né +16.5% (2 đòn)
-  Chiêu 2: Hư Ảnh Phân Thân — sát thương ×1.22, bạo kích +16.5%
-  Chiêu 3: Nhất Bộ Thiên Lý — sát thương ×1,00, né +27.5% (2 đòn)
-  Chiêu 4: Càn Khôn Vô Tung — sát thương ×1.39, bạo kích +11%, né +22% (2 đòn)
+  Chiêu 1: Càn Khôn Na Di — sát thương ×1.18, né +17.7% (2 đòn)
+  Chiêu 2: Hư Ảnh Phân Thân — sát thương ×1.24, bạo kích +17.7%
+  Chiêu 3: Nhất Bộ Thiên Lý — sát thương ×1,00, né +29.5% (2 đòn)
+  Chiêu 4: Càn Khôn Vô Tung — sát thương ×1.41, bạo kích +11.8%, né +23.6% (2 đòn)
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1020] Vạn Kiếm Triều Tông Điển  (id cp_van_kiem_trieu_tong)
   Nhóm: Công Pháp Linh Giới · Loại: Kiếm đạo (hành Kim) · Thiên Phẩm
   Mô tả: Vạn kiếm triều tông: tăng mạnh công kích, thiên về đấu pháp và sát thương.
   Yêu cầu: Độ Kiếp · Linh Giới   Giá: 80 Linh Tinh
-  Hiệu ứng Cấp 0: +28% Công kích · +6% Tu vi nhận được · +2% Xuyên giáp (Đấu Pháp) · +3% Sát thương bạo kích
-  Hiệu ứng Cấp 100 (trước trần): +61.6% Công kích · +13.2% Tu vi nhận được · +4.4% Xuyên giáp (Đấu Pháp) · +6.6% Sát thương bạo kích
-  Đấu Pháp: Cấp 0 buff tự thân +12%, debuff đối thủ −6% · Cấp 100 buff tự thân +27%, debuff đối thủ −21%
+  Hiệu ứng Cấp 0: +56% Công kích · +30.7% Tu vi nhận được · +28% Lực Chiến · +3% Xuyên giáp (Đấu Pháp) · +4.5% Sát thương bạo kích · +2.8% Né Lôi Kiếp · +11.4% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +156.8% Công kích · +86% Tu vi nhận được · +78.4% Lực Chiến · +8.4% Xuyên giáp (Đấu Pháp) · +12.6% Sát thương bạo kích · +7.8% Né Lôi Kiếp · +31.9% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +26.4%, debuff đối thủ −13.2% · Cấp 100 buff tự thân +51.4%, debuff đối thủ −38.2%
   Nâng cấp: 4 → 29 Linh Tinh/cấp; tổng 0→100 = 1.372
-  Chiêu 1: Triều Tông Kiếm Ý — sát thương ×1.27, xuyên giáp +6.6%
-  Chiêu 2: Vạn Kiếm Quy Tông — sát thương ×1.22, bạo kích +16.5%
-  Chiêu 3: Kiếm Vũ Cửu Thiên — sát thương ×1.33, xuyên giáp +13.2%
-  Chiêu 4: Vạn Kiếm Triều Tông — sát thương ×1.50, xuyên giáp +19.8%, bạo kích +11%
+  Chiêu 1: Triều Tông Kiếm Ý — sát thương ×1.29, xuyên giáp +7.1%
+  Chiêu 2: Vạn Kiếm Quy Tông — sát thương ×1.24, bạo kích +17.7%
+  Chiêu 3: Kiếm Vũ Cửu Thiên — sát thương ×1.35, xuyên giáp +14.2%
+  Chiêu 4: Vạn Kiếm Triều Tông — sát thương ×1.53, xuyên giáp +21.2%, bạo kích +11.8%
   Nguồn: Cửa Hàng · Bí Cảnh Linh Giới / Thượng Cổ (rơi ngẫu nhiên)
 ----------------------------------------------------------------------------------------------------
 [1021] Đại La Tiên Kinh  (id cp_dai_la_tien_kinh)
   Nhóm: Công Pháp Tiên Giới · Loại: Tu luyện (hành Mộc) · Tiên Phẩm
   Mô tả: Công pháp tu luyện cao cấp của Tiên Giới: tăng mạnh hiệu quả tu vi.
   Yêu cầu: Phàm Nhân · Tiên Giới   Giá: 60 Linh Tinh
-  Hiệu ứng Cấp 0: +65% Tu vi nhận được · +12% Hấp thu linh khí
-  Hiệu ứng Cấp 100 (trước trần): +143% Tu vi nhận được · +26.4% Hấp thu linh khí
-  Đấu Pháp: Cấp 0 buff tự thân +8%, debuff đối thủ −5% · Cấp 100 buff tự thân +23%, debuff đối thủ −20%
+  Hiệu ứng Cấp 0: +188.5% Tu vi nhận được · +37.3% Lực Chiến · +16.8% Hấp thu linh khí · +3.7% Cơ hội Tu Luyện nhân đôi · +18.5% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +527.8% Tu vi nhận được · +104.4% Lực Chiến · +47% Hấp thu linh khí · +10.4% Cơ hội Tu Luyện nhân đôi · +51.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +36%, debuff đối thủ −26% · Cấp 100 buff tự thân +61%, debuff đối thủ −51%
   Nâng cấp: 3 → 21 Linh Tinh/cấp; tổng 0→100 = 988
-  Chiêu 1: Đại La Dẫn Khí — sát thương ×1.17, hồi ~4 sinh lực
-  Chiêu 2: Tiên Khí Quán Đỉnh — sát thương ×1,00, giảm 22% sát thương nhận (2 đòn)
-  Chiêu 3: Đại La Quy Nhất — sát thương ×1.17, hồi ~8 sinh lực
-  Chiêu 4: Đại La Vô Thượng — sát thương ×1.27, hồi ~7 sinh lực, giảm 16.5% sát thương nhận (1 đòn)
+  Chiêu 1: Đại La Dẫn Khí — sát thương ×1.18, hồi ~5 sinh lực
+  Chiêu 2: Tiên Khí Quán Đỉnh — sát thương ×1,00, giảm 24.6% sát thương nhận (2 đòn)
+  Chiêu 3: Đại La Quy Nhất — sát thương ×1.18, hồi ~9 sinh lực
+  Chiêu 4: Đại La Vô Thượng — sát thương ×1.31, hồi ~7 sinh lực, giảm 18.5% sát thương nhận (1 đòn)
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1022] Thái Thượng Vô Cực Quyết  (id cp_thai_thuong_vo_cuc)
   Nhóm: Công Pháp Tiên Giới · Loại: Toàn diện (hành Hỗn Nguyên) · Tiên Phẩm
   Mô tả: Công pháp toàn diện: tăng đồng đều các chỉ số tổng hợp.
   Yêu cầu: Luyện Khí · Tiên Giới   Giá: 90 Linh Tinh
-  Hiệu ứng Cấp 0: +10% Công kích · +10% Phòng ngự · +10% Sinh mệnh · +8% Thân pháp (tốc độ) · +12% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +22% Công kích · +22% Phòng ngự · +22% Sinh mệnh · +17.6% Thân pháp (tốc độ) · +26.4% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +10%, debuff đối thủ −8% · Cấp 100 buff tự thân +25%, debuff đối thủ −23%
+  Hiệu ứng Cấp 0: +69.5% Công kích · +69.5% Phòng ngự · +69.5% Sinh mệnh · +69.5% Thân pháp (tốc độ) · +104.4% Tu vi nhận được · +38.2% Lực Chiến · +2.5% Cơ hội Tu Luyện nhân đôi · +3.7% Giữ tu vi khi Đột Phá thất bại · +18.5% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +194.6% Công kích · +194.6% Phòng ngự · +194.6% Sinh mệnh · +194.6% Thân pháp (tốc độ) · +292.3% Tu vi nhận được · +107% Lực Chiến · +7% Cơ hội Tu Luyện nhân đôi · +10.4% Giữ tu vi khi Đột Phá thất bại · +51.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +37%, debuff đối thủ −27% · Cấp 100 buff tự thân +62%, debuff đối thủ −52%
   Nâng cấp: 4 → 34 Linh Tinh/cấp; tổng 0→100 = 1.563
-  Chiêu 1: Thái Thượng Hiển Hóa — sát thương ×1.22, hồi ~4 sinh lực
-  Chiêu 2: Vô Cực Hộ Thể — sát thương ×1,00, giảm 19.8% sát thương nhận (2 đòn), né +11% (2 đòn)
-  Chiêu 3: Thái Thượng Phá Giáp — sát thương ×1.31, xuyên giáp +8.8%, bạo kích +8.8%
-  Chiêu 4: Thái Thượng Vô Cực — sát thương ×1.42, hồi ~5 sinh lực, giảm 19.8% sát thương nhận (1 đòn), đối thủ gây ít hơn 13.2% (1 đòn)
+  Chiêu 1: Thái Thượng Hiển Hóa — sát thương ×1.25, hồi ~4 sinh lực
+  Chiêu 2: Vô Cực Hộ Thể — sát thương ×1,00, giảm 22.1% sát thương nhận (2 đòn), né +12.3% (2 đòn)
+  Chiêu 3: Thái Thượng Phá Giáp — sát thương ×1.34, xuyên giáp +9.8%, bạo kích +9.8%
+  Chiêu 4: Thái Thượng Vô Cực — sát thương ×1.47, hồi ~6 sinh lực, giảm 22.1% sát thương nhận (1 đòn), đối thủ gây ít hơn 14.8% (1 đòn)
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1023] Cửu Thiên Tiên Lôi Kinh  (id cp_cuu_thien_tien_loi)
   Nhóm: Công Pháp Tiên Giới · Loại: Lôi pháp (hành Kim) · Tiên Phẩm
   Mô tả: Tiên lôi chín tầng trời: thiên về công kích, tăng mạnh hiệu quả đánh Boss.
   Yêu cầu: Trúc Cơ · Tiên Giới   Giá: 130 Linh Tinh
-  Hiệu ứng Cấp 0: +34% Công kích · +8% Tu vi nhận được · +28% Sát thương lên Boss · +2% Bạo kích (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +74.8% Công kích · +17.6% Tu vi nhận được · +61.6% Sát thương lên Boss · +4.4% Bạo kích (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +16%, debuff đối thủ −7% · Cấp 100 buff tự thân +31%, debuff đối thủ −22%
+  Hiệu ứng Cấp 0: +73% Công kích · +84% Tu vi nhận được · +40.2% Lực Chiến · +53.2% Sát thương lên Boss · +2.8% Bạo kích (Đấu Pháp) · +9.2% Giảm sát thương Lôi Kiếp · +15.4% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +204.4% Công kích · +235.2% Tu vi nhận được · +112.6% Lực Chiến · +149% Sát thương lên Boss · +7.8% Bạo kích (Đấu Pháp) · +25.8% Giảm sát thương Lôi Kiếp · +43.1% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +41.6%, debuff đối thủ −28% · Cấp 100 buff tự thân +66.6%, debuff đối thủ −53%
   Nâng cấp: 6 → 46 Linh Tinh/cấp; tổng 0→100 = 2.130
-  Chiêu 1: Cửu Thiên Lôi Dẫn — sát thương ×1.29
-  Chiêu 2: Tiên Lôi Phá Giáp — sát thương ×1.23, bạo kích +17.3%
-  Chiêu 3: Lôi Thần Giáng Thế — sát thương ×1.34, xuyên giáp +11.5%
-  Chiêu 4: Cửu Thiên Tiên Lôi — sát thương ×1.52, xuyên giáp +17.3%, bạo kích +11.5%
+  Chiêu 1: Cửu Thiên Lôi Dẫn — sát thương ×1.32
+  Chiêu 2: Tiên Lôi Phá Giáp — sát thương ×1.26, bạo kích +19.2%
+  Chiêu 3: Lôi Thần Giáng Thế — sát thương ×1.38, xuyên giáp +12.8%
+  Chiêu 4: Cửu Thiên Tiên Lôi — sát thương ×1.58, xuyên giáp +19.2%, bạo kích +12.8%
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1024] Bất Diệt Tiên Thể Kinh  (id cp_bat_diet_tien_the)
   Nhóm: Công Pháp Tiên Giới · Loại: Luyện thể (hành Thổ) · Tiên Phẩm
   Mô tả: Tiên thể bất diệt: thiên về sinh tồn, tăng mạnh HP và phòng ngự.
   Yêu cầu: Kết Đan · Tiên Giới   Giá: 180 Linh Tinh
-  Hiệu ứng Cấp 0: +28% Phòng ngự · +34% Sinh mệnh · +8% Tu vi nhận được · +30% Hồi Sinh Mệnh · +2% Giảm sát thương nhận (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +61.6% Phòng ngự · +74.8% Sinh mệnh · +17.6% Tu vi nhận được · +66% Hồi Sinh Mệnh · +4.4% Giảm sát thương nhận (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +10%, debuff đối thủ −7% · Cấp 100 buff tự thân +25%, debuff đối thủ −22%
+  Hiệu ứng Cấp 0: +76.5% Phòng ngự · +76.5% Sinh mệnh · +96% Tu vi nhận được · +42.1% Lực Chiến · +42% Hồi Sinh Mệnh · +2.8% Giảm sát thương nhận (Đấu Pháp) · +3.7% Giữ tu vi khi Đột Phá thất bại · +12.3% Giảm sát thương Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +214.2% Phòng ngự · +214.2% Sinh mệnh · +268.8% Tu vi nhận được · +117.9% Lực Chiến · +117.6% Hồi Sinh Mệnh · +7.8% Giảm sát thương nhận (Đấu Pháp) · +10.4% Giữ tu vi khi Đột Phá thất bại · +34.4% Giảm sát thương Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +39%, debuff đối thủ −29% · Cấp 100 buff tự thân +64%, debuff đối thủ −54%
   Nâng cấp: 8 → 63 Linh Tinh/cấp; tổng 0→100 = 2.885
-  Chiêu 1: Tiên Thể Hộ Thân — sát thương ×1,00, giảm 23% sát thương nhận (2 đòn)
-  Chiêu 2: Bất Diệt Kim Thân — sát thương ×1.17, giảm 28.8% sát thương nhận (2 đòn)
-  Chiêu 3: Thiên Địa Bất Hoại — sát thương ×1.23, hồi ~6 sinh lực
-  Chiêu 4: Bất Diệt Tiên Thể — sát thương ×1,00, hồi ~9 sinh lực, giảm 40.2% sát thương nhận (2 đòn)
+  Chiêu 1: Tiên Thể Hộ Thân — sát thương ×1,00, giảm 25.6% sát thương nhận (2 đòn)
+  Chiêu 2: Bất Diệt Kim Thân — sát thương ×1.19, giảm 32% sát thương nhận (2 đòn)
+  Chiêu 3: Thiên Địa Bất Hoại — sát thương ×1.26, hồi ~6 sinh lực
+  Chiêu 4: Bất Diệt Tiên Thể — sát thương ×1,00, hồi ~10 sinh lực, giảm 44.8% sát thương nhận (2 đòn)
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1025] Hỗn Nguyên Vô Cực Công  (id cp_hon_nguyen_vo_cuc)
   Nhóm: Công Pháp Tiên Giới · Loại: Toàn diện (hành Hỗn Nguyên) · Thần Phẩm
   Mô tả: Công pháp cân bằng: tăng hiệu quả tổng hợp mọi mặt.
   Yêu cầu: Nguyên Anh · Tiên Giới   Giá: 240 Linh Tinh
-  Hiệu ứng Cấp 0: +12% Công kích · +12% Phòng ngự · +12% Sinh mệnh · +10% Thân pháp (tốc độ) · +15% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +26.4% Công kích · +26.4% Phòng ngự · +26.4% Sinh mệnh · +22% Thân pháp (tốc độ) · +33% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +11%, debuff đối thủ −8% · Cấp 100 buff tự thân +26%, debuff đối thủ −23%
+  Hiệu ứng Cấp 0: +80% Công kích · +80% Phòng ngự · +80% Sinh mệnh · +80% Thân pháp (tốc độ) · +130.5% Tu vi nhận được · +44% Lực Chiến · +2.8% Cơ hội Tu Luyện nhân đôi · +4.2% Giữ tu vi khi Đột Phá thất bại · +21% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +224% Công kích · +224% Phòng ngự · +224% Sinh mệnh · +224% Thân pháp (tốc độ) · +365.4% Tu vi nhận được · +123.2% Lực Chiến · +7.8% Cơ hội Tu Luyện nhân đôi · +11.8% Giữ tu vi khi Đột Phá thất bại · +58.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +40%, debuff đối thủ −30% · Cấp 100 buff tự thân +65%, debuff đối thủ −55%
   Nâng cấp: 10 → 83 Linh Tinh/cấp; tổng 0→100 = 3.828
-  Chiêu 1: Hỗn Nguyên Nhất Khí — sát thương ×1.23, hồi ~4 sinh lực
-  Chiêu 2: Vô Cực Tương Sinh — sát thương ×1,00, giảm 20.7% sát thương nhận (2 đòn), né +11.5% (2 đòn)
-  Chiêu 3: Hỗn Nguyên Phá Pháp — sát thương ×1.32, xuyên giáp +9.2%, bạo kích +9.2%
-  Chiêu 4: Hỗn Nguyên Vô Cực — sát thương ×1.44, hồi ~6 sinh lực, giảm 20.7% sát thương nhận (1 đòn), đối thủ gây ít hơn 13.8% (1 đòn)
+  Chiêu 1: Hỗn Nguyên Nhất Khí — sát thương ×1.26, hồi ~4 sinh lực
+  Chiêu 2: Vô Cực Tương Sinh — sát thương ×1,00, giảm 23% sát thương nhận (2 đòn), né +12.8% (2 đòn)
+  Chiêu 3: Hỗn Nguyên Phá Pháp — sát thương ×1.36, xuyên giáp +10.2%, bạo kích +10.2%
+  Chiêu 4: Hỗn Nguyên Vô Cực — sát thương ×1.49, hồi ~6 sinh lực, giảm 23% sát thương nhận (1 đòn), đối thủ gây ít hơn 15.4% (1 đòn)
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1026] Thời Không Tiên Điển  (id cp_thoi_khong_tien_dien)
   Nhóm: Công Pháp Tiên Giới · Loại: Thân pháp (hành Mộc) · Thần Phẩm
   Mô tả: Nắm giữ thời không: thiên về tốc độ, hỗ trợ né tránh và hiệu ứng chiến đấu.
   Yêu cầu: Hóa Thần · Tiên Giới   Giá: 320 Linh Tinh
-  Hiệu ứng Cấp 0: +40% Thân pháp (tốc độ) · +8% Tu vi nhận được · +3% Né tránh (Đấu Pháp) · +1.5% Bạo kích (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +88% Thân pháp (tốc độ) · +17.6% Tu vi nhận được · +6.6% Né tránh (Đấu Pháp) · +3.3% Bạo kích (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +12%, debuff đối thủ −8% · Cấp 100 buff tự thân +27%, debuff đối thủ −23%
+  Hiệu ứng Cấp 0: +83.5% Thân pháp (tốc độ) · +120% Tu vi nhận được · +45.9% Lực Chiến · +4.2% Né tránh (Đấu Pháp) · +2.1% Bạo kích (Đấu Pháp) · +5.3% Né Lôi Kiếp · +14% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +233.8% Thân pháp (tốc độ) · +336% Tu vi nhận được · +128.5% Lực Chiến · +11.8% Né tránh (Đấu Pháp) · +5.9% Bạo kích (Đấu Pháp) · +14.8% Né Lôi Kiếp · +39.2% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +41%, debuff đối thủ −31% · Cấp 100 buff tự thân +66%, debuff đối thủ −56%
   Nâng cấp: 14 → 112 Linh Tinh/cấp; tổng 0→100 = 5.164
-  Chiêu 1: Thời Không Chuyển Dịch — sát thương ×1.18, né +18% (2 đòn)
-  Chiêu 2: Quang Âm Bộ — sát thương ×1.24, bạo kích +18%
+  Chiêu 1: Thời Không Chuyển Dịch — sát thương ×1.20, né +20% (2 đòn)
+  Chiêu 2: Quang Âm Bộ — sát thương ×1.27, bạo kích +20%
   Chiêu 3: Thời Gian Đình Trệ — sát thương ×1,00, né +30% (2 đòn)
-  Chiêu 4: Thời Không Tiên Điển — sát thương ×1.42, bạo kích +12%, né +24% (2 đòn)
+  Chiêu 4: Thời Không Tiên Điển — sát thương ×1.47, bạo kích +13.3%, né +26.6% (2 đòn)
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1027] Sinh Tử Luân Hồi Kinh  (id cp_sinh_tu_luan_hoi)
   Nhóm: Công Pháp Tiên Giới · Loại: Sinh cơ (hành Mộc) · Thần Phẩm
   Mô tả: Nắm giữ vòng sinh tử: tăng khả năng sinh tồn, có hút máu và hồi phục đặc biệt trong chiến đấu.
   Yêu cầu: Luyện Hư · Tiên Giới   Giá: 420 Linh Tinh
-  Hiệu ứng Cấp 0: +30% Sinh mệnh · +8% Tu vi nhận được · +40% Hồi Sinh Mệnh · +1.5% Giảm sát thương nhận (Đấu Pháp) · +2% Hút máu (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +66% Sinh mệnh · +17.6% Tu vi nhận được · +88% Hồi Sinh Mệnh · +3.3% Giảm sát thương nhận (Đấu Pháp) · +4.4% Hút máu (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +9%, debuff đối thủ −9% · Cấp 100 buff tự thân +24%, debuff đối thủ −24%
+  Hiệu ứng Cấp 0: +87% Sinh mệnh · +132% Tu vi nhận được · +47.9% Lực Chiến · +56% Hồi Sinh Mệnh · +2.1% Giảm sát thương nhận (Đấu Pháp) · +2.8% Hút máu (Đấu Pháp) · +4.2% Giữ tu vi khi Đột Phá thất bại · +10.5% Giảm sát thương Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +243.6% Sinh mệnh · +369.6% Tu vi nhận được · +134.1% Lực Chiến · +156.8% Hồi Sinh Mệnh · +5.9% Giảm sát thương nhận (Đấu Pháp) · +7.8% Hút máu (Đấu Pháp) · +11.8% Giữ tu vi khi Đột Phá thất bại · +29.4% Giảm sát thương Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +42%, debuff đối thủ −32% · Cấp 100 buff tự thân +67%, debuff đối thủ −57%
   Nâng cấp: 18 → 145 Linh Tinh/cấp; tổng 0→100 = 6.673
-  Chiêu 1: Sinh Tử Luân Chuyển — sát thương ×1.18, hồi ~7 sinh lực
-  Chiêu 2: Luân Hồi Hộ Thể — sát thương ×1,00, hồi ~5 sinh lực, giảm 18% sát thương nhận (2 đòn)
-  Chiêu 3: Tử Sinh Nghịch Chuyển — sát thương ×1,00, hồi ~11 sinh lực
-  Chiêu 4: Sinh Tử Luân Hồi — sát thương ×1.24, hồi ~12 sinh lực, giảm 24% sát thương nhận (2 đòn)
+  Chiêu 1: Sinh Tử Luân Chuyển — sát thương ×1.20, hồi ~8 sinh lực
+  Chiêu 2: Luân Hồi Hộ Thể — sát thương ×1,00, hồi ~5 sinh lực, giảm 20% sát thương nhận (2 đòn)
+  Chiêu 3: Tử Sinh Nghịch Chuyển — sát thương ×1,00, hồi ~12 sinh lực
+  Chiêu 4: Sinh Tử Luân Hồi — sát thương ×1.27, hồi ~12 sinh lực, giảm 26.6% sát thương nhận (2 đòn)
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1028] Vạn Đạo Quy Nhất Kinh  (id cp_van_dao_quy_nhat)
   Nhóm: Công Pháp Tiên Giới · Loại: Ngũ Hành (hành Ngũ Hành) · Thần Phẩm
   Mô tả: Vạn đạo quy về một: công pháp toàn diện, tương hợp linh căn rất mạnh.
   Yêu cầu: Hợp Thể · Tiên Giới   Giá: 560 Linh Tinh
-  Hiệu ứng Cấp 0: +12% Công kích · +12% Phòng ngự · +12% Sinh mệnh · +12% Thân pháp (tốc độ) · +18% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +26.4% Công kích · +26.4% Phòng ngự · +26.4% Sinh mệnh · +26.4% Thân pháp (tốc độ) · +39.6% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +12%, debuff đối thủ −9% · Cấp 100 buff tự thân +27%, debuff đối thủ −24%
+  Hiệu ứng Cấp 0: +90.5% Công kích · +90.5% Phòng ngự · +90.5% Sinh mệnh · +90.5% Thân pháp (tốc độ) · +156.6% Tu vi nhận được · +49.8% Lực Chiến · +1.4% Tỉ lệ Đột Phá · +4.2% Giữ tu vi khi Đột Phá thất bại · +21% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +253.4% Công kích · +253.4% Phòng ngự · +253.4% Sinh mệnh · +253.4% Thân pháp (tốc độ) · +438.5% Tu vi nhận được · +139.4% Lực Chiến · +3.9% Tỉ lệ Đột Phá · +11.8% Giữ tu vi khi Đột Phá thất bại · +58.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +43%, debuff đối thủ −33% · Cấp 100 buff tự thân +68%, debuff đối thủ −58%
   Nâng cấp: 24 → 195 Linh Tinh/cấp; tổng 0→100 = 8.946
-  Chiêu 1: Vạn Đạo Hội Tụ — sát thương ×1.24
-  Chiêu 2: Quy Nhất Hộ Thể — sát thương ×1,00, hồi ~4 sinh lực, giảm 18% sát thương nhận (2 đòn)
-  Chiêu 3: Vạn Đạo Phá Chướng — sát thương ×1.30, xuyên giáp +9.6%
-  Chiêu 4: Vạn Đạo Quy Nhất — sát thương ×1.42, giảm 18% sát thương nhận (1 đòn), đối thủ gây ít hơn 14.4% (1 đòn)
+  Chiêu 1: Vạn Đạo Hội Tụ — sát thương ×1.27
+  Chiêu 2: Quy Nhất Hộ Thể — sát thương ×1,00, hồi ~4 sinh lực, giảm 20% sát thương nhận (2 đòn)
+  Chiêu 3: Vạn Đạo Phá Chướng — sát thương ×1.33, xuyên giáp +10.6%
+  Chiêu 4: Vạn Đạo Quy Nhất — sát thương ×1.47, giảm 20% sát thương nhận (1 đòn), đối thủ gây ít hơn 16% (1 đòn)
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1029] Thái Sơ Tiên Nguyên Quyết  (id cp_thai_so_tien_nguyen)
   Nhóm: Công Pháp Tiên Giới · Loại: Tu luyện (hành Mộc) · Hỗn Độn Phẩm
   Mô tả: Khởi nguyên thái sơ: tăng hiệu quả tu luyện và hiệu suất tích lũy tu vi.
   Yêu cầu: Đại Thừa · Tiên Giới   Giá: 760 Linh Tinh
-  Hiệu ứng Cấp 0: +80% Tu vi nhận được · +15% Hấp thu linh khí · +1% Tỉ lệ Đột Phá
-  Hiệu ứng Cấp 100 (trước trần): +176% Tu vi nhận được · +33% Hấp thu linh khí · +2.2% Tỉ lệ Đột Phá
-  Đấu Pháp: Cấp 0 buff tự thân +9%, debuff đối thủ −6% · Cấp 100 buff tự thân +24%, debuff đối thủ −21%
+  Hiệu ứng Cấp 0: +232% Tu vi nhận được · +45.9% Lực Chiến · +21% Hấp thu linh khí · +1.4% Tỉ lệ Đột Phá · +4.7% Cơ hội Tu Luyện nhân đôi · +23.5% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +649.6% Tu vi nhận được · +128.5% Lực Chiến · +58.8% Hấp thu linh khí · +3.9% Tỉ lệ Đột Phá · +13.2% Cơ hội Tu Luyện nhân đôi · +65.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +44%, debuff đối thủ −34% · Cấp 100 buff tự thân +69%, debuff đối thủ −59%
   Nâng cấp: 32 → 261 Linh Tinh/cấp; tổng 0→100 = 11.983
-  Chiêu 1: Thái Sơ Dẫn Nguyên — sát thương ×1.19, hồi ~5 sinh lực
-  Chiêu 2: Tiên Nguyên Hộ Thể — sát thương ×1,00, giảm 25% sát thương nhận (2 đòn)
-  Chiêu 3: Thái Sơ Hồi Nguyên — sát thương ×1.19, hồi ~9 sinh lực
-  Chiêu 4: Thái Sơ Tiên Nguyên — sát thương ×1.31, hồi ~8 sinh lực, giảm 18.8% sát thương nhận (1 đòn)
+  Chiêu 1: Thái Sơ Dẫn Nguyên — sát thương ×1.21, hồi ~6 sinh lực
+  Chiêu 2: Tiên Nguyên Hộ Thể — sát thương ×1,00, giảm 27.6% sát thương nhận (2 đòn)
+  Chiêu 3: Thái Sơ Hồi Nguyên — sát thương ×1.21, hồi ~10 sinh lực
+  Chiêu 4: Thái Sơ Tiên Nguyên — sát thương ×1.34, hồi ~8 sinh lực, giảm 20.7% sát thương nhận (1 đòn)
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1030] Thiên Đạo Chí Tôn Kinh  (id cp_thien_dao_chi_ton)
   Nhóm: Công Pháp Tiên Giới · Loại: Toàn diện (hành Hỗn Nguyên) · Hỗn Độn Phẩm
   Mô tả: Công pháp cực hiếm của Tiên Giới: tăng chỉ số tổng hợp, điều kiện sử dụng rất cao.
   Yêu cầu: Độ Kiếp · Tiên Giới   Giá: 1.100 Linh Tinh
-  Hiệu ứng Cấp 0: +16% Công kích · +16% Phòng ngự · +16% Sinh mệnh · +12% Thân pháp (tốc độ) · +22% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +35.2% Công kích · +35.2% Phòng ngự · +35.2% Sinh mệnh · +26.4% Thân pháp (tốc độ) · +48.4% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +16%, debuff đối thủ −12% · Cấp 100 buff tự thân +31%, debuff đối thủ −27%
+  Hiệu ứng Cấp 0: +97.5% Công kích · +97.5% Phòng ngự · +97.5% Sinh mệnh · +97.5% Thân pháp (tốc độ) · +191.4% Tu vi nhận được · +53.6% Lực Chiến · +3.1% Cơ hội Tu Luyện nhân đôi · +4.7% Giữ tu vi khi Đột Phá thất bại · +23.5% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +273% Công kích · +273% Phòng ngự · +273% Sinh mệnh · +273% Thân pháp (tốc độ) · +535.9% Tu vi nhận được · +150.1% Lực Chiến · +8.7% Cơ hội Tu Luyện nhân đôi · +13.2% Giữ tu vi khi Đột Phá thất bại · +65.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +45%, debuff đối thủ −35% · Cấp 100 buff tự thân +70%, debuff đối thủ −60%
   Nâng cấp: 46 → 381 Linh Tinh/cấp; tổng 0→100 = 17.471
-  Chiêu 1: Thiên Đạo Chí Tôn — sát thương ×1.25, hồi ~4 sinh lực
-  Chiêu 2: Chí Tôn Hộ Thân — sát thương ×1,00, giảm 22.5% sát thương nhận (2 đòn), né +12.5% (2 đòn)
-  Chiêu 3: Thiên Đạo Diệt Pháp — sát thương ×1.35, xuyên giáp +10%, bạo kích +10%
-  Chiêu 4: Thiên Đạo Vô Thượng — sát thương ×1.47, hồi ~6 sinh lực, giảm 22.5% sát thương nhận (1 đòn), đối thủ gây ít hơn 15% (1 đòn)
+  Chiêu 1: Thiên Đạo Chí Tôn — sát thương ×1.28, hồi ~4 sinh lực
+  Chiêu 2: Chí Tôn Hộ Thân — sát thương ×1,00, giảm 24.8% sát thương nhận (2 đòn), né +13.8% (2 đòn)
+  Chiêu 3: Thiên Đạo Diệt Pháp — sát thương ×1.39, xuyên giáp +11%, bạo kích +11%
+  Chiêu 4: Thiên Đạo Vô Thượng — sát thương ×1.52, hồi ~7 sinh lực, giảm 24.8% sát thương nhận (1 đòn), đối thủ gây ít hơn 16.6% (1 đòn)
   Nguồn: Cửa Hàng
 ----------------------------------------------------------------------------------------------------
 [1031] Cửu Tiêu Thần Lôi Quyết  (id cp_cuu_tieu_than_loi)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Lôi pháp (hành Kim) · Tiên Phẩm
   Mô tả: Thần lôi cửu tiêu — rơi từ Boss Thế Giới. Thiên về công kích, đánh Boss cực mạnh.
   Yêu cầu: Nguyên Anh · Phàm Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +30% Công kích · +6% Tu vi nhận được · +22% Sát thương lên Boss · +2% Xuyên giáp (Đấu Pháp) · +2% Bạo kích (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +66% Công kích · +13.2% Tu vi nhận được · +48.4% Sát thương lên Boss · +4.4% Xuyên giáp (Đấu Pháp) · +4.4% Bạo kích (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +14%, debuff đối thủ −6% · Cấp 100 buff tự thân +29%, debuff đối thủ −21%
+  Hiệu ứng Cấp 0: +108% Công kích · +255% Tu vi nhận được · +67.5% Lực Chiến · +44% Sát thương lên Boss · +2.8% Xuyên giáp (Đấu Pháp) · +2.8% Bạo kích (Đấu Pháp) · +9.2% Giảm sát thương Lôi Kiếp · +15.4% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +302.4% Công kích · +714% Tu vi nhận được · +189% Lực Chiến · +123.2% Sát thương lên Boss · +7.8% Xuyên giáp (Đấu Pháp) · +7.8% Bạo kích (Đấu Pháp) · +25.8% Giảm sát thương Lôi Kiếp · +43.1% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +68%, debuff đối thủ −53% · Cấp 100 buff tự thân +93%, debuff đối thủ −78%
   Nâng cấp: 48.000 → 728.640 Linh Thạch/cấp; tổng 0→100 = 29.463.372
-  Chiêu 1: Cửu Tiêu Lôi Động — sát thương ×1.26
-  Chiêu 2: Thần Lôi Phá Thiên — sát thương ×1.21, bạo kích +15.8%
-  Chiêu 3: Lôi Hải Cuồng Triều — sát thương ×1.31, xuyên giáp +10.5%
-  Chiêu 4: Cửu Tiêu Thần Lôi — sát thương ×1.47, xuyên giáp +15.8%, bạo kích +10.5%
+  Chiêu 1: Cửu Tiêu Lôi Động — sát thương ×1.31
+  Chiêu 2: Thần Lôi Phá Thiên — sát thương ×1.25, bạo kích +18.8%
+  Chiêu 3: Lôi Hải Cuồng Triều — sát thương ×1.38, xuyên giáp +12.5%
+  Chiêu 4: Cửu Tiêu Thần Lôi — sát thương ×1.56, xuyên giáp +18.8%, bạo kích +12.5%
   Nguồn: Boss Thế Giới (người kết liễu 1,5%) · Mảnh Cửu Tiêu (người đóng góp ≥ 2% sát thương)
 ----------------------------------------------------------------------------------------------------
 [1032] Thái Cổ Long Tượng Công  (id cp_thai_co_long_tuong)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Luyện thể (hành Thổ) · Thần Phẩm
   Mô tả: Sức mạnh long tượng thái cổ — rơi từ Bí Cảnh Thượng Cổ. Thiên về luyện thể.
   Yêu cầu: Luyện Hư · Phàm Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +10% Công kích · +22% Phòng ngự · +30% Sinh mệnh · +6% Tu vi nhận được · +2% Giảm sát thương nhận (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +22% Công kích · +48.4% Phòng ngự · +66% Sinh mệnh · +13.2% Tu vi nhận được · +4.4% Giảm sát thương nhận (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +10%, debuff đối thủ −5% · Cấp 100 buff tự thân +25%, debuff đối thủ −20%
+  Hiệu ứng Cấp 0: +116% Công kích · +123.2% Phòng ngự · +168% Sinh mệnh · +270% Tu vi nhận được · +84.8% Lực Chiến · +2.8% Giảm sát thương nhận (Đấu Pháp) · +4.2% Giữ tu vi khi Đột Phá thất bại · +14% Giảm sát thương Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +324.8% Công kích · +345% Phòng ngự · +470.4% Sinh mệnh · +756% Tu vi nhận được · +237.4% Lực Chiến · +7.8% Giảm sát thương nhận (Đấu Pháp) · +11.8% Giữ tu vi khi Đột Phá thất bại · +39.2% Giảm sát thương Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +70%, debuff đối thủ −55% · Cấp 100 buff tự thân +95%, debuff đối thủ −80%
   Nâng cấp: 60.000 → 910.800 Linh Thạch/cấp; tổng 0→100 = 36.829.214
-  Chiêu 1: Long Tượng Hộ Thể — sát thương ×1,00, giảm 22% sát thương nhận (2 đòn)
-  Chiêu 2: Tượng Lực Chấn Sơn — sát thương ×1.17, giảm 27.5% sát thương nhận (2 đòn)
-  Chiêu 3: Long Ngâm Chấn Địa — sát thương ×1.22, hồi ~5 sinh lực
-  Chiêu 4: Thái Cổ Long Tượng — sát thương ×1,00, hồi ~9 sinh lực, giảm 38.5% sát thương nhận (2 đòn)
+  Chiêu 1: Long Tượng Hộ Thể — sát thương ×1,00, giảm 26% sát thương nhận (2 đòn)
+  Chiêu 2: Tượng Lực Chấn Sơn — sát thương ×1.19, giảm 32.5% sát thương nhận (2 đòn)
+  Chiêu 3: Long Ngâm Chấn Địa — sát thương ×1.26, hồi ~6 sinh lực
+  Chiêu 4: Thái Cổ Long Tượng — sát thương ×1,00, hồi ~10 sinh lực, giảm 45% sát thương nhận (2 đòn)
   Nguồn: Bí Cảnh Thượng Cổ (chuỗi Độ Kiếp Linh Giới, 2%/lần) · Mảnh Thái Cổ Long Tượng
 ----------------------------------------------------------------------------------------------------
 [1033] Vạn Cổ Trường Sinh Kinh  (id cp_van_co_truong_sinh)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Sinh cơ (hành Mộc) · Thần Phẩm
   Mô tả: Trường sinh vạn cổ — chỉ có thể gặp qua Kỳ Ngộ. Thiên về sinh tồn.
   Yêu cầu: Kết Đan · Linh Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +34% Sinh mệnh · +8% Tu vi nhận được · +50% Hồi Sinh Mệnh · +1.5% Giảm sát thương nhận (Đấu Pháp) · +2% Hút máu (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +74.8% Sinh mệnh · +17.6% Tu vi nhận được · +110% Hồi Sinh Mệnh · +3.3% Giảm sát thương nhận (Đấu Pháp) · +4.4% Hút máu (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +10%, debuff đối thủ −6% · Cấp 100 buff tự thân +25%, debuff đối thủ −21%
+  Hiệu ứng Cấp 0: +119% Sinh mệnh · +275% Tu vi nhận được · +74.4% Lực Chiến · +70% Hồi Sinh Mệnh · +2.1% Giảm sát thương nhận (Đấu Pháp) · +2.8% Hút máu (Đấu Pháp) · +4.2% Giữ tu vi khi Đột Phá thất bại · +10.5% Giảm sát thương Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +333.2% Sinh mệnh · +770% Tu vi nhận được · +208.3% Lực Chiến · +196% Hồi Sinh Mệnh · +5.9% Giảm sát thương nhận (Đấu Pháp) · +7.8% Hút máu (Đấu Pháp) · +11.8% Giữ tu vi khi Đột Phá thất bại · +29.4% Giảm sát thương Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +70%, debuff đối thủ −55% · Cấp 100 buff tự thân +95%, debuff đối thủ −80%
   Nâng cấp: 4 → 34 Linh Tinh/cấp; tổng 0→100 = 1.563
-  Chiêu 1: Trường Sinh Hồi Xuân — sát thương ×1.17, hồi ~7 sinh lực
-  Chiêu 2: Vạn Cổ Bất Hủ — sát thương ×1,00, hồi ~4 sinh lực, giảm 16.5% sát thương nhận (2 đòn)
-  Chiêu 3: Sinh Cơ Cuồn Cuộn — sát thương ×1,00, hồi ~10 sinh lực
-  Chiêu 4: Vạn Cổ Trường Sinh — sát thương ×1.22, hồi ~11 sinh lực, giảm 22% sát thương nhận (2 đòn)
+  Chiêu 1: Trường Sinh Hồi Xuân — sát thương ×1.19, hồi ~8 sinh lực
+  Chiêu 2: Vạn Cổ Bất Hủ — sát thương ×1,00, hồi ~5 sinh lực, giảm 19.5% sát thương nhận (2 đòn)
+  Chiêu 3: Sinh Cơ Cuồn Cuộn — sát thương ×1,00, hồi ~11 sinh lực
+  Chiêu 4: Vạn Cổ Trường Sinh — sát thương ×1.26, hồi ~12 sinh lực, giảm 26% sát thương nhận (2 đòn)
   Nguồn: Kỳ Ngộ hiếm (Cảm Ngộ)
 ----------------------------------------------------------------------------------------------------
 [1034] Hư Thiên Độn Pháp  (id cp_hu_thien_don_phap)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Thân pháp (hành Mộc) · Thần Phẩm
   Mô tả: Độn hư không thiên — rơi từ Bí Cảnh Linh Giới. Thiên về tốc độ.
   Yêu cầu: Hợp Thể · Linh Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +36% Thân pháp (tốc độ) · +8% Tu vi nhận được · +3% Né tránh (Đấu Pháp) · +1.5% Bạo kích (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +79.2% Thân pháp (tốc độ) · +17.6% Tu vi nhận được · +6.6% Né tránh (Đấu Pháp) · +3.3% Bạo kích (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +12%, debuff đối thủ −6% · Cấp 100 buff tự thân +27%, debuff đối thủ −21%
+  Hiệu ứng Cấp 0: +122% Thân pháp (tốc độ) · +280% Tu vi nhận được · +76.3% Lực Chiến · +4.2% Né tránh (Đấu Pháp) · +2.1% Bạo kích (Đấu Pháp) · +5.3% Né Lôi Kiếp · +14% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +341.6% Thân pháp (tốc độ) · +784% Tu vi nhận được · +213.6% Lực Chiến · +11.8% Né tránh (Đấu Pháp) · +5.9% Bạo kích (Đấu Pháp) · +14.8% Né Lôi Kiếp · +39.2% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +70%, debuff đối thủ −55% · Cấp 100 buff tự thân +95%, debuff đối thủ −80%
   Nâng cấp: 4 → 34 Linh Tinh/cấp; tổng 0→100 = 1.563
-  Chiêu 1: Hư Thiên Độn Ảnh — sát thương ×1.17, né +17.3% (2 đòn)
-  Chiêu 2: Không Hành Thuật — sát thương ×1.23, bạo kích +17.3%
-  Chiêu 3: Độn Thiên Vô Tung — sát thương ×1,00, né +28.8% (2 đòn)
-  Chiêu 4: Hư Thiên Độn Pháp — sát thương ×1.40, bạo kích +11.5%, né +23% (2 đòn)
+  Chiêu 1: Hư Thiên Độn Ảnh — sát thương ×1.20, né +20.3% (2 đòn)
+  Chiêu 2: Không Hành Thuật — sát thương ×1.27, bạo kích +20.3%
+  Chiêu 3: Độn Thiên Vô Tung — sát thương ×1,00, né +30% (2 đòn)
+  Chiêu 4: Hư Thiên Độn Pháp — sát thương ×1.47, bạo kích +13.5%, né +27% (2 đòn)
   Nguồn: Bí Cảnh Linh Giới từ Hợp Thể (1,2%/lần) · Mảnh Hư Thiên Độn Pháp
 ----------------------------------------------------------------------------------------------------
 [1035] Cửu U Diệt Hồn Kinh  (id cp_cuu_u_diet_hon)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Âm pháp (hành Thủy) · Thần Phẩm
   Mô tả: Diệt hồn cửu u — rơi từ Boss hoặc Bí Cảnh Đặc Biệt. Thiên về đấu pháp.
   Yêu cầu: Luyện Hư · Linh Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +26% Công kích · +8% Tu vi nhận được · +2.5% Xuyên giáp (Đấu Pháp) · +2% Hút máu (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +57.2% Công kích · +17.6% Tu vi nhận được · +5.5% Xuyên giáp (Đấu Pháp) · +4.4% Hút máu (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +13%, debuff đối thủ −13% · Cấp 100 buff tự thân +28%, debuff đối thủ −28%
+  Hiệu ứng Cấp 0: +125% Công kích · +285% Tu vi nhận được · +78.1% Lực Chiến · +3.5% Xuyên giáp (Đấu Pháp) · +5.6% Hút máu (Đấu Pháp) · +3.5% Cơ hội Tu Luyện nhân đôi
+  Hiệu ứng Cấp 100 (trước trần): +350% Công kích · +798% Tu vi nhận được · +218.7% Lực Chiến · +9.8% Xuyên giáp (Đấu Pháp) · +15.7% Hút máu (Đấu Pháp) · +9.8% Cơ hội Tu Luyện nhân đôi
+  Đấu Pháp: Cấp 0 buff tự thân +70%, debuff đối thủ −55% · Cấp 100 buff tự thân +95%, debuff đối thủ −80%
   Nâng cấp: 5 → 38 Linh Tinh/cấp; tổng 0→100 = 1.755
-  Chiêu 1: Cửu U Hồn Trảo — sát thương ×1.23, hồi ~4 sinh lực
-  Chiêu 2: Diệt Hồn Chú — sát thương ×1,00, đối thủ gây ít hơn 17.3% (2 đòn)
-  Chiêu 3: U Minh Phệ Hồn — sát thương ×1.29, hồi ~5 sinh lực, đối thủ gây ít hơn 20.7% (2 đòn)
-  Chiêu 4: Cửu U Diệt Hồn — sát thương ×1.46, hồi ~7 sinh lực, đối thủ gây ít hơn 28.8% (2 đòn)
+  Chiêu 1: Cửu U Hồn Trảo — sát thương ×1.27, hồi ~4 sinh lực
+  Chiêu 2: Diệt Hồn Chú — sát thương ×1,00, đối thủ gây ít hơn 20.3% (2 đòn)
+  Chiêu 3: U Minh Phệ Hồn — sát thương ×1.34, hồi ~5 sinh lực, đối thủ gây ít hơn 24.3% (2 đòn)
+  Chiêu 4: Cửu U Diệt Hồn — sát thương ×1.54, hồi ~8 sinh lực, đối thủ gây ít hơn 30% (2 đòn)
   Nguồn: Boss Thế Giới (người kết liễu 0,8%) · Bí Cảnh Đặc Biệt (3%/lần) · Mảnh Cửu U Diệt Hồn
 ----------------------------------------------------------------------------------------------------
 [1036] Thái Sơ Hỗn Độn Kinh  (id cp_thai_so_hon_don)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Toàn diện (hành Hỗn Nguyên) · Hỗn Độn Phẩm
   Mô tả: Hỗn độn thái sơ — chỉ gặp qua Kỳ Ngộ cấp cao. Công pháp tổng hợp.
   Yêu cầu: Đại Thừa · Linh Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +14% Công kích · +14% Phòng ngự · +14% Sinh mệnh · +12% Thân pháp (tốc độ) · +20% Tu vi nhận được
-  Hiệu ứng Cấp 100 (trước trần): +30.8% Công kích · +30.8% Phòng ngự · +30.8% Sinh mệnh · +26.4% Thân pháp (tốc độ) · +44% Tu vi nhận được
-  Đấu Pháp: Cấp 0 buff tự thân +14%, debuff đối thủ −10% · Cấp 100 buff tự thân +29%, debuff đối thủ −25%
+  Hiệu ứng Cấp 0: +133% Công kích · +133% Phòng ngự · +133% Sinh mệnh · +133% Thân pháp (tốc độ) · +300% Tu vi nhận được · +83.1% Lực Chiến · +3.1% Cơ hội Tu Luyện nhân đôi · +4.7% Giữ tu vi khi Đột Phá thất bại · +23.5% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +372.4% Công kích · +372.4% Phòng ngự · +372.4% Sinh mệnh · +372.4% Thân pháp (tốc độ) · +840% Tu vi nhận được · +232.7% Lực Chiến · +8.7% Cơ hội Tu Luyện nhân đôi · +13.2% Giữ tu vi khi Đột Phá thất bại · +65.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +72%, debuff đối thủ −57% · Cấp 100 buff tự thân +97%, debuff đối thủ −82%
   Nâng cấp: 9 → 71 Linh Tinh/cấp; tổng 0→100 = 3.280
-  Chiêu 1: Hỗn Độn Sơ Khai — sát thương ×1.24, hồi ~4 sinh lực
-  Chiêu 2: Thái Sơ Hộ Thể — sát thương ×1,00, giảm 21.6% sát thương nhận (2 đòn), né +12% (2 đòn)
-  Chiêu 3: Hỗn Độn Phá Pháp — sát thương ×1.34, xuyên giáp +9.6%, bạo kích +9.6%
-  Chiêu 4: Thái Sơ Hỗn Độn — sát thương ×1.46, hồi ~6 sinh lực, giảm 21.6% sát thương nhận (1 đòn), đối thủ gây ít hơn 14.4% (1 đòn)
+  Chiêu 1: Hỗn Độn Sơ Khai — sát thương ×1.28, hồi ~4 sinh lực
+  Chiêu 2: Thái Sơ Hộ Thể — sát thương ×1,00, giảm 25.2% sát thương nhận (2 đòn), né +14% (2 đòn)
+  Chiêu 3: Hỗn Độn Phá Pháp — sát thương ×1.39, xuyên giáp +11.2%, bạo kích +11.2%
+  Chiêu 4: Thái Sơ Hỗn Độn — sát thương ×1.53, hồi ~7 sinh lực, giảm 25.2% sát thương nhận (1 đòn), đối thủ gây ít hơn 16.8% (1 đòn)
   Nguồn: Kỳ Ngộ cấp cao (Cảm Ngộ)
 ----------------------------------------------------------------------------------------------------
 [1037] Vô Thượng Kiếm Đạo Kinh  (id cp_vo_thuong_kiem_dao)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Kiếm đạo (hành Kim) · Hỗn Độn Phẩm
   Mô tả: Kiếm đạo vô thượng — rơi từ Boss Thế Giới cấp cao. Thiên về công kích.
   Yêu cầu: Trúc Cơ · Tiên Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +38% Công kích · +8% Tu vi nhận được · +15% Sát thương lên Boss · +3% Xuyên giáp (Đấu Pháp) · +5% Sát thương bạo kích
-  Hiệu ứng Cấp 100 (trước trần): +83.6% Công kích · +17.6% Tu vi nhận được · +33% Sát thương lên Boss · +6.6% Xuyên giáp (Đấu Pháp) · +11% Sát thương bạo kích
-  Đấu Pháp: Cấp 0 buff tự thân +18%, debuff đối thủ −8% · Cấp 100 buff tự thân +33%, debuff đối thủ −23%
+  Hiệu ứng Cấp 0: +136% Công kích · +305% Tu vi nhận được · +85% Lực Chiến · +30% Sát thương lên Boss · +4.2% Xuyên giáp (Đấu Pháp) · +7% Sát thương bạo kích · +3.9% Né Lôi Kiếp · +15.7% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +380.8% Công kích · +854% Tu vi nhận được · +238% Lực Chiến · +84% Sát thương lên Boss · +11.8% Xuyên giáp (Đấu Pháp) · +19.6% Sát thương bạo kích · +10.9% Né Lôi Kiếp · +44% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +72%, debuff đối thủ −57% · Cấp 100 buff tự thân +97%, debuff đối thủ −82%
   Nâng cấp: 17 → 137 Linh Tinh/cấp; tổng 0→100 = 6.293
-  Chiêu 1: Vô Thượng Kiếm Ý — sát thương ×1.31, xuyên giáp +7.5%
-  Chiêu 2: Kiếm Đạo Chí Cao — sát thương ×1.25, bạo kích +18.8%
-  Chiêu 3: Nhất Kiếm Đoạn Thiên — sát thương ×1.38, xuyên giáp +15%
-  Chiêu 4: Vô Thượng Kiếm Đạo — sát thương ×1.56, xuyên giáp +22.5%, bạo kích +12.5%
+  Chiêu 1: Vô Thượng Kiếm Ý — sát thương ×1.36, xuyên giáp +8.7%
+  Chiêu 2: Kiếm Đạo Chí Cao — sát thương ×1.29, bạo kích +21.8%
+  Chiêu 3: Nhất Kiếm Đoạn Thiên — sát thương ×1.44, xuyên giáp +17.4%
+  Chiêu 4: Vô Thượng Kiếm Đạo — sát thương ×1.65, xuyên giáp +25%, bạo kích +14.5%
   Nguồn: Boss Thế Giới cấp cao (cấp 6+, người kết liễu 1,2%) · Mảnh Vô Thượng Kiếm Đạo
 ----------------------------------------------------------------------------------------------------
 [1038] Thiên Hà Tinh Thần Quyết  (id cp_thien_ha_tinh_than)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Tu luyện (hành Mộc) · Hỗn Độn Phẩm
   Mô tả: Tinh thần thiên hà — rơi từ Bí Cảnh Linh Giới. Thiên về tu luyện.
   Yêu cầu: Kết Đan · Tiên Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +90% Tu vi nhận được · +15% Hấp thu linh khí · +2% Tỉ lệ Ngộ đạo · +5% Thu hoạch Bí Cảnh
-  Hiệu ứng Cấp 100 (trước trần): +198% Tu vi nhận được · +33% Hấp thu linh khí · +4.4% Tỉ lệ Ngộ đạo · +11% Thu hoạch Bí Cảnh
-  Đấu Pháp: Cấp 0 buff tự thân +10%, debuff đối thủ −7% · Cấp 100 buff tự thân +25%, debuff đối thủ −22%
+  Hiệu ứng Cấp 0: +310% Tu vi nhận được · +69.7% Lực Chiến · +21% Hấp thu linh khí · +2.8% Tỉ lệ Ngộ đạo · +7% Thu hoạch Bí Cảnh · +4.7% Cơ hội Tu Luyện nhân đôi · +23.5% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +868% Tu vi nhận được · +195.2% Lực Chiến · +58.8% Hấp thu linh khí · +7.8% Tỉ lệ Ngộ đạo · +19.6% Thu hoạch Bí Cảnh · +13.2% Cơ hội Tu Luyện nhân đôi · +65.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +72%, debuff đối thủ −57% · Cấp 100 buff tự thân +97%, debuff đối thủ −82%
   Nâng cấp: 21 → 174 Linh Tinh/cấp; tổng 0→100 = 8.002
-  Chiêu 1: Tinh Hà Dẫn Khí — sát thương ×1.19, hồi ~5 sinh lực
-  Chiêu 2: Thiên Hà Hộ Thể — sát thương ×1,00, giảm 25% sát thương nhận (2 đòn)
-  Chiêu 3: Tinh Thần Hồi Nguyên — sát thương ×1.19, hồi ~9 sinh lực
-  Chiêu 4: Thiên Hà Tinh Thần — sát thương ×1.31, hồi ~8 sinh lực, giảm 18.8% sát thương nhận (1 đòn)
+  Chiêu 1: Tinh Hà Dẫn Khí — sát thương ×1.22, hồi ~6 sinh lực
+  Chiêu 2: Thiên Hà Hộ Thể — sát thương ×1,00, giảm 29% sát thương nhận (2 đòn)
+  Chiêu 3: Tinh Thần Hồi Nguyên — sát thương ×1.22, hồi ~10 sinh lực
+  Chiêu 4: Thiên Hà Tinh Thần — sát thương ×1.36, hồi ~9 sinh lực, giảm 21.8% sát thương nhận (1 đòn)
   Nguồn: Bí Cảnh Linh Giới từ Đại Thừa (0,8%/lần) · Mảnh Thiên Hà Tinh Thần
 ----------------------------------------------------------------------------------------------------
 [1039] Càn Khôn Trấn Giới Kinh  (id cp_can_khon_tran_gioi)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Phòng ngự (hành Thổ) · Thần Phẩm
   Mô tả: Càn khôn trấn giới — phát trong Sự Kiện Đặc Biệt (admin). Thiên về phòng ngự.
   Yêu cầu: Phàm Nhân · Linh Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +36% Phòng ngự · +30% Sinh mệnh · +8% Tu vi nhận được · +3% Giảm sát thương nhận (Đấu Pháp)
-  Hiệu ứng Cấp 100 (trước trần): +79.2% Phòng ngự · +66% Sinh mệnh · +17.6% Tu vi nhận được · +6.6% Giảm sát thương nhận (Đấu Pháp)
-  Đấu Pháp: Cấp 0 buff tự thân +10%, debuff đối thủ −10% · Cấp 100 buff tự thân +25%, debuff đối thủ −25%
+  Hiệu ứng Cấp 0: +137% Phòng ngự · +137% Sinh mệnh · +305% Tu vi nhận được · +85.6% Lực Chiến · +4.2% Giảm sát thương nhận (Đấu Pháp) · +4.2% Giữ tu vi khi Đột Phá thất bại · +17.5% Giảm sát thương Lôi Kiếp
+  Hiệu ứng Cấp 100 (trước trần): +383.6% Phòng ngự · +383.6% Sinh mệnh · +854% Tu vi nhận được · +239.7% Lực Chiến · +11.8% Giảm sát thương nhận (Đấu Pháp) · +11.8% Giữ tu vi khi Đột Phá thất bại · +49% Giảm sát thương Lôi Kiếp
+  Đấu Pháp: Cấp 0 buff tự thân +70%, debuff đối thủ −55% · Cấp 100 buff tự thân +95%, debuff đối thủ −80%
   Nâng cấp: 4 → 34 Linh Tinh/cấp; tổng 0→100 = 1.563
-  Chiêu 1: Càn Khôn Hộ Giới — sát thương ×1,00, giảm 26.4% sát thương nhận (2 đòn)
-  Chiêu 2: Trấn Giới Ấn — sát thương ×1,00, hồi ~5 sinh lực, giảm 33.6% sát thương nhận (2 đòn)
-  Chiêu 3: Càn Khôn Phong Tỏa — sát thương ×1.22, giảm 33.6% sát thương nhận (2 đòn), đối thủ gây ít hơn 14.4% (1 đòn)
-  Chiêu 4: Càn Khôn Trấn Giới — sát thương ×1,00, hồi ~9 sinh lực, giảm 45% sát thương nhận (3 đòn)
+  Chiêu 1: Càn Khôn Hộ Giới — sát thương ×1,00, giảm 30.8% sát thương nhận (2 đòn)
+  Chiêu 2: Trấn Giới Ấn — sát thương ×1,00, hồi ~6 sinh lực, giảm 39.2% sát thương nhận (2 đòn)
+  Chiêu 3: Càn Khôn Phong Tỏa — sát thương ×1.25, giảm 39.2% sát thương nhận (2 đòn), đối thủ gây ít hơn 16.8% (1 đòn)
+  Chiêu 4: Càn Khôn Trấn Giới — sát thương ×1,00, hồi ~10 sinh lực, giảm 45% sát thương nhận (3 đòn)
   Nguồn: Sự Kiện Đặc Biệt (admin phát / mã code)
 ----------------------------------------------------------------------------------------------------
 [1040] Vô Cực Thiên Đạo Kinh  (id cp_vo_cuc_thien_dao)
   Nhóm: Công Pháp Đặc Biệt (độc quyền) · Loại: Toàn diện (hành Hỗn Nguyên) · Hỗn Độn Phẩm
   Mô tả: Thiên đạo vô cực — chỉ có thể gặp qua Kỳ Ngộ cực hiếm. Công pháp độc quyền cấp cao nhất của nhóm mới.
   Yêu cầu: Hóa Thần · Tiên Giới   Giá: KHÔNG bán
-  Hiệu ứng Cấp 0: +20% Công kích · +20% Phòng ngự · +20% Sinh mệnh · +15% Thân pháp (tốc độ) · +28% Tu vi nhận được · +10% Sát thương lên Boss
-  Hiệu ứng Cấp 100 (trước trần): +44% Công kích · +44% Phòng ngự · +44% Sinh mệnh · +33% Thân pháp (tốc độ) · +61.6% Tu vi nhận được · +22% Sát thương lên Boss
-  Đấu Pháp: Cấp 0 buff tự thân +18%, debuff đối thủ −14% · Cấp 100 buff tự thân +33%, debuff đối thủ −29%
+  Hiệu ứng Cấp 0: +145% Công kích · +145% Phòng ngự · +145% Sinh mệnh · +145% Thân pháp (tốc độ) · +320% Tu vi nhận được · +90.6% Lực Chiến · +20% Sát thương lên Boss · +3.1% Cơ hội Tu Luyện nhân đôi · +4.7% Giữ tu vi khi Đột Phá thất bại · +23.5% Linh Thạch thu từ Bí Cảnh
+  Hiệu ứng Cấp 100 (trước trần): +406% Công kích · +406% Phòng ngự · +406% Sinh mệnh · +406% Thân pháp (tốc độ) · +896% Tu vi nhận được · +253.7% Lực Chiến · +56% Sát thương lên Boss · +8.7% Cơ hội Tu Luyện nhân đôi · +13.2% Giữ tu vi khi Đột Phá thất bại · +65.8% Linh Thạch thu từ Bí Cảnh
+  Đấu Pháp: Cấp 0 buff tự thân +72%, debuff đối thủ −57% · Cấp 100 buff tự thân +97%, debuff đối thủ −82%
   Nâng cấp: 50 → 414 Linh Tinh/cấp; tổng 0→100 = 18.956
-  Chiêu 1: Vô Cực Thiên Đạo — sát thương ×1.26, hồi ~4 sinh lực
-  Chiêu 2: Thiên Đạo Hộ Thân — sát thương ×1,00, giảm 23.4% sát thương nhận (2 đòn), né +13% (2 đòn)
-  Chiêu 3: Vô Cực Phá Hư — sát thương ×1.36, xuyên giáp +10.4%, bạo kích +10.4%
-  Chiêu 4: Thiên Đạo Vô Cực — sát thương ×1.49, hồi ~6 sinh lực, giảm 23.4% sát thương nhận (1 đòn), đối thủ gây ít hơn 15.6% (1 đòn)
+  Chiêu 1: Vô Cực Thiên Đạo — sát thương ×1.30, hồi ~5 sinh lực
+  Chiêu 2: Thiên Đạo Hộ Thân — sát thương ×1,00, giảm 27% sát thương nhận (2 đòn), né +15% (2 đòn)
+  Chiêu 3: Vô Cực Phá Hư — sát thương ×1.42, xuyên giáp +12%, bạo kích +12%
+  Chiêu 4: Thiên Đạo Vô Cực — sát thương ×1.57, hồi ~7 sinh lực, giảm 27% sát thương nhận (1 đòn), đối thủ gây ít hơn 18% (1 đòn)
   Nguồn: Kỳ Ngộ cực hiếm (Cảm Ngộ)
 ----------------------------------------------------------------------------------------------------
 

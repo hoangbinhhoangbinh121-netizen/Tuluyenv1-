@@ -58,7 +58,7 @@ function aggregate(row) {
       const b = D.BY_TIER.get(t); const level = Math.min(D.MAX_LEVEL, lv[t] || 0);
       const aff = affinityOf(row, b);
       for (const [k, v] of Object.entries(fxAt(b, level))) {
-        const scaled = (D.STAT_KEYS.includes(k) || k === 'tu' || k === 'boss') ? v * aff : v;   // tương hợp chỉ nhân các hiệu ứng chính
+        const scaled = (D.STAT_KEYS.includes(k) || k === 'tu' || k === 'boss' || k === 'luc') ? v * aff : v;   // tương hợp chỉ nhân các hiệu ứng chính
         sum[k] = (sum[k] || 0) + scaled;
       }
       buff += pvpBuffAt(b, level); debuff += pvpDebuffAt(b, level);
@@ -67,16 +67,17 @@ function aggregate(row) {
     const cap = (k) => Math.min(D.FX_CAP[k], Math.max(0, sum[k] || 0));
     const stat = { atk: cap('atk'), def: cap('def'), hp: cap('hp'), spd: cap('spd') };
     const route = {}; for (const k of D.ROUTE_KEYS) if (sum[k]) route[k] = cap(k);
-    res = { n: tiers.length, books, stat, tu: cap('tu'), boss: cap('boss'), route, buff, debuff };
+    res = { n: tiers.length, books, stat, tu: cap('tu'), boss: cap('boss'), luc: cap('luc'), route, buff, debuff };
   }
   cache.set(row, res);
   return res;
 }
-const EMPTY = Object.freeze({ n: 0, books: [], stat: Object.freeze({ atk: 0, def: 0, hp: 0, spd: 0 }), tu: 0, boss: 0, route: Object.freeze({}), buff: 0, debuff: 0 });
+const EMPTY = Object.freeze({ n: 0, books: [], stat: Object.freeze({ atk: 0, def: 0, hp: 0, spd: 0 }), tu: 0, boss: 0, luc: 0, route: Object.freeze({}), buff: 0, debuff: 0 });
 
 const statBonus = (row, stat) => (stat ? aggregate(row).stat[stat] || 0 : 0);
 const tuBonus = (row) => aggregate(row).tu;
 const bossBonus = (row) => aggregate(row).boss;
+const lucBonus = (row) => aggregate(row).luc;
 const routeFx = (row) => aggregate(row).route;
 
 // ---------------------------------------------------------------- chiêu thức
@@ -136,6 +137,6 @@ function applySkill(eff, selfSt, enemySt, hpPool, selfKey, tag) {
 }
 
 module.exports = {
-  D, parseSlots, parseLevels, levelOf, fxAt, pvpBuffAt, pvpDebuffAt, affinityOf, aggregate, statBonus, tuBonus, bossBonus, routeFx,
+  D, parseSlots, parseLevels, levelOf, fxAt, pvpBuffAt, pvpDebuffAt, affinityOf, aggregate, statBonus, tuBonus, bossBonus, lucBonus, routeFx,
   skillEffect, skillEffectText, battleState, incomingBuffs, outgoingWeak, tickDefender, tickAttacker, applySkill, HEAL_SCALE, EMPTY,
 };

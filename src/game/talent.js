@@ -33,13 +33,13 @@ const DILUTION = { 1: 1.0, 2: 0.85, 3: 0.7, 4: 0.6, 5: 0.5 };   // linh căn nhi
 
 const CAPS = {   // trần của TỔNG hiệu ứng mới (không tính hệ số gốc). Số âm tối đa -0.10 (regen -0.50).
   tu: 0.35, absorb: 0.40, ngo: 0.12, atk: 0.15, def: 0.15, hp: 0.15, regen: 1.5, crit: 0.10, critMult: 0.25, dodge: 0.10,
-  bt: 0.08, failKeep: 0.10, kiepDmg: 0.45, kiepDodge: 0.12, loot: 0.30, dr: 0.12, pierce: 0.15, lifesteal: 0.10, proc: 0.08,
+  bt: 0.08, failKeep: 0.10, kiepDmg: 0.45, kiepDodge: 0.12, loot: 0.30, dr: 0.12, pierce: 0.15, lifesteal: 0.10, proc: 0.08, thach: 0.60,
 };
 const LABEL = {
   tu: 'Tốc độ tu luyện', absorb: 'Hấp thu linh khí (Cảm Ngộ / Linh Mạch)', ngo: 'Tỉ lệ Ngộ đạo', atk: 'Công kích', def: 'Phòng ngự', hp: 'Sinh mệnh',
   regen: 'Hồi Sinh Mệnh', crit: 'Bạo kích (Đấu Pháp)', critMult: 'Sát thương bạo kích', dodge: 'Né tránh (Đấu Pháp)', bt: 'Tỉ lệ Đột Phá',
   failKeep: 'Giữ tu vi khi Đột Phá thất bại', kiepDmg: 'Giảm sát thương Lôi Kiếp', kiepDodge: 'Né Lôi Kiếp', loot: 'Thu hoạch Bí Cảnh / Cơ duyên',
-  dr: 'Giảm sát thương nhận (Đấu Pháp)', pierce: 'Xuyên giáp (Đấu Pháp)', lifesteal: 'Hút máu (Đấu Pháp)', proc: 'Cơ hội Tu Luyện nhân đôi',
+  dr: 'Giảm sát thương nhận (Đấu Pháp)', pierce: 'Xuyên giáp (Đấu Pháp)', lifesteal: 'Hút máu (Đấu Pháp)', proc: 'Cơ hội Tu Luyện nhân đôi', thach: 'Linh Thạch thu từ Bí Cảnh',
 };
 const PCT_KEYS = new Set(Object.keys(CAPS));
 const fmtFx = (k, v) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(v * 100 % 1 === 0 ? 0 : 1)}% ${LABEL[k] || k}`;

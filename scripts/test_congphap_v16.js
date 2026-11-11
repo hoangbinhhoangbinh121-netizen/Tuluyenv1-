@@ -26,7 +26,7 @@ for (const b of B) {
   eq(b.skills.length, 4); eq(new Set(b.skills.map((s) => s.name)).size, 4); ok(Object.keys(b.fx).length >= 1);
   ok(b.require_realm >= 0 && b.require_realm < K.REALMS.length && b.require_world >= 0, 'realm/world hợp lệ');
   ok(b.shop ? b.cost > 0 : b.cost === null, 'giá'); ok(['linh_thach', 'linh_tinh'].includes(b.currency));
-  for (const s of b.skills) { const e = CPX.skillEffect(s.name); ok(e && e.dmg >= 1 && e.dmg <= 1.6, `chiêu ${s.name} có hiệu ứng`); ok(CPX.skillEffectText(s.name).length > 5); }
+  for (const s of b.skills) { const e = CPX.skillEffect(s.name); ok(e && e.dmg >= 1 && e.dmg <= D16.SKILL_CAP.dmg, `chiêu ${s.name} có hiệu ứng`); ok(CPX.skillEffectText(s.name).length > 5); }
 }
 eq(new Set(B.map((b) => b.name)).size, 40); eq(new Set(B.flatMap((b) => b.skills.map((s) => s.name))).size, 160, '160 chiêu không trùng tên');
 // giá tăng theo cảnh giới trong từng nhóm shop
@@ -64,16 +64,16 @@ eq(K.CONG_PHAP_TIER_DEF.map((t) => t.tier).join(','), '1,2,3,4,5,6,7,101,102,201
   // chưa sở hữu / trùng
   ok(!C16.setEquipped(u, [1010]).ok, 'không trang bị quyển chưa sở hữu'); ok(C16.setEquipped(u, [1003, 1003]).tiers.length === 1, 'không trang bị trùng'); C16.setEquipped(u, []);
 
-  // ---- (5) tính đúng 1 lần: 1008 Xích Viêm = công +16% (nhân tương hợp), không đụng chỉ số khác
+  // ---- (5) tính đúng 1 lần: 1008 Xích Viêm = công +fx.atk (nhân tương hợp), không đụng chỉ số khác
   const u2 = mk({ realm_index: 5, atk: 1000, def_: 1000, hp: 1000, spd: 1000 }); C16.grantDirect(u2, 1008); C16.setEquipped(u2, [1008]);
   const r2 = Cu.getCultivator(u2); const aff = CPX.aggregate(r2).books[0].aff;
-  const expectAtk = Math.floor(1000 * (1 + 0.16 * aff) * T.statMult(r2, 'atk')); ok(Math.abs(Cu.effectiveAtk(r2) - expectAtk) <= 1, `công = ${expectAtk}, thực ${Cu.effectiveAtk(r2)}`);
+  const expectAtk = Math.floor(1000 * (1 + D16.BY_TIER.get(1008).fx.atk * aff) * T.statMult(r2, 'atk')); ok(Math.abs(Cu.effectiveAtk(r2) - expectAtk) <= 1, `công = ${expectAtk}, thực ${Cu.effectiveAtk(r2)}`);
   eq(Cu.effectiveSpd(r2), 1000, 'chỉ cộng công, tốc không đổi'); eq(Cu.effectiveDef(r2), Math.floor(1000 * T.statMult(r2, 'def')), 'thủ không đổi');
   // cấp nâng làm tăng hiệu quả, chặn trần
   const lv0 = Cu.effectiveAtk(r2); C16.upgrade(u2, 1008); ok(Cu.effectiveAtk(Cu.getCultivator(u2)) > lv0, 'nâng cấp tăng công'); eq(Cu.congphapLevelsMap(Cu.getCultivator(u2))[1008], 1);
   // tu luyện
   const u3 = mk({ realm_index: 3 }); C16.grantDirect(u3, 1004); C16.setEquipped(u3, [1004]);
-  const m3 = Cu.cpTuMult(Cu.getCultivator(u3)); ok(m3 > 1.25 && m3 < 1.4, `tu mult ${m3}`);
+  const m3 = Cu.cpTuMult(Cu.getCultivator(u3)); const aff3 = CPX.aggregate(Cu.getCultivator(u3)).books[0].aff; ok(Math.abs(m3 - (1 + D16.BY_TIER.get(1004).fx.tu * aff3)) < 1e-6 && m3 > 1.5, `tu mult ${m3}`);
   // công pháp "không phải quyển nào cũng cộng mọi chỉ số"
   ok(!D16.BOOKS.every((b) => D16.STAT_KEYS.every((k) => b.fx[k])), 'không phải quyển nào cũng cộng đủ chỉ số');
 

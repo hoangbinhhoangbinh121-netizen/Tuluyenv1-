@@ -137,6 +137,7 @@ const pvpDebuffPct = (row) => Number(row.cong_phap_pvp_debuff || 0);
 
 function calcLucChien(row) {
   let base = effectiveAtk(row) * 3 + effectiveDef(row) * 2 + effectiveSpd(row) * 1.5 + effectiveMaxHp(row) * 0.5 + row.tu_vi * 0.01;
+  base *= 1 + CPX.lucBonus(row);          // v16.4: công pháp mới cộng % Lực Chiến (đúng 1 lần, tính từ ô trang bị)
   base += int(row.ruong_bonus_lucchien || 0);
   return int(base);
 }

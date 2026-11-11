@@ -45,20 +45,22 @@ const FX_LABEL = {
   absorb: 'Hấp thu linh khí', ngo: 'Tỉ lệ Ngộ đạo', regen: 'Hồi Sinh Mệnh', loot: 'Thu hoạch Bí Cảnh', bt: 'Tỉ lệ Đột Phá',
   dodge: 'Né tránh (Đấu Pháp)', dr: 'Giảm sát thương nhận (Đấu Pháp)', pierce: 'Xuyên giáp (Đấu Pháp)', crit: 'Bạo kích (Đấu Pháp)',
   critMult: 'Sát thương bạo kích', lifesteal: 'Hút máu (Đấu Pháp)',
+  luc: 'Lực Chiến', proc: 'Cơ hội Tu Luyện nhân đôi', failKeep: 'Giữ tu vi khi Đột Phá thất bại', kiepDmg: 'Giảm sát thương Lôi Kiếp', kiepDodge: 'Né Lôi Kiếp', thach: 'Linh Thạch thu từ Bí Cảnh',
 };
 /** Khoá nào tính ở đâu (xem game/cpfx.js). */
 const STAT_KEYS = ['atk', 'def', 'hp', 'spd'];
-const ROUTE_KEYS = ['absorb', 'ngo', 'regen', 'loot', 'bt', 'dodge', 'dr', 'pierce', 'crit', 'critMult', 'lifesteal'];
+const ROUTE_KEYS = ['absorb', 'ngo', 'regen', 'loot', 'bt', 'dodge', 'dr', 'pierce', 'crit', 'critMult', 'lifesteal', 'proc', 'failKeep', 'kiepDmg', 'kiepDodge', 'thach'];
 /** Trần của TỔNG hiệu ứng công pháp mới (cộng cả 3 quyển, đã nhân cấp). */
-const FX_CAP = {
-  atk: 1.0, def: 1.0, hp: 1.2, spd: 0.9, tu: 2.5, boss: 0.8,
+const FX_CAP = {   // v16.2: nâng trần chỉ số/tu vi (để 3 quyển mới thực sự vượt công pháp cũ); các hiệu ứng route còn bị chặn thêm bởi CAPS của talent.js
+  atk: 4.5, def: 4.5, hp: 5.4, spd: 4.0, tu: 8.0, boss: 2.5, luc: 3.0,
   absorb: 0.30, ngo: 0.06, regen: 1.2, loot: 0.15, bt: 0.04, dodge: 0.08, dr: 0.08, pierce: 0.10, crit: 0.07, critMult: 0.15, lifesteal: 0.06,
+  proc: 0.08, failKeep: 0.10, kiepDmg: 0.45, kiepDodge: 0.12, thach: 0.60,
 };
 
 // ----- nâng cấp -----
 const MAX_LEVEL = 100;
-const LEVEL_FX_GROWTH = 0.012;       // fx(level) = fx × (1 + 0.012 × level) → tối đa ×2,2 ở cấp 100 (rồi chặn bởi FX_CAP)
-const LEVEL_PVP_STEP = 0.0015;       // buff/debuff đấu pháp cộng thêm mỗi cấp (công pháp cũ: 0,01/cấp)
+const LEVEL_FX_GROWTH = 0.018;       // fx(level) = fx × (1 + 0.018 × level) → tối đa ×2,8 ở cấp 100 (v16.4: tầng cao mạnh hơn; v16.0–16.3 = 0,012) (rồi chặn bởi FX_CAP)
+const LEVEL_PVP_STEP = 0.0025;       // buff/debuff đấu pháp cộng thêm mỗi cấp (công pháp cũ: 0,01/cấp)
 /** Khung chi phí: [cấp tối đa của khung, hệ số khung] — chi phí cấp L = ceil(base × hệ số × (1 + 0,02 × vị trí trong khung)). */
 const UP_BRACKETS = [[10, 1], [20, 1.6], [40, 2.6], [60, 4.2], [80, 6.8], [100, 11]];
 const UP_BRACKETS_LT = [[10, 0.5], [20, 0.5], [40, 1], [60, 1.5], [80, 2], [100, 3]];   // Linh Tinh (hiếm) → hệ số nhẹ hơn
@@ -83,7 +85,7 @@ const ARCH = {
   phongngu: [{ guard: [0.22, 2] }, { guard: [0.28, 2], heal: 0.10 }, { dmg: 1.18, guard: [0.28, 2], weaken: [0.12, 1] }, { guard: [0.38, 3], heal: 0.18 }],
 };
 /** Trần mỗi thông số chiêu (sau khi nhân hệ số sk của quyển). */
-const SKILL_CAP = { dmg: 1.6, pierce: 0.25, crit: 0.25, heal: 0.30, guard: [0.45, 3], weaken: [0.30, 3], dodge: [0.30, 3] };
+const SKILL_CAP = { dmg: 1.75, pierce: 0.25, crit: 0.25, heal: 0.30, guard: [0.45, 3], weaken: [0.30, 3], dodge: [0.30, 3] };
 
 /**
  * Dòng dữ liệu: [tier, id, tên, mô tả, nhóm, loại, phẩm, require_realm, require_world, tiền, giá|null, pvp_buff, pvp_debuff, sk, fx, 4 tên chiêu, 4 lời dẫn chiêu]
@@ -188,9 +190,67 @@ function upBase(price, currency) {
 
 // Công pháp độc quyền không có giá bán → chi phí nâng cấp tính theo "giá tham chiếu" tương đương cấp bậc của nó (không để quyển hiếm nâng cấp rẻ hơn quyển thường).
 const EXCL_REF = { 1031: 800000, 1032: 1000000, 1033: 90, 1034: 100, 1035: 110, 1036: 200, 1037: 400, 1038: 500, 1039: 90, 1040: 1200 };
+// ----- v16.2: tăng chỉ số / tốc độ tu luyện / thêm loại hiệu ứng -----
+// Bảng RAW giữ số gốc; hệ số dưới đây nhân lên khi dựng sách (đổi 1 chỗ, không phải sửa 40 dòng). stat = atk/def/hp/spd · tu = tu vi nhận được · route = các hiệu ứng khác.
+const GROUP_SCALE = {
+  nhan: { stat: 2.2, tu: 2.8, route: 1.5, pvp: 2.2 },
+  linh: { stat: 2.0, tu: 3.2, route: 1.5, pvp: 2.2 },
+  tien: { stat: 1.9, tu: 2.9, route: 1.4, pvp: 2.6 },
+  doc: { stat: 2.0, tu: 2.6, route: 1.4, pvp: 2.6 },
+};
+const MULTI_STAT_BONUS = 2.8;      // quyển cộng đều ≥ 3 chỉ số (Ngũ Hành / Toàn diện): nhân thêm để vượt các công pháp cũ cộng đều (Tầng 7, 101, 102, 201)
+const MULTI_TU_BONUS = 3.0;        // …và tu vi nhận được của quyển đa chỉ số
+const SIDE_TU_BONUS = 1.6;         // quyển chuyên 1 chỉ số: phần tu vi kèm theo
+const SKILL_POWER_BONUS = 0.08;    // chiêu thức mạnh hơn nhẹ (sk += 0,08)
+/** Hiệu ứng "kiểu mới" theo loại công pháp (ở phẩm Hoàng; nhân (1 + 0,3 × phẩm)). Tất cả đều có hook thật trong game (xem talent.js / dotpha.js / actionsBasic.js / bicanh.js). */
+const CAT_EXTRA = {
+  tu: { proc: 0.012, thach: 0.06 }, luyenthe: { kiepDmg: 0.04, failKeep: 0.012 }, loi: { kiepDmg: 0.03, thach: 0.05 },
+  bang: { kiepDodge: 0.012, kiepDmg: 0.03 }, am: { proc: 0.010, lifesteal: 0.008 }, than: { kiepDodge: 0.015, thach: 0.04 },
+  nguhanh: { thach: 0.06, failKeep: 0.012, bt: 0.004 }, hoa: { thach: 0.04, proc: 0.008 }, sinhco: { failKeep: 0.012, kiepDmg: 0.03 },
+  tho: { kiepDmg: 0.05, thach: 0.05 }, kiem: { thach: 0.04, kiepDodge: 0.010 }, toanien: { thach: 0.06, failKeep: 0.012, proc: 0.008 },
+  phongngu: { kiepDmg: 0.05, failKeep: 0.012 },
+};
+const r3 = (v) => Math.round(v * 1000) / 1000;
+function buffFx(fx, cat, group, pham) {
+  const g = GROUP_SCALE[group]; const out = {};
+  const statN = STAT_KEYS.filter((k) => fx[k]).length;
+  const multi = statN >= 3 ? MULTI_STAT_BONUS : 1;
+  for (const [k, v] of Object.entries(fx)) {
+    if (STAT_KEYS.includes(k)) out[k] = r3(v * g.stat * multi);
+    else if (k === 'tu') out[k] = r3(v * g.tu * (statN >= 3 ? MULTI_TU_BONUS : (cat === 'tu' ? 1 : SIDE_TU_BONUS)));
+    else if (k === 'boss') out[k] = r3(v * g.stat);
+    else out[k] = r3(v * g.route);
+  }
+  const lv = 1 + 0.3 * pham;
+  for (const [k, v] of Object.entries(CAT_EXTRA[cat] || {})) out[k] = r3((out[k] || 0) + v * lv * g.route);
+  return out;
+}
+// ----- v16.2b: SÀN SỨC MẠNH — quyển độc quyền & Tiên Giới ("xịn") luôn vượt công pháp cũ, bất kể loại -----
+// Công pháp cũ (chỉ số = bonus × 0,4; tu vi = bonus): Tầng 7 = 0,44 / 1,10 · 101 = 0,52 / 1,30 · 102 = 0,62 / 1,55 · 201 = 0,80 / 2,00 · buff Đấu Pháp tối đa 0,55 / 0,42.
+// stat = sàn cho MỖI chỉ số mà quyển có cộng · tu = sàn tu vi (quyển Tu Luyện đã cao hơn nên không bị ảnh hưởng) · buff/debuff = sàn Đấu Pháp · sk = cộng thêm sức mạnh chiêu.
+const FLOORS = {
+  linh: { stat: () => 0.54, tu: () => 0, buff: () => 0, debuff: () => 0, sk: 0 },
+  tien: { stat: (i) => 0.66 + 0.035 * i, tu: (i) => 0.60 + 0.12 * i, buff: (i) => 0.36 + 0.01 * i, debuff: (i) => 0.26 + 0.01 * i, sk: 0.05 },
+  doc: { stat: (i, ph) => 0.88 + 0.05 * ph + 0.03 * i, tu: (i, ph) => 2.15 + 0.1 * ph + 0.05 * i, buff: (i, ph) => 0.60 + 0.02 * ph, debuff: (i, ph) => 0.45 + 0.02 * ph, sk: 0.12 },
+};
+const idxInGroup = {};
 const BOOKS = RAW.map((r) => {
-  const [tier, id, name, desc, group, cat, pham, require_realm, require_world, currency, cost, pvp_buff, pvp_debuff, sk, fx, sn, sd] = r;
+  const [tier, id, name, desc, group, cat, pham, require_realm, require_world, currency, cost, pvp_buff0, pvp_debuff0, sk0, fx0, sn, sd] = r;
   const arch = ARCH[cat];
+  const gi = idxInGroup[group] = (idxInGroup[group] === undefined ? 0 : idxInGroup[group] + 1);
+  const fx = buffFx(fx0, cat, group, pham);
+  let sk = r3(sk0 + SKILL_POWER_BONUS);
+  let pvp_buff = r3(pvp_buff0 * GROUP_SCALE[group].pvp); let pvp_debuff = r3(pvp_debuff0 * GROUP_SCALE[group].pvp);
+  const F = FLOORS[group];
+  if (F) {
+    for (const k of STAT_KEYS) if (fx[k]) fx[k] = r3(Math.max(fx[k], F.stat(gi, pham)));
+    if (F.tu(gi, pham) && fx.tu !== undefined) fx.tu = r3(Math.max(fx.tu, F.tu(gi, pham)));
+    pvp_buff = r3(Math.max(pvp_buff, F.buff(gi, pham))); pvp_debuff = r3(Math.max(pvp_debuff, F.debuff(gi, pham)));
+    sk = r3(sk + F.sk);
+  }
+  // v16.4: hiệu ứng LỰC CHIẾN (+% vào Lực Chiến tổng, tính 1 lần trong calcLucChien) — theo trung bình các chỉ số quyển cộng (quyển Tu Luyện thuần: theo tu vi)
+  { const sv = STAT_KEYS.filter((k) => fx[k]).map((k) => fx[k]); const mean = sv.length ? sv.reduce((x, y) => x + y, 0) / sv.length : 0;
+    fx.luc = r3((mean > 0 ? 0.5 * mean : 0.18 * (fx.tu || 0)) * (group === 'doc' ? 1.25 : group === 'tien' ? 1.1 : 1)); }
   return Object.freeze({
     tier, id, name, desc, group, cat, pham, phamName: PHAM[pham], require_realm, require_world, currency, cost, shop: cost !== null,
     pvp_buff, pvp_debuff, fx: Object.freeze({ ...fx }), sk, element: CATS[cat].element,
