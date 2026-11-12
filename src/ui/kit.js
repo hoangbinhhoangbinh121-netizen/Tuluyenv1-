@@ -75,7 +75,7 @@ class View {
     s.addOptions(options.slice(0, 25).map((o) => {
       const opt = { label: String(o.label).slice(0, 100), value: String(o.value) };
       if (o.description) opt.description = String(o.description).slice(0, 100);
-      const em = toComponentEmoji(o.emoji); if (em) opt.emoji = em;
+      const em0 = toComponentEmoji(o.emoji); const em = typeof em0 === 'string' ? { name: em0 } : em0; if (em) opt.emoji = em;   // select option: emoji PHẢI là object (v16.7)
       if (o.default) opt.default = true;
       return opt;
     }));

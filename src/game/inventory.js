@@ -69,6 +69,7 @@ const redeemedCodeSet = (row) => new Set(String(row.redeemed_codes || '').split(
 function rewardLinesForCode(c) {
   const r = [];
   if (c.linh_thach) r.push(`💎 **${fmtNum(c.linh_thach)}** ${E.linhthach} Linh Thạch`);
+  if (c.linh_tinh) r.push(`🌠 **${fmtNum(c.linh_tinh)}** ${E.linhtinh} Linh Tinh`);
   if (c.dan_taytuy_trongsinh) r.push(`🧪 **${c.dan_taytuy_trongsinh}** × ${E.taytuydan} Đan Tẩy Tủy Trọng Sinh (vật phẩm hiếm — giá trị cửa hàng ${fmtNum(K.TAYTUY_LINH_THACH_COST)} Linh Thạch)`);
   if (c.dan_taytuy_nuaban) r.push(`🧪 **${c.dan_taytuy_nuaban}** × ${E.taytuydan} Đan Tẩy Tủy Nửa Tác Dụng (tự chọn reroll ${E.linhcan} Linh Căn HOẶC ${E.thechat} Thể Chất — giá trị cửa hàng ${fmtNum(K.TAYTUY_NUABAN_LINH_THACH_COST)} Linh Thạch)`);
   if (c.dan_duoc) r.push(`💊 **${c.dan_duoc}** × ${E.danduoc} Đan Dược (cắn ngay nhận 60~120 tu vi)`);
@@ -83,6 +84,7 @@ function grantCodeRewards(userId, code, c) {
   if (!row) return '❌ Người chơi này không còn tồn tại trong hệ thống (chưa/không còn `/batdau`).';
   const redeemed = redeemedCodeSet(row); const up = {};
   if (c.linh_thach) up.linh_thach = row.linh_thach + c.linh_thach;
+  if (c.linh_tinh) up.linh_tinh = (row.linh_tinh || 0) + c.linh_tinh;      // v16.5: mã code có thể tặng Linh Tinh (dùng cho mã đền bù)
   for (const col of ['dan_taytuy_trongsinh', 'dan_taytuy_nuaban', 'dan_duoc', 'dan_pha_gioi', 'ruong_than_bi']) if (c[col]) up[col] = (row[col] || 0) + c[col];
   if (c.cong_phap && require('./congphapV16').isNew(c.cong_phap)) require('./congphapV16').grantInto(up, row, Number(c.cong_phap));   // v16: mã code có thể tặng 1 công pháp mới
   redeemed.add(code);

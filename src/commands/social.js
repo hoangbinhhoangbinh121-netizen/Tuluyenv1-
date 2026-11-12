@@ -18,15 +18,13 @@ defineCommand({
 });
 defineCommand({ name: 'bangxephang', description: 'Xem Thiên Kiêu Bảng', run: (c) => c.send({ embeds: [SV.buildLeaderboardEmbed()] }) });
 defineCommand({
-  name: 'giaodich', description: 'Đề xuất giao dịch 2 chiều (Linh Thạch/Đan Dược/Linh Căn/Thể Chất) với người chơi khác', ...needs,
+  name: 'giaodich', description: 'Đề xuất giao dịch 2 chiều (Linh Thạch/Đan Dược) với người chơi khác', ...needs,
   options: [user('nguoi_nhan', 'Người nhận'),
     { name: 'linh_thach_gui', type: 'int', description: 'Linh Thạch muốn gửi' }, { name: 'dan_duoc_gui', type: 'int', description: 'Đan Dược muốn gửi' },
-    { name: 'doi_linh_can', type: 'string', description: 'Đổi chéo Linh Căn? (có/không)' }, { name: 'doi_the_chat', type: 'string', description: 'Đổi chéo Thể Chất? (có/không)' },
     { name: 'linh_thach_nhan', type: 'int', description: 'Linh Thạch muốn nhận' }, { name: 'dan_duoc_nhan', type: 'int', description: 'Đan Dược muốn nhận' }],
   async run(c) {
-    const a = c.args; const yn = (s) => ['có', 'co', 'yes', 'y', 'true', '1', 'ok'].includes(String(s || '').trim().toLowerCase());
-    const lc = yn(a.doi_linh_can); const tc = yn(a.doi_the_chat);
-    const res = T.createOffer(c.user.id, a.nguoi_nhan.id, a.linh_thach_gui || 0, a.dan_duoc_gui || 0, lc, tc, a.linh_thach_nhan || 0, a.dan_duoc_nhan || 0, lc, tc);
+    const a = c.args;
+    const res = T.createOffer(c.user.id, a.nguoi_nhan.id, a.linh_thach_gui || 0, a.dan_duoc_gui || 0, false, false, a.linh_thach_nhan || 0, a.dan_duoc_nhan || 0, false, false);
     if (res !== 'ok') return c.send(res);
     return c.send({ content: SV.offerAnnouncement(c.user.id, a.nguoi_nhan.id, `<@${a.nguoi_nhan.id}>`), components: SV.tradeConfirmView(c.user.id, a.nguoi_nhan.id).components() });
   },

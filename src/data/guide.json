@@ -214,7 +214,7 @@
       ],
       [
         "giaodich",
-        "Đề xuất giao dịch 2 chiều (Linh Thạch/Đan Dược/Linh Căn/Thể Chất)."
+        "Đề xuất giao dịch 2 chiều (Linh Thạch/Đan Dược). Không còn đổi Linh Căn / Thể Chất."
       ]
     ]
   },
@@ -292,6 +292,10 @@
       [
         "phatcongphap",
         "[Admin] Sự Kiện Đặc Biệt: cấp 1 Công Pháp V16 (mã 1001–1040, mặc định 1039) cho 1 thành viên."
+      ],
+      [
+        "xemnguoichoi",
+        "[Admin] Xem toàn bộ hồ sơ / bảng thuộc tính 1 người chơi (chỉ đọc, hiện riêng cho admin): tổng quan, chỉ số kèm từng nguồn cộng, tài nguyên, công pháp, căn cốt, xã hội, thời gian + nút xuất file .txt đầy đủ mọi cột DB."
       ],
       [
         "thuhoilinhthach",

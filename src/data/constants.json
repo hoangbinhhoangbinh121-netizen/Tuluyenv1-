@@ -812,6 +812,17 @@
    "max_uses": null,
    "linh_thach": 50000,
    "dan_duoc": 2
+  },
+  "DENBUMATDULIEU": {
+   "label": "🎁 Đền Bù Sự Cố Mất Dữ Liệu",
+   "booster_only": false,
+   "max_uses": null,
+   "linh_thach": 5000000,
+   "linh_tinh": 100,
+   "ruong_than_bi": 3,
+   "dan_pha_gioi": 2,
+   "dan_duoc": 10,
+   "dan_taytuy_nuaban": 1
   }
  },
  "ADMIN_CODE_APPROVER_IDS": [

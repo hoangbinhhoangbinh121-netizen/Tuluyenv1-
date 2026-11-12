@@ -16,7 +16,6 @@ const { View, showModal, globalClickAllowed, EPHEMERAL } = require('./kit');
 const { now, fmtNum } = require('../util');
 
 const eph = (i, c, x = {}) => i.reply({ content: c, flags: EPHEMERAL, ...x });
-const yesno = (raw) => ['có', 'co', 'yes', 'y', 'true', '1', 'ok'].includes(String(raw || '').trim().toLowerCase());
 const parseIntField = (raw) => { raw = String(raw || '').trim(); if (!raw) return 0; if (!/^-?\d+$/.test(raw)) throw new Error('nan'); return Number(raw); };
 const cleanId = (raw) => String(raw).trim().replace(/^<@!?/, '').replace(/>$/, '');
 
@@ -43,7 +42,7 @@ function tradeConfirmView(fromId, toId) {
 }
 const offerAnnouncement = (fromId, toId, targetDisplay) => {
   const offer = T.getOffer(fromId, toId);
-  const txt = T.formatOffer(offer, Cu.getCultivator(fromId), Cu.getCultivator(toId));
+  const txt = T.formatOffer(offer);
   return `${E.giaodich} <@${fromId}> đề xuất giao dịch tới ${targetDisplay}:\n${txt}\n⏳ Đề xuất có hiệu lực trong 15 phút — <@${toId}> hãy bấm nút bên dưới để phản hồi.`;
 };
 
@@ -54,32 +53,27 @@ function openTradeGive(i, userId, targetId, display) {
     fields: [
       { id: 'lt', label: 'Linh Thạch muốn GỬI', placeholder: '0 nếu không gửi', required: false, maxLength: 20 },
       { id: 'dd', label: 'Đan Dược muốn GỬI', placeholder: '0 nếu không gửi', required: false, maxLength: 12 },
-      { id: 'lc', label: 'Đổi Linh Căn của mình? (có/không)', placeholder: 'có / không', required: false, maxLength: 6 },
-      { id: 'tc', label: 'Đổi Thể Chất của mình? (có/không)', placeholder: 'có / không', required: false, maxLength: 6 },
     ],
     onSubmit: async (mi, get) => {
       let lt; let dd;
       try { lt = parseIntField(get('lt')); dd = parseIntField(get('dd')); } catch (_) { return eph(mi, '❌ Linh Thạch/Đan Dược phải là số nguyên.'); }
-      const lc = yesno(get('lc')); const tc = yesno(get('tc'));
       const v2 = new View({ ownerId: userId, timeout: 300 });
       v2.button({ key: 'step2', label: 'Tiếp tục — Bước 2/2 (MUỐN NHẬN)', emoji: E.giaodich, style: 'green' }, (bi) => showModal(bi, {
         title: 'Giao Dịch (Bước 2/2) — MUỐN NHẬN',
         fields: [
           { id: 'lt', label: 'Linh Thạch muốn NHẬN', placeholder: '0 nếu không nhận', required: false, maxLength: 20 },
           { id: 'dd', label: 'Đan Dược muốn NHẬN', placeholder: '0 nếu không nhận', required: false, maxLength: 12 },
-          { id: 'lc', label: 'Nhận Linh Căn của đối phương? (có/không)', placeholder: 'có / không', required: false, maxLength: 6 },
-          { id: 'tc', label: 'Nhận Thể Chất của đối phương? (có/không)', placeholder: 'có / không', required: false, maxLength: 6 },
         ],
         onSubmit: async (m2, get2) => {
           let wlt; let wdd;
           try { wlt = parseIntField(get2('lt')); wdd = parseIntField(get2('dd')); } catch (_) { return eph(m2, '❌ Linh Thạch/Đan Dược phải là số nguyên.'); }
-          const res = T.createOffer(userId, targetId, lt, dd, lc, tc, wlt, wdd, yesno(get2('lc')), yesno(get2('tc')));
+          const res = T.createOffer(userId, targetId, lt, dd, false, false, wlt, wdd, false, false);
           if (res !== 'ok') return eph(m2, res);
           v2.stop();
           return m2.reply({ content: offerAnnouncement(userId, targetId, display), components: tradeConfirmView(userId, targetId).components() });
         },
       }));
-      return mi.reply({ content: `✅ Bước 1/2 đã ghi nhận: gửi **${fmtNum(lt)}** 💎, **${fmtNum(dd)}** Đan Dược${lc ? ', đổi Linh Căn' : ''}${tc ? ', đổi Thể Chất' : ''}.\nBấm nút bên dưới để nhập phần **MUỐN NHẬN**:`, components: v2.components(), flags: EPHEMERAL });
+      return mi.reply({ content: `✅ Bước 1/2 đã ghi nhận: gửi **${fmtNum(lt)}** 💎, **${fmtNum(dd)}** Đan Dược.\nBấm nút bên dưới để nhập phần **MUỐN NHẬN**:`, components: v2.components(), flags: EPHEMERAL });
     },
   });
 }
