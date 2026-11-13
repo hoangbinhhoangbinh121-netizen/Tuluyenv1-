@@ -81,6 +81,7 @@ function takeForcedNotice(userId) {
 
 /** Bắt đầu bế quan treo (cũng là LÀM MỚI sau khi bị xuất quan cưỡng chế). */
 function batDau(userId) {
+  const lk = require('./cultLock').get(userId); if (lk) return { ok: false, kind: 'locked', lock: lk };   // /khoatuluyen
   const fresh = settleIfExpired(userId);
   if (fresh) Cu.updateCultivator(userId, { treo_forced: 0 });
   const notice = fresh || takeForcedNotice(userId);
@@ -102,6 +103,7 @@ function xem(userId) {
 
 /** Xuất quan: cộng tu vi và kết thúc phiên treo. */
 function xuatQuan(userId) {
+  const lk = require('./cultLock').get(userId); if (lk) return { ok: false, kind: 'locked', lock: lk };
   const fresh = settleIfExpired(userId);
   if (fresh) { Cu.updateCultivator(userId, { treo_forced: 0 }); const s0 = stateOf(userId); const row0 = Cu.getCultivator(userId); return { ok: true, kind: 'cuong_che', ...s0, ...fresh, after: row0.tu_vi, required: R.tuViRequired(row0.realm_index, row0.stage_index, row0.world_tier) }; }
   const notice = takeForcedNotice(userId);

@@ -28,6 +28,8 @@ require('./commands/pvp');
 require('./commands/sectwar');
 require('./commands/daiphu');
 require('./commands/guide');
+require('./commands/store');   // v16.8: TuTienStore — nạp tiền thật, nhận vật phẩm
+require('./commands/khoatuluyen');   // v16.8: /khoatuluyen — admin khóa tu luyện người chơi
 const { startBackground } = require('./background');
 
 const TOKEN = process.env.DISCORD_TOKEN;
@@ -87,6 +89,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
     await detectOwner(c);
     try { await registerSlash(c); } catch (e) { console.error('❌ Đăng ký slash lỗi:', e.message, '— kiểm tra bot đã được mời với quyền "applications.commands" (và GUILD_ID nếu có đặt).'); }
     startBackground(client);
+    try { require('./store').start(c); } catch (e) { console.error('⚠️ TuTienStore không khởi động được:', e.message); }   // v16.8
   });
   // Server mới mời bot vào → lệnh slash hiện ngay (chỉ khi không ghim GUILD_ID).
   client.on(Events.GuildCreate, async (g) => {

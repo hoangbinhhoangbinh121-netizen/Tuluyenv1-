@@ -45,7 +45,7 @@ const locked = (fn) => async (ctx) => {
   if (!unlock) return ctx.send({ embeds: [require('../ui/notifications').warning(BUSY, { footer: 'E008 · Dữ liệu đang được xử lý' })] });
   try { return await ctx.send(fn(ctx.user.id)); } finally { unlock(); }
 };
-const cultRun = (kind, run) => locked((id) => { const r = run(id); return { embeds: [r.ok ? CULT.result(r) : CULT.cooldown(kind, r.remain)] }; });
+const cultRun = (kind, run) => locked((id) => { const r = run(id); return { embeds: [r.ok ? CULT.result(r) : r.kind === 'locked' ? CULT.locked(r.lock) : CULT.cooldown(kind, r.remain)] }; });
 defineCommand({ name: 'tuluyen', description: 'Tu luyện nhanh nhận tu vi', needsCultivator: true, run: cultRun('tuluyen', A.tuluyenR) });
 defineCommand({ name: 'dongquan', description: 'Bế quan tu luyện lượng lớn tu vi', needsCultivator: true, run: cultRun('dongquan', A.dongquanR) });
 defineCommand({

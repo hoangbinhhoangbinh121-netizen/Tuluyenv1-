@@ -4,6 +4,7 @@ const K = require('./constants');
 const CD = require('./cooldowns');
 const R = require('./realm');
 const Cu = require('./cultivator');
+const Lock = require('./cultLock');
 const F = require('./format');
 const { E } = require('./emoji');
 const { getSectExpBuffMult } = require('./sectBase');
@@ -65,6 +66,7 @@ function tuluyenFatigue(userId, t, record = true) {
 
 /** Tu luyện — trả dữ liệu có cấu trúc (UI v7 dựng Embed từ đây). */
 function tuluyenR(userId) {
+  const lk = Lock.get(userId); if (lk) return { ok: false, kind: 'locked', lock: lk, remain: 0 };   // /khoatuluyen
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_TULUYEN - (t - row.last_tuluyen);
@@ -83,6 +85,7 @@ function tuluyenR(userId) {
 }
 function doTuluyen(userId) {
   const r = tuluyenR(userId);
+  if (r.kind === 'locked') return Lock.text(r.lock);
   if (!r.ok) return `⏳ Còn ${F.fmtTime(r.remain)} nữa mới tu luyện tiếp được.`;
   let note = r.sectBuff ? ' (đã gồm buff +5% EXP Tông Môn Chiến)' : '';
   if (r.buff) note += ' (✨ đang có buff Tu Luyện, hấp thụ linh khí nhanh hơn hẳn)';
@@ -92,6 +95,7 @@ function doTuluyen(userId) {
 }
 
 function dongquanR(userId) {
+  const lk = Lock.get(userId); if (lk) return { ok: false, kind: 'locked', lock: lk, remain: 0 };
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_DONGQUAN - (t - row.last_dongquan);
@@ -110,6 +114,7 @@ function dongquanR(userId) {
 }
 function doDongquan(userId) {
   const r = dongquanR(userId);
+  if (r.kind === 'locked') return Lock.text(r.lock);
   if (!r.ok) return `⏳ Còn ${F.fmtTime(r.remain)} nữa mới bế quan tiếp được.`;
   const note = r.sectBuff ? ' (đã gồm buff +5% EXP Tông Môn Chiến)' : '';
   return `${E.bequan} Bế quan xong, nhận được **${fmtNum(r.gained)}** tu vi và **${fmtNum(r.linhThachGain)}** ${E.linhthach} Linh Thạch${note}.`;
@@ -119,6 +124,7 @@ function doDongquan(userId) {
 function kyNgo(userId, row) { try { return require('./congphapV16').rollKyNgo(userId, row); } catch (e) { console.error('⚠️ Kỳ Ngộ:', e.message); return ''; } }
 
 function doCanngo(userId) {
+  const lk = Lock.get(userId); if (lk) return Lock.text(lk);
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_CANNGO - (t - row.last_canngo);
@@ -134,6 +140,7 @@ function doCanngo(userId) {
 }
 
 function doLinhmach(userId) {
+  const lk = Lock.get(userId); if (lk) return Lock.text(lk);
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_LINHMACH - (t - row.last_linhmach);

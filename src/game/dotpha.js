@@ -5,6 +5,7 @@ const BAL = require('./balance');
 const CD = require('./cooldowns');
 const R = require('./realm');
 const Cu = require('./cultivator');
+const Lock = require('./cultLock');
 const T = require('./talent');
 const TO = require('./talentOps');
 const F = require('./format');
@@ -41,6 +42,7 @@ function resolveCuuLoiKiep(userId, row) {
 }
 
 function doDotpha(userId) {
+  const lk = Lock.get(userId); if (lk && Number(lk.block_dotpha)) return Lock.text(lk);   // /khoatuluyen ca_dotpha:Có
   const row = Cu.getCultivator(userId);
   if (Cu.ngusuyActive(row)) {
     const idx = Math.min(row.ngusuy_stage, K.NGUSUY_STAGES.length - 1);

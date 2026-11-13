@@ -29,6 +29,8 @@ async function animate(interaction, userId, { kind, cooldown, lastCol, run }) {
   const unlock = tryUserLock(userId);
   if (!unlock) return interaction.reply({ embeds: [N.warning('Bạn đang thao tác quá nhanh, vui lòng chờ lượt trước xử lý xong rồi thử lại.', { footer: 'E008 · Dữ liệu đang được xử lý' })], flags: EPHEMERAL });
   try {
+    const lk = require('../game/cultLock').get(userId);
+    if (lk) return await interaction.reply({ embeds: [CULT.locked(lk)], flags: EPHEMERAL });   // /khoatuluyen
     const row = Cu.getCultivator(userId);
     const remain = cooldown - (now() - row[lastCol]);
     if (remain > 0) return await interaction.reply({ embeds: [CULT.cooldown(kind, remain)], flags: EPHEMERAL });
@@ -38,7 +40,7 @@ async function animate(interaction, userId, { kind, cooldown, lastCol, run }) {
       await interaction.editReply({ embeds: [CULT.inProgress(kind, st, ANIM_STEPS)] }).catch(() => {});
     }
     const res = run(userId);
-    const emb = res.ok ? CULT.result(res) : CULT.cooldown(kind, res.remain);
+    const emb = res.ok ? CULT.result(res) : res.kind === 'locked' ? CULT.locked(res.lock) : CULT.cooldown(kind, res.remain);
     try { await interaction.editReply({ embeds: [emb] }); }
     catch (_) { await interaction.followUp({ embeds: [emb], flags: EPHEMERAL }).catch(() => {}); }  // kết quả không bao giờ bị nuốt
   } finally { unlock(); }

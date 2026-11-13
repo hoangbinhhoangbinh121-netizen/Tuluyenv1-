@@ -1,4 +1,6 @@
 # Tiên Giới Bot v16.7 — Node.js + discord.js + SQLite
+> 🏪 **v16.8:** thêm **TuTienStore** — nạp tiền thật (VietQR + SePay), tự giao vật phẩm, tin nhắn ẩn. Xem `TUTIENSTORE.md`.
+> 🔒 **v16.8:** thêm lệnh admin **`/khoatuluyen`** — khóa/mở khóa tu luyện của 1 người chơi (tạm thời theo giờ hoặc vô thời hạn, tùy chọn khóa cả Đột Phá). Chặn Tu Luyện, Bế Quan, Cảm Ngộ, Linh Mạch, Bế Quan Treo ở cả lệnh gõ lẫn nút bấm; khóa lưu DB, hết hạn tự gỡ; khi khóa phiên treo đang chạy bị hủy. Test: `npm run test:lock`.
 
 > **v16.7** — LOẠI BỎ việc giao dịch / đổi Linh Căn và Thể Chất giữa người chơi (Giao Dịch chỉ còn Linh Thạch + Đan Dược; đề xuất cũ có đổi căn cốt tự huỷ, không mất gì). Thêm lệnh admin `/xemnguoichoi` (7 mục + xuất file đầy đủ, chỉ đọc, riêng tư). Sửa kit: emoji trong Select phải là object.
 > **v16.6** — Mã đền bù thêm 1 Đan Tẩy Tủy Nửa Tác Dụng (xem v16.5). **v16.5** — Mã đền bù sự cố mất dữ liệu: `DENBUMATDULIEU` (mỗi tài khoản đổi 1 lần, không giới hạn lượt, không cần admin duyệt): 5.000.000 Linh Thạch + 100 Linh Tinh + 3 Rương Thần Bí + 2 Đan Phá Giới + 10 Đan Dược + 1 Đan Tẩy Tủy Nửa Tác Dụng. Mã code hỗ trợ thêm trường `linh_tinh`. Sửa quà trong `src/data/constants.json` → `CODE_DEFINITIONS`.
