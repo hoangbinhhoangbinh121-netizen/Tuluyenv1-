@@ -36,6 +36,14 @@ const LEGACY_ALIAS = {
   emoji_3: 'daolu_ketdoi', emoji_4: 'daolu_chiatay',
 };
 
+/**
+ * v18.0: tên emoji TRÊN DISCORD khác tên file khi tranh của key đã ĐỔI NỘI DUNG (Application Emoji không thay được ảnh, chỉ xoá+tạo lại).
+ * `tg7_canhgioi_14` cũ trên Discord là vương miện Tiên Đế cũ (nay là canhgioi_19). Cảnh giới 14 mới (Chuẩn Tiên Vương) được tải lên dưới tên
+ * `tg7_canhgioi_14_v18` → không bao giờ hiện nhầm tranh cũ, không phải xoá gì trên Discord, chạy lặp vẫn an toàn.
+ */
+const REMOTE_REVISION = { canhgioi_14: 'v18' };
+const remoteName = (key) => PREFIX + key + (REMOTE_REVISION[key] ? `_${REMOTE_REVISION[key]}` : '');
+
 const isPixel = (s) => typeof s === 'string' && s.includes(`:${PREFIX}`);
 const setResolved = (key, tag) => {
   const bar = Object.keys(BAR_KEYS).find((b) => BAR_KEYS[b] === key);
@@ -91,7 +99,7 @@ async function syncPixelEmoji({ budgetMs = 90000 } = {}) {
     const existing = Object.fromEntries((listing.items || []).map((e) => [e.name, e]));
     const pending = [];
     for (const key of wanted) {
-      const name = PREFIX + key;
+      const name = remoteName(key);
       let e = existing[name];
       if (!e) {
         if (Date.now() - t0 > budgetMs) { pending.push(key); continue; }
@@ -109,7 +117,7 @@ async function syncPixelEmoji({ budgetMs = 90000 } = {}) {
   } catch (ex) {
     console.warn(`⚠️ Emoji pixel: không đồng bộ được (${ex.message}) — thử bộ nhớ đệm / emoji Unicode dự phòng.`);
     const cache = readCache();
-    for (const k of wanted) if (typeof cache[k] === 'string' && isPixel(cache[k])) resolved[k] = cache[k];
+    for (const k of wanted) if (typeof cache[k] === 'string' && isPixel(cache[k]) && cache[k].includes(`:${remoteName(k)}:`)) resolved[k] = cache[k];   // v18.0: bỏ ID cũ của key đã đổi tranh (canhgioi_14)
     _pending = wanted.filter((k) => !resolved[k]);
   }
   for (const [k, tag] of Object.entries(resolved)) setResolved(k, tag);
@@ -178,10 +186,21 @@ function skinEmojiText(text) {
   });
 }
 
-/** Emoji cảnh giới lớn theo chỉ số 0..14. */
-const realmEmoji = (idx) => CUSTOM_EMOJI[`canhgioi_${Math.max(0, Math.min(14, Number(idx) || 0))}`] || '✦';
+/** Emoji cảnh giới lớn theo chỉ số 0..28 (v18.0: 29 cảnh giới; vượt giới hạn → kẹp về 0..MAX_REALM_IDX). */
+const realmEmoji = (idx) => {
+  const i = Math.max(0, Math.min(K.MAX_REALM_IDX, Math.trunc(Number(idx)) || 0));
+  return CUSTOM_EMOJI[`canhgioi_${i}`] || FALLBACK[`canhgioi_${i}`] || '✦';
+};
+/** Emoji tiểu cảnh giới Sơ Kỳ / Trung Kỳ / Hậu Kỳ / Viên Mãn (chỉ cảnh giới dùng 4 tiểu cảnh giới; còn lại trả ''). */
+const STAGE_KEYS = ['so_ky', 'trung_ky', 'hau_ky', 'vien_man'];
+const stageEmoji = (realmIdx, stageIdx) => {
+  const r = K.REALMS[realmIdx];
+  if (!r || !Array.isArray(r.stages) || r.stages.length !== 4) return '';
+  const k = STAGE_KEYS[Math.max(0, Math.min(3, Math.trunc(Number(stageIdx)) || 0))];
+  return CUSTOM_EMOJI[k] || FALLBACK[k] || '';
+};
 
 module.exports = {
   E, BAR, CUSTOM_EMOJI, PREFIX, ALL_KEYS, syncPixelEmoji, continuePixelSyncInBackground, applyEmojiFallbacks,
-  toComponentEmoji, skinEmojiText, realmEmoji, FALLBACK,
+  toComponentEmoji, skinEmojiText, realmEmoji, stageEmoji, remoteName, FALLBACK,
 };

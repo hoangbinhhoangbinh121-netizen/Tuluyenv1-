@@ -25,7 +25,8 @@ function blockReason(user, id, q = 0) {
   if (Inv.isLocked(user, id, q)) return 'Vật phẩm đang bị 🔒 khoá — mở khoá trước.';
   return null;
 }
-const unitPrice = (id, q = 0) => Cat.sellPrice(id, q);
+const unitPrice = (id, q = 0) => { const b = Cat.sellPrice(id, q); return b > 0 ? Math.max(1, Math.floor(b * require('./admin17').sellMult())) : 0; };   // v17.2: hệ số giá do /quantri (mặc định 1)
+const buyUnit = (id) => Math.ceil(Cat.buyPrice(id) * require('./admin17').buyMult());
 function quote(user, id, q = 0, n = 1) {
   const have = Inv.qty(user, id, q); n = Math.max(0, Math.min(int(n), have)); const p = unitPrice(id, q);
   return { id, q, have, n, unit: p, total: p * n, block: blockReason(user, id, q) };
@@ -76,14 +77,14 @@ function sellGear(user, gearId) {
 }
 
 // ------------------------------------------------------------------ NPC bán
-const shopList = (user) => Object.entries(C.NPC_SHOP).map(([id, lim]) => ({ id, limit: lim, bought: Inv.dailyGet(user, `npcbuy:${id}`), price: Cat.buyPrice(id), item: I.BY_ID[id] }));
+const shopList = (user) => Object.entries(C.NPC_SHOP).map(([id, lim]) => ({ id, limit: lim, bought: Inv.dailyGet(user, `npcbuy:${id}`), price: buyUnit(id), item: I.BY_ID[id] }));
 function buy(user, id, n = 1) {
   n = int(n); const lim = C.NPC_SHOP[id]; if (!lim) return { ok: false, msg: 'NPC không bán vật phẩm này.' };
   if (!(n > 0)) return { ok: false, msg: 'Số lượng không hợp lệ.' };
   return D.transaction(() => {
     const bought = Inv.dailyGet(user, `npcbuy:${id}`);
     if (bought + n > lim) return { ok: false, msg: `❌ Hôm nay NPC chỉ còn bán cho bạn **${Math.max(0, lim - bought)}** × ${I.BY_ID[id].name}.` };
-    const cost = Cat.buyPrice(id) * n; const me = Cu.getCultivator(user);
+    const cost = buyUnit(id) * n; const me = Cu.getCultivator(user);
     if (!me || me.linh_thach < cost) return { ok: false, msg: `❌ Cần ${fmtNum(cost)} Linh Thạch (hiện có ${fmtNum(me ? me.linh_thach : 0)}).` };
     if (!Cu.updateCultivator(user, { linh_thach: new Delta(-cost) }, { linh_thach: cost })) return { ok: false, msg: Cu.MSG_BALANCE_CHANGED };
     const got = Inv.add(user, id, n, { why: 'mua NPC' }); if (got < n) throw new Error('kho đầy');
@@ -92,4 +93,4 @@ function buy(user, id, n = 1) {
   });
 }
 
-module.exports = { blockReason, unitPrice, quote, sell, sellable, sellAll, previewAll, sellGear, shopList, buy, GOLD_CAP };
+module.exports = { blockReason, unitPrice, buyUnit, quote, sell, sellable, sellAll, previewAll, sellGear, shopList, buy, GOLD_CAP };

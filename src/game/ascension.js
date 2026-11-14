@@ -182,7 +182,8 @@ function phithangFailMessage(row) {
   return '⏳ Có một lệnh Phi Thăng khác của bạn vừa xử lý xong (hoặc dữ liệu vừa thay đổi). Hãy kiểm tra lại bằng `/dieukienphithang` rồi thử lại.';
 }
 
-function doPhithang(userId, guildId = 0) {
+/** Lõi phi thăng: trả chuỗi (thất bại) hoặc đối tượng { ok, tier, from, rank, title, text } (thành công). */
+function phithangCore(userId, guildId = 0) {
   const row = Cu.getCultivator(userId);
   const [gr, gs] = gateFor(row.world_tier);
   if (!isAtAscensionGate(row)) return `❌ Cần đạt ${R.realmDisplay(gr, gs)} mới có thể phi thăng.`;
@@ -228,11 +229,20 @@ function doPhithang(userId, guildId = 0) {
   const bcNote = newTier === 1 ? `\n${E.bicanhlinhgioi} **Hệ Thống Bí Cảnh Linh Giới đã mở khóa!** Dùng nút **Bí Cảnh Linh Giới** trong Chiến Đấu hoặc \`/bicanhlinhgioi\` để bắt đầu.` : '';
   const tgNote = newTier === 2 ? `\n${E.thiennhanngusuy} 👑 **PHI THĂNG TIÊN GIỚI THÀNH CÔNG!** Vượt qua Độ Kiếp, Thượng Cổ Thủ Hộ và Thiên Nhân Ngũ Suy — bạn chính thức bước vào hàng ngũ Chân Tiên.` : '';
   const speed = int((1 - R.worldMult(newTier)) * 100);
-  return `${first}${E.phithang}🎉 PHI THĂNG THÀNH CÔNG! Bạn rời khỏi ${R.worldTierName(row.world_tier)}, bước vào **${tierLabel}**!\n${R.worldTierFlavor(newTier)}\n` +
+  const text = `${first}${E.phithang}🎉 PHI THĂNG THÀNH CÔNG! Bạn rời khỏi ${R.worldTierName(row.world_tier)}, bước vào **${tierLabel}**!\n${R.worldTierFlavor(newTier)}\n` +
     `✅ Tu vi & cảnh giới **giữ nguyên** (${R.realmDisplay(row.realm_index, row.stage_index)}, **${fmtNum(row.tu_vi)}** tu vi) — KHÔNG reset về Luyện Khí, tiếp tục đột phá lên thẳng từ đây.\n` +
     `📊 Do ở ${tierLabel} nên mốc tu vi cần để đột phá tiếp theo tăng vọt lên **${fmtNum(nextReq)}** (tu luyện sẽ chậm hơn hẳn, giữ cân bằng game).\n` +
     `📉 Tốc độ tu luyện thường (Tu Luyện/Bế Quan) tại ${tierLabel} còn lại **${int(R.worldMult(newTier) * 100)}%** (giảm ${speed}% vĩnh viễn) — bù lại bằng Bí Cảnh Linh Giới.\n` +
     `💪 Buff thể chất (Sinh Mệnh/Công Kích/Phòng Ngự/Thân Pháp) mỗi lần đột phá cũng giảm còn ~40% mức cũ.\n🔓 Mở khóa công pháp, bí cảnh, tông môn và tài nguyên riêng của ${tierLabel}.\n🏅 Nhận danh hiệu **「${title}」**.${bcNote}${tgNote}`;
+  return { ok: true, tier: newTier, from: row.world_tier, rank: myRank, title, text };
 }
 
-module.exports = { isAtAscensionGate, doVuotthienkiep, doDanhPhithangSugia, doDanhThuongcoThuho, tiengioiChecklist, doVuotThiennhanngusuy, doPhithang, gateFor };
+/** v17.2: kết quả có cấu trúc để giao diện chiếu hiệu ứng (ui/ascendFx). Thất bại → { ok:false, text }. */
+function doPhithangEx(userId, guildId = 0) {
+  const r = phithangCore(userId, guildId);
+  return typeof r === 'string' ? { ok: false, tier: 0, text: r } : r;
+}
+/** Giữ nguyên chữ ký cũ (trả chuỗi) cho mọi nơi gọi cũ. */
+const doPhithang = (userId, guildId = 0) => doPhithangEx(userId, guildId).text;
+
+module.exports = { doPhithangEx, isAtAscensionGate, doVuotthienkiep, doDanhPhithangSugia, doDanhThuongcoThuho, tiengioiChecklist, doVuotThiennhanngusuy, doPhithang, gateFor };

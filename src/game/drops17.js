@@ -26,7 +26,7 @@ function luckMult(row, extra = 0) {
 function roll(user, source, opts = {}) {
   const d = C.DROPS[source]; if (!d) return { got: {}, text: '' };
   const row = opts.row || Cu.getCultivator(user);
-  const pm = luckMult(row, opts.extra || 0);
+  const pm = luckMult(row, opts.extra || 0) * (opts.noAdminMult ? 1 : require('./admin17').dropMult());   // v17.2: hệ số /quantri (kinh tế × sự kiện); trần cap/ngày·tuần·phẩm cấp vẫn áp dụng
   const got = {};
   for (const [id, p, lo, hi, lim] of d.rolls) {
     const it = I.BY_ID[id]; if (!it) continue;

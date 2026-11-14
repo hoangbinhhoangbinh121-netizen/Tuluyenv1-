@@ -2,6 +2,8 @@
 /** Mẫu Nhân vật (spec §3.1) — chia 8 tab, KHÔNG nhồi mọi dữ liệu vào một Embed. */
 const K = require('../../game/constants');
 const R = require('../../game/realm');
+const { stageEmoji } = require('../../game/emoji');
+const stageIco = (row) => { const e = stageEmoji(row.realm_index, row.stage_index); return e ? ` ${e}` : ''; };   // v18.0: emoji tiểu cảnh giới (Sơ/Trung/Hậu Kỳ/Viên Mãn)
 const Cu = require('../../game/cultivator');
 const CP = require('../../game/congphap');
 const D = require('../../db');
@@ -38,7 +40,7 @@ function tongquan(user, row) {
     description: `${world} · ${row.sect_id ? getSectName(row.sect_id) : 'Tán Tu'}`,
     thumbnail: user.displayAvatarURL ? user.displayAvatarURL() : undefined,
     fields: [
-      { name: 'CẢNH GIỚI', value: `**${R.realmDisplay(row.realm_index, row.stage_index)}**`, inline: false },
+      { name: 'CẢNH GIỚI', value: `**${R.realmDisplay(row.realm_index, row.stage_index)}**${stageIco(row)}`, inline: false },
       { name: `${E.linhngo} Tu vi`, value: `${progressBar(row.tu_vi, required, { kind: 'tuvi' })}\n${exp(row.tu_vi, required)} EXP`, inline: false },
       { name: `${E.hp} Sinh mệnh`, value: `${progressBar(curHp, maxHp, { kind: 'hp' })}\n${exp(curHp, maxHp)}`, inline: false },
       { name: `${E.satthuong} Lực chiến`, value: `${progressBar(luc, moc, { kind: 'lucchien' })}\n**${num(luc)}** (mốc: ${num(moc)})`, inline: false },
@@ -67,7 +69,7 @@ function canhgioi(user, row) {
     cat: 'dotpha', status: 'Cảnh giới', title: 'Cảnh Giới Đột Phá',
     fields: [
       { name: 'Cảnh giới hiện tại', value: `**${R.realmDisplay(row.realm_index, row.stage_index)}**`, inline: true },
-      { name: 'Cảnh giới tiếp theo', value: nxt ? `**${R.realmDisplay(nxt[0], nxt[1])}**` : '**Đã đạt tối cao**', inline: true },
+      { name: 'Cảnh giới tiếp theo', value: nxt ? `**${R.realmDisplay(nxt[0], nxt[1])}**` : '**Đã đạt đỉnh cao nhất hiện tại**', inline: true },
       { name: 'Tiến độ', value: `${progressBar(row.tu_vi, required, { kind: 'tuvi' })}\n${exp(row.tu_vi, required)} EXP`, inline: false },
       { name: 'Điều kiện đột phá', value: checklist(row), inline: false },
       statField('dotpha', 'Tỉ lệ ước tính', pct(rate), { inline: true }),

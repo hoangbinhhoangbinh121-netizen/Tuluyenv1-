@@ -9,7 +9,7 @@ for (let r = 1; r < K.REALMS.length; r++) {
   const cnt = K.totalStageCount(r);
   for (let s = 0; s < cnt; s++) for (const w of [0, 1, 2]) {
     const exp = (r > K.DOKIEP_REALM_IDX || (r === K.DOKIEP_REALM_IDX && s === K.DOKIEP_VIENMAN_STAGE)) ? 7 : 1;
-    assert.strictEqual(R.tuViRequired(r, s, w), Math.trunc(Math.trunc(R.tuViRequiredBase(r, s, w) * K.EXP_REQUIRED_MULT * (R.isMajorGate(r, s) ? K.EXP_GATE_MAJOR_MULT : K.EXP_GATE_MINOR_MULT)) * 0 + raw(r, s, w) * exp), `r${r} s${s} w${w}`);
+    assert.strictEqual(R.tuViRequired(r, s, w), Math.min(K.TU_VI_REQUIRED_CAP, Math.trunc(raw(r, s, w) * exp)), `r${r} s${s} w${w}`);   // v18.0: có trần chống tràn số
     assert.strictEqual(R.tienExpMult(r, s), exp); n++;
   }
 }

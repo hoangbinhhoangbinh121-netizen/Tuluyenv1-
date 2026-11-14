@@ -1,4 +1,8 @@
-# Tiên Giới Bot v17.1 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v18.0 — Node.js + discord.js + SQLite
+
+> **v18.0** — MỞ RỘNG CẢNH GIỚI: từ 15 lên **29 đại cảnh giới** (… Đại La Kim Tiên → Chuẩn Tiên Vương · Tiên Vương · Chuẩn Tiên Tôn · Tiên Tôn · Chuẩn Tiên Đế · **Tiên Đế** · Chuẩn Tiên Tổ · Tiên Tổ · Chuẩn Đạo Tổ · Đạo Tổ · Chuẩn Thiên Đạo · Thiên Đạo · Đại Đạo Chí Tôn · Vô Thượng Chí Tôn · **Siêu Thoát**), từ Chân Tiên trở lên mỗi cảnh giới đúng 4 tiểu cảnh giới Sơ Kỳ/Trung Kỳ/Hậu Kỳ/Viên Mãn. Siêu Thoát Viên Mãn là đỉnh cao nhất hiện tại. **Migration tự động** (có sao lưu, chạy 1 lần, đối chiếu, rollback): Tiên Đế cũ (index 14) → Tiên Đế mới (index 19) Viên Mãn — không mất dữ liệu. 14 emoji cảnh giới mới + 4 emoji tiểu cảnh giới. Chi tiết: `BAO_CAO_V18.md`.
+
+> **v17.2** — (1) Hiệu ứng **Phi Thăng Tiên Giới**: 5 cảnh pixel động (cảnh báo → Thiên Môn → Thiên Kiếp → độ kiếp thành công → Tiên Giới đón khách) rồi cảnh cuối kèm kết quả; chạy SAU khi giao dịch đã commit nên lỗi ảnh không ảnh hưởng dữ liệu. (2) Admin: `/quantri` — một lệnh có menu + biểu mẫu: cho/thu vật phẩm V17, cho trang bị, đặt cấp nghề, hoàn tất lò; đặt cảnh giới/tu vi/Linh Thạch/Linh Tinh, hồi phục; chỉnh EXP đột phá, hệ số Tiên, rơi đồ, giá NPC ngay trong game; sự kiện tăng tốc tu luyện / tăng tỉ lệ rơi có thời hạn; thông báo toàn server; nhật ký admin (`admin_log17`).
 
 > **v17.1** — Đột phá TRÊN Độ Kiếp Viên Mãn (cửa ải Độ Kiếp Viên Mãn → Chân Tiên và toàn bộ cảnh giới Tiên) cần tu vi **x7** (`TIEN_EXP_MULT`, chỉnh bằng env; tốc độ/phần thưởng tu vi không đổi).
 

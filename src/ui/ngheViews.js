@@ -332,7 +332,7 @@ function viewInv(uid, arg = '') {
   rows.push(rowOf(cm));
   if (slice.length) {
     const im = new StringSelectMenuBuilder().setCustomId(cid(uid, 'isel')).setPlaceholder('Xem chi tiết vật phẩm…');
-    im.addOptions(slice.map((x) => ({ label: `${x.item.name}${x.q ? ` (${I.qName(x.q)})` : ''} ×${x.qty}`.slice(0, 100), value: `${x.id}:${x.q}`, description: `${x.item.rarity_name} · NPC ${fmtNum(Cat.sellPrice(x.id, x.q))} LT`.slice(0, 100), emoji: optEmoji(Emo.item(x.id)) })));
+    im.addOptions(slice.map((x) => ({ label: `${x.item.name}${x.q ? ` (${I.qName(x.q)})` : ''} ×${x.qty}`.slice(0, 100), value: `${x.id}:${x.q}`, description: `${x.item.rarity_name} · NPC ${fmtNum(Npc.unitPrice(x.id, x.q))} LT`.slice(0, 100), emoji: optEmoji(Emo.item(x.id)) })));
     rows.push(rowOf(im));
   }
   rows.push(rowOf(btn(cid(uid, 'v', 'inv', `${cat}:${page - 1}`), 'Trước', '⬅️', ButtonStyle.Secondary, page <= 0), btn(cid(uid, 'v', 'inv', `${cat}:${page + 1}`), 'Sau', '➡️', ButtonStyle.Secondary, page >= pages - 1),
@@ -349,8 +349,8 @@ function viewItem(uid, arg) {
   const src = Cat.sources(id).map(Cat.srcLabel); const use = Cat.usages(id).map(Cat.useLabel);
   if (src.length) e.addFields({ name: '📥 Nguồn nhận', value: listFit(src.map((x) => `• ${x}`), 1000, (n) => `… +${n}`) });
   if (use.length) e.addFields({ name: '📤 Công dụng', value: listFit(use.map((x) => `• ${x}`), 1000, (n) => `… +${n}`) });
-  const price = Cat.sellPrice(id, q); const block = Npc.blockReason(uid, id, q);
-  e.addFields({ name: '🏪 NPC', value: `${block ? `⛔ ${block}` : `Thu mua **${fmtNum(price)}** Linh Thạch/viên`}${C.NPC_SHOP[id] ? `\nBán: **${fmtNum(Cat.buyPrice(id))}** LT (≤ ${C.NPC_SHOP[id]}/ngày)` : ''}` });
+  const price = Npc.unitPrice(id, q); const block = Npc.blockReason(uid, id, q);
+  e.addFields({ name: '🏪 NPC', value: `${block ? `⛔ ${block}` : `Thu mua **${fmtNum(price)}** Linh Thạch/viên`}${C.NPC_SHOP[id] ? `\nBán: **${fmtNum(Npc.buyUnit(id))}** LT (≤ ${C.NPC_SHOP[id]}/ngày)` : ''}` });
   const s = `${id}:${q}`; const rows = [];
   const useBtn = Dan.isPill(id) ? btn(cid(uid, 'pu', s, '1'), 'Dùng', '💊', ButtonStyle.Success, have < 1)
     : LEGACY_PILLS.includes(id) ? btn(cid(uid, 'pu', s, '1'), 'Dùng', '💊', ButtonStyle.Success, have < 1)
@@ -367,7 +367,7 @@ function viewSellConfirm(uid, arg) {
   const [id, q0, n0] = String(arg).split(':'); const it = I.BY_ID[id]; if (!it) return viewInv(uid);
   const q = Number(q0) || 0; const have = Inv.qty(uid, id, q); const n = n0 === 'all' ? have : Math.min(have, Number(n0) || 1);
   const e = E0('💰 Xác nhận bán', 0xe74c3c);
-  const total = Cat.sellPrice(id, q) * n;
+  const total = Npc.unitPrice(id, q) * n;
   e.setDescription(`Bán **${fmtNum(n)} × ${it.name}**${q ? ` (${I.qName(q)})` : ''} cho NPC → nhận **${fmtNum(total)}** Linh Thạch.\n${it.rarity >= 4 ? `⚠️ Đây là vật phẩm **${it.rarity_name}** — chắc chắn muốn bán?\n` : ''}**Không thể hoàn tác.**`);
   return shell(uid, 'sellc', e, [rowOf(btn(cid(uid, 'isell', `${id}:${q}`, String(n)), 'Xác nhận bán', '✅', ButtonStyle.Danger, n < 1), btn(cid(uid, 'v', 'item', `${id}:${q}`), 'Huỷ', '↩️'))]);
 }

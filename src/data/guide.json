@@ -22,7 +22,7 @@
       ],
       [
         "dotpha",
-        "Đột phá lên cảnh giới kế tiếp khi đã đủ tu vi."
+        "Đột phá lên cảnh giới kế tiếp khi đã đủ tu vi. Có 29 đại cảnh giới (Phàm Nhân → Siêu Thoát); từ Chân Tiên trở lên mỗi cảnh giới có 4 tiểu cảnh giới Sơ Kỳ · Trung Kỳ · Hậu Kỳ · Viên Mãn. Chỉ đột phá sang đại cảnh giới kế khi đã Viên Mãn; Siêu Thoát Viên Mãn là đỉnh cao nhất hiện tại."
       ],
       [
         "canngo",
@@ -241,7 +241,7 @@
   {
     "key": "phithang",
     "label": "🌌 Phi Thăng",
-    "desc": "Vượt Thiên Kiếp, thử thách và phi thăng lên thế giới cao hơn.",
+    "desc": "Vượt Thiên Kiếp, thử thách và phi thăng lên thế giới cao hơn. Phi Thăng lên Tiên Giới có hiệu ứng pixel động riêng (Thiên Môn, Thiên Kiếp, Tiên Cung).",
     "commands": [
       [
         "dieukienphithang",

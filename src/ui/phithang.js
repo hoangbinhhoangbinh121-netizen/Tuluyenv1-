@@ -62,7 +62,11 @@ function phiThangGroupView(userId) {
   const v = new View({ ownerId: userId, timeout: 120 });
   const eph = (i, c) => i.reply({ content: c, flags: EPHEMERAL });
   v.button({ key: 'dk', label: 'Điều Kiện', emoji: E.dieukien, style: 'grey' }, (i) => i.reply({ embeds: [buildAscensionStatusEmbed(Cu.getCultivator(userId))], flags: EPHEMERAL }));
-  v.button({ key: 'pt', label: 'Phi Thăng', emoji: E.phithang, style: 'blurple' }, (i) => eph(i, A.doPhithang(userId, i.guildId || 0)));
+  v.button({ key: 'pt', label: 'Phi Thăng', emoji: E.phithang, style: 'blurple' }, async (i) => {
+    const res = A.doPhithangEx(userId, i.guildId || 0);
+    if (require('./ascendFx').isTienGioi(res)) return require('./ascendFx').playForButton(i, res);   // v17.2: hiệu ứng phi thăng Tiên Giới
+    return eph(i, res.text);
+  });
   v.button({ key: 'tk', label: 'Vượt Thiên Kiếp', emoji: E.thienkiep, style: 'red' }, (i) => i.reply({ content: `${E.thienkiep} Chọn Thiên Kiếp muốn vượt:`, components: chooserView(userId, 'thienkiep').components(), flags: EPHEMERAL }));
   v.button({ key: 'sg', label: 'Sứ Giả', emoji: E.linhgioilenh, style: 'secondary' }, (i) => i.reply({ content: '👺 Chọn Sứ Giả muốn khiêu chiến:', components: chooserView(userId, 'sugia').components(), flags: EPHEMERAL }));
   v.button({ key: 'ns', label: 'Thiên Nhân Ngũ Suy', emoji: E.thiennhanngusuy, style: 'grey' }, (i) => eph(i, A.doVuotThiennhanngusuy(userId)));

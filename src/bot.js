@@ -19,6 +19,7 @@ require('./commands/admin');
 require('./commands/adminXem');
 require('./commands/dan');
 require('./commands/nghe');
+require('./commands/quantri');
 require('./commands/pets');
 require('./commands/kho');
 require('./commands/chiendau');
@@ -129,7 +130,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v17.1 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v18.0 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);
@@ -137,10 +138,17 @@ async function main() {
   if (/\s|^["']|["']$/.test(TOKEN)) console.warn('⚠️ DISCORD_TOKEN có dấu cách/dấu nháy thừa — hãy xoá đi nếu bot không đăng nhập được.');
   const driver = D.initDb();
   console.log(`🗄️ SQLite: ${D.DB_PATH} (driver: ${driver})`);
+  // v18.0: PHẢI chạy đầu tiên (trước mọi thao tác đọc nhân vật): chuyển Tiên Đế cũ (cảnh giới 14) → Tiên Đế mới (cảnh giới 19, Viên Mãn). Có sao lưu + chống chạy lặp.
+  try {
+    const m = require('./game/migrateV18').run();
+    if (m.aborted) { console.error(m.error); console.error('⛔ Dừng khởi động để bảo vệ dữ liệu: hãy kiểm tra dung lượng ổ đĩa/quyền ghi thư mục db_backups rồi chạy lại.'); process.exit(1); }
+    console.log(m.skipped ? '🌌 Cảnh giới v18: đã migrate trước đó.' : `🌌 Cảnh giới v18: chuyển ${m.moved} người Tiên Đế cũ → Tiên Đế (Viên Mãn)${m.assumed ? ' [dữ liệu đã ở dạng mới]' : ''}. Sao lưu: ${m.backup || '—'}`);
+  } catch (e) { console.error('🚨 migrate cảnh giới v18 lỗi — dừng để bảo vệ dữ liệu:', e); process.exit(1); }
   try { const m = require('./game/talentOps').migrateAll(); console.log(`🧬 Thể Chất/Linh Căn v13.9: ${m.total} nhân vật, đã đồng bộ hồ sơ cho ${m.written} người.`); } catch (e) { console.error('⚠️ migrate Thể Chất/Linh Căn:', e); }
   try { const n = require('./game/pets').migrateAll(); console.log(`🐾 Linh Thú v14.0: đã chuyển đổi ${n} Linh Thú kiểu cũ sang hệ thống mới.`); } catch (e) { console.error('⚠️ migrate Linh Thú:', e.message); }
   try { const m = require('./game/migrateV16').run(); console.log(m.skipped ? '📜 Công Pháp v16: đã migrate trước đó.' : `📜 Công Pháp v16: chuẩn hoá ${m.fixed}/${m.players} người có công pháp (bỏ ô lỗi: ${m.cleaned}). Sao lưu: ${m.backup || 'KHÔNG sao lưu được — xem log'}`); } catch (e) { console.error('⚠️ migrate Công Pháp v16:', e.message); }
   try { const m = require('./game/migrateV17').run(); console.log(m.skipped ? '🏮 Bách Nghề v17: đã migrate trước đó.' : `🏮 Bách Nghề v17: ${m.players} người chơi, dữ liệu V16 nguyên vẹn (${m.ok ? 'đối chiếu KHỚP' : 'LỆCH — xem log'}). Sao lưu: ${m.backup || 'KHÔNG sao lưu được — xem log'}`); } catch (e) { console.error('⚠️ migrate v17:', e.message); }
+  try { require('./game/admin17').applyEco(); } catch (e) { console.error('⚠️ áp hệ số kinh tế /quantri:', e.message); }   // v17.2: nạp hệ số EXP admin đã chỉnh
   await syncPixelEmoji();
 
   process.on('unhandledRejection', (e) => console.error('⚠️ unhandledRejection:', e));

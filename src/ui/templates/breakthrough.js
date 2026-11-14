@@ -37,7 +37,7 @@ function checklist(row) {
   const line = (ok, text) => `${ok ? E.xacnhan : E.tuchoi} ${text}`;
   return [
     line(row.tu_vi >= required, 'Tu vi đạt yêu cầu'),
-    line(!!nxt, nxt ? 'Còn cảnh giới phía trên' : 'Đã đạt cảnh giới tối cao'),
+    line(!!nxt, nxt ? 'Còn cảnh giới phía trên' : 'Đã đạt cảnh giới cao nhất hiện tại (Siêu Thoát Viên Mãn)'),
     line(!(row.last_dotpha_fail && (Date.now() / 1000 - row.last_dotpha_fail) < 600), 'Không còn bị khóa dưỡng thương'),
   ].join('\n');
 }

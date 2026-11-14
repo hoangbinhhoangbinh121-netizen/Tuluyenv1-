@@ -34,6 +34,8 @@ const CREATE_V17 = [
   `CREATE TABLE IF NOT EXISTS fx_buffs (
      user_id TEXT NOT NULL, key TEXT NOT NULL, fx TEXT NOT NULL, until REAL NOT NULL, charges INTEGER NOT NULL DEFAULT 0, q INTEGER NOT NULL DEFAULT 2, kind TEXT NOT NULL DEFAULT 'pill',
      PRIMARY KEY (user_id, key))`,
+  // Nhật ký thao tác admin (v17.2 — /quantri)
+  `CREATE TABLE IF NOT EXISTS admin_log17 (id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, admin_id TEXT NOT NULL, action TEXT NOT NULL, target TEXT, detail TEXT)`,
   // Linh Điền
   `CREATE TABLE IF NOT EXISTS linh_dien (user_id TEXT PRIMARY KEY, level INTEGER NOT NULL DEFAULT 1, created_at REAL)`,
   `CREATE TABLE IF NOT EXISTS linh_dien_plot (

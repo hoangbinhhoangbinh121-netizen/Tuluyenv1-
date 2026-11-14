@@ -57,3 +57,8 @@ Toàn bộ 147 emoji V17 (`i17_/c17_/r17_/p17_/s17_`) được cắt từ **shee
 
 ## V17.1
 Đột phá TRÊN Độ Kiếp Viên Mãn cần tu vi x7 (`TIEN_EXP_MULT`, env chỉnh được): áp cho cửa ải Độ Kiếp Viên Mãn → Chân Tiên và mọi tầng Chân Tiên → Tiên Đế. Tốc độ tu luyện/phần thưởng tu vi (mốc GỐC) và mốc Lực Chiến Thiên Kiếp không đổi, nên Tiên tu chậm hơn đúng 7 lần.
+
+## V17.2
+**Hiệu ứng Phi Thăng Tiên Giới** (`src/ui/ascendFx.js`, 6 GIF trong `assets/phithang/`): chỉ chiếu khi phi thăng LÊN Tiên Giới (bậc 2) thành công, ở `/phithang` (slash/tiền tố) và nút Phi Thăng. Giao dịch phi thăng (`ascension.doPhithangEx`) commit xong rồi mới chiếu; nếu gửi ảnh lỗi thì vẫn giao kết quả chữ. Phi thăng Linh Giới giữ nguyên (không hiệu ứng). Công khai trong kênh (không ẩn) để mọi người thấy. Mỗi lần chiếu ≈ 18 giây, 6 lần sửa tin nhắn.
+**/quantri** (admin của bot, `ADMIN_CODE_APPROVER_IDS`): 6 mục — Tổng quan, Vật phẩm & Nghề, Nhân vật, Kinh tế, Sự kiện & Thông báo, Nhật ký. Hệ số kinh tế lưu `bot_settings` (khóa `eco_*`, `ev_drop_*`), nạp lại khi khởi động, có biên an toàn: EXP gốc 1–100000, tiểu/đại cảnh giới 0.01–10, Tiên 1–1000, rơi đồ 0–5, giá thu NPC 0.1–3, giá bán NPC 0.1–5. Hệ số rơi đồ chỉ nhân xác suất — trần cap/ngày/tuần/phẩm cấp vẫn áp dụng. Mọi thao tác ghi `admin_log17`.
+**Giới hạn đã biết:** chưa thử trên Discord thật (chỉ mock nghiêm ngặt); hiệu ứng GIF cần quyền gửi file/đính kèm của bot trong kênh; nếu kênh chặn đính kèm thì chỉ hiện kết quả chữ. Không có chức năng "reset nhân vật" trong `/quantri` (đã có `/restore_db`, `/usedb`).

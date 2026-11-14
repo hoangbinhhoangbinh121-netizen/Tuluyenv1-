@@ -55,10 +55,11 @@ function doDotpha(userId) {
     return `⏳ Vừa đột phá thất bại, cần dưỡng thương thêm **${F.fmtTime(remainFail)}** mới thử lại được.\n${E.phagioidan} Dùng nút **Dùng Đan Dược** để cắn Đan Dược Phá Giới, bỏ tối đa 5 phút mỗi viên.`;
   }
   const realmIdx = row.realm_index; const stageIdx = row.stage_index;
+  const nxt = R.nextStage(realmIdx, stageIdx);
+  // v18.0: Siêu Thoát Viên Mãn là đỉnh cao nhất hiện tại — kiểm tra TRƯỚC điều kiện tu vi để báo đúng lý do.
+  if (nxt === null) return `♾️ Bạn đã đạt đến **${R.realmDisplay(K.MAX_REALM_IDX, K.totalStageCount(K.MAX_REALM_IDX) - 1, true)}** — cảnh giới cao nhất hiện tại, không thể đột phá thêm!`;
   const required = R.tuViRequired(realmIdx, stageIdx, row.world_tier);
   if (row.tu_vi < required) return `❌ Chưa đủ tu vi để đột phá (cần ${required}, hiện có ${row.tu_vi}).`;
-  const nxt = R.nextStage(realmIdx, stageIdx);
-  if (nxt === null) return '♾️ Bạn đã đạt đến Tiên Đế, cảnh giới tối cao!';
 
   const fxd = X17.get(row);   // v17: trang bị / Phá Cảnh Đan / Hộ Mạch Đan / Ngưng Thần Đan
   let rate = K.BASE_BREAKTHROUGH_RATE - realmIdx * 0.005 + (row.ngo_tinh + fxd.ngo) * 0.01 + row.khi_van * 0.005;
