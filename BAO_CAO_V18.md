@@ -1,4 +1,8 @@
-# BÁO CÁO V18.0 — Mở rộng Cảnh Giới (29 đại cảnh giới)
+# BÁO CÁO V18.0 / V18.1 / V18.2 — Mở rộng Cảnh Giới (29 đại cảnh giới)
+
+> **V18.2**: tăng EXP đột phá của các cảnh giới **Tiên cao = từ Chuẩn Tiên Vương (index 14) trở lên** thêm **x5**, NHÂN CHỒNG với x7 của V17.1 → tổng **x35** so với trước V17.1. Hệ số `HIGH_TIEN_EXP_MULT` (mặc định 5; `constants.js`, env cùng tên, hoặc `/quantri` → Kinh tế → "Hệ số Tiên" có ô thứ hai). Chỉ đổi mốc tu vi đột phá (`R.tuViRequired`), tốc độ/phần thưởng không đổi (như V17.1). Chân Tiên … Đại La Kim Tiên vẫn x7. Để mốc Siêu Thoát Viên Mãn ở Tiên Giới (thế giới bậc 2) không chạm trần 9×10^15, hệ số tăng mốc mỗi đại cảnh giới sau Đại La giảm nhẹ từ ×1,2009 xuống ×1,165. Sửa thêm: ô "Đặt cảnh giới" của `/quantri` ghi nhầm "0–14" → "0–28".
+
+> **V18.1**: emoji cảnh giới **14–28 dùng bộ tranh do người dùng tự vẽ** (bảng "Tu Tiên Cảnh Giới"), cắt bằng `scripts/build_emoji_from_sheet_v18_canhgioi.py` từ `assets/source/canhgioi_sheet_v18_1.png`; `canhgioi_19` (Tiên Đế) cũng dùng tranh mới trong bảng. Emoji 0–13 và 4 emoji tiểu cảnh giới giữ nguyên. Không đổi gì khác so với V18.0.
 
 > Nền: V17.2 (đã có x7 EXP đột phá Tiên, hiệu ứng Phi Thăng, `/quantri`). Mọi cơ chế/hệ số V17.1 giữ nguyên, trừ MỘT chỗ buộc phải đổi về kỹ thuật (xem mục 3).
 
@@ -34,13 +38,13 @@ Tiên Đế cũ (`realm_index=14`, không tiểu cảnh giới) → Tiên Đế 
 
 ## 3. Công thức (thay đổi kỹ thuật BẮT BUỘC)
 Công thức cũ `100·3^realm·50^thế_giới` ×hệ số tốc độ `1,35^realm` sẽ TRÀN số nguyên ở Siêu Thoát (3^28 ≫ 2^53) và làm linh thạch bế quan lạm phát ~100 lần. Vì vậy **chỉ từ SAU Đại La Kim Tiên (13)**:
-- Mốc tu vi mỗi đại cảnh giới ×3^(1/6) (thay vì ×3); hệ số tốc độ ×1,35^(1/6) (thay vì ×1,35). Hệ quả: Tiên Đế mới (19) có mức tu vi/tốc độ/linh thạch **đúng bằng Tiên Đế cũ** → người chuyển sang không bị lạm phát/thiếu hụt.
+- Mốc tu vi mỗi đại cảnh giới ×1,165 (V18.0: ×3^(1/6)≈1,2009; thay vì ×3); hệ số tốc độ ×1,35^(1/6) (thay vì ×1,35). Hệ quả: Tiên Đế mới (19) có tốc độ/linh thạch **đúng bằng Tiên Đế cũ** → người chuyển sang không bị lạm phát/thiếu hụt.
 - Trần mốc tu vi `TU_VI_REQUIRED_CAP = 9×10^15` (< 2^53). Chỉ chạm trần ở thế giới bậc ≥3 cảnh giới rất cao (trước đây các trường hợp này đã sai số do vượt 2^53).
 - Cảnh giới 0–13: giá trị **không đổi** (test đối chiếu). Tỉ lệ đột phá `0,72 − 0,005·realm` (sàn 15%), chỉ số/realm, x7 EXP Tiên, Cửu Lôi Kiếp… giữ nguyên.
 - Vì tu vi mỗi bậc không còn ×3, một người Tiên Đế cũ tích tu vi lớn có thể đủ tu vi cho vài bậc kế (vẫn phải ĐỘT PHÁ từng bậc, có tỉ lệ + Cửu Lôi Kiếp, không tự nhảy).
 
 ## 4. Emoji
-- `canhgioi_0–13`: giữ nguyên. `canhgioi_19` = **vương miện Tiên Đế cũ (giữ nguyên tranh)**. `canhgioi_14–18, 20–28`: 14 tranh pixel 128×128 mới (vương ấn đang hình thành · vương miện bạc-ngọc · thần kích · thánh liên · đế ấn · bản nguyên hỗn độn · cổ thụ bản nguyên · Thái Cực đang hình thành · Thái Cực hoàn chỉnh · thiên nhãn thức tỉnh · thiên nhãn hoàn chỉnh · vòng xoáy đại đạo · thần ấn tối cao · cổng vượt ngoài vũ trụ). Tiểu cảnh giới: `so_ky, trung_ky, hau_ky, vien_man` (đĩa đầy 1/4 → trọn vẹn). Script vẽ: `scripts/make_pixel_emoji_v18_canhgioi.py`.
+- `canhgioi_0–13`: giữ nguyên. (V18.0 tự vẽ 14–28; **V18.1 thay bằng tranh của người dùng**, bao gồm cả `canhgioi_19`.) Tranh V18.0 từng gồm (vương ấn đang hình thành · vương miện bạc-ngọc · thần kích · thánh liên · đế ấn · bản nguyên hỗn độn · cổ thụ bản nguyên · Thái Cực đang hình thành · Thái Cực hoàn chỉnh · thiên nhãn thức tỉnh · thiên nhãn hoàn chỉnh · vòng xoáy đại đạo · thần ấn tối cao · cổng vượt ngoài vũ trụ). Tiểu cảnh giới: `so_ky, trung_ky, hau_ky, vien_man` (đĩa đầy 1/4 → trọn vẹn). Script vẽ: `scripts/make_pixel_emoji_v18_canhgioi.py`.
 - `realmEmoji(0..28)` (kẹp ngoài khoảng), `stageEmoji()`; fallback Unicode cho đủ 29 + 4 trong `src/data/emoji_fallback.json`.
 - **Vấn đề trên Discord thật**: emoji ứng dụng `tg7_canhgioi_14` ĐÃ tồn tại với tranh vương miện cũ và bot không bao giờ thay emoji đã có. Giải pháp: cảnh giới 14 mới tải lên dưới tên `tg7_canhgioi_14_v18`; bộ nhớ đệm ID cũ bị bỏ qua. Không cần xoá gì trên Discord (emoji `tg7_canhgioi_14` cũ nằm không dùng, xoá tay được nếu muốn).
 

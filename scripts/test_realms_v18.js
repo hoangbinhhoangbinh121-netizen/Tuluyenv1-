@@ -44,10 +44,14 @@ for (const [r, s, w] of [[1, 0, 0], [5, 7, 1], [9, 22, 1], [10, 0, 2], [13, 3, 2
 ok(R.tuViRequiredBase(13, 0, 2) === Math.trunc(100 * 3 ** 13 * 50 ** 2), 'base idx13 giữ nguyên'); ok(R.realmSpeedMult(13) === 16 * 1.35 ** 4 || Math.abs(R.realmSpeedMult(13) - K.REALM_SPEED_MULT[9] * 1.35 ** 4) < 1e-6, 'speed idx13 giữ nguyên');
 // Tiên Đế mới (19) = đúng mức Tiên Đế cũ (14 cũ) về tốc độ (không lạm phát linh thạch)
 ok(Math.abs(R.realmSpeedMult(19) - K.REALM_SPEED_MULT[9] * 1.35 ** 5) < 1e-6, 'tốc độ Tiên Đế mới = Tiên Đế cũ');
-ok(Math.abs(R.tuViRequiredBase(19, 0, 2) / R.tuViRequiredBase(13, 0, 2) - 3) < 0.01, 'mốc Tiên Đế mới ≈ ×3 Đại La (đúng 1 bậc cũ)');
+ok(Math.abs(R.tuViRequiredBase(19, 0, 2) / R.tuViRequiredBase(13, 0, 2) - K.HIGH_REALM_GROWTH ** 6) < 0.01, 'mốc tăng ×HIGH_REALM_GROWTH mỗi bậc sau Đại La');
 ok(R.realmSpeedMult(28) < 200, `speed Siêu Thoát hợp lý: ${R.realmSpeedMult(28)}`);
-// Cơ chế v17.1 vẫn còn: x7 từ Độ Kiếp Viên Mãn trở lên
-ok(R.tienExpMult(9, 22) === 7 && R.tienExpMult(9, 21) === 1 && R.tienExpMult(28, 3) === 7 && R.tienExpMult(14, 0) === 7, 'x7 EXP Tiên');
+// Cơ chế v17.1 vẫn còn: x7 từ Độ Kiếp Viên Mãn trở lên; v18.2: Tiên cao (từ Chuẩn Tiên Vương) thêm x5 → x35
+ok(R.tienExpMult(9, 22) === 7 && R.tienExpMult(9, 21) === 1 && R.tienExpMult(10, 0) === 7 && R.tienExpMult(13, 3) === 7, 'x7 EXP Tiên (Chân Tiên … Đại La Kim Tiên)');
+ok(K.HIGH_TIEN_EXP_MULT === 5 && R.tienExpMult(14, 0) === 35 && R.tienExpMult(19, 2) === 35 && R.tienExpMult(28, 3) === 35, 'x35 EXP Tiên cao');
+// Siêu Thoát Viên Mãn ở Tiên Giới (thế giới bậc 2) vẫn DƯỚI trần (không bị phẳng hoá ở các cảnh giới cuối)
+ok(R.tuViRequired(28, 3, 2) < K.TU_VI_REQUIRED_CAP && R.tuViRequired(27, 3, 2) < R.tuViRequired(28, 3, 2), 'Tiên Giới: không chạm trần');
+ok(R.tuViRequired(14, 0, 2) === Math.trunc(R.tuViRequiredBase(14, 0, 2) * K.EXP_REQUIRED_MULT * K.EXP_GATE_MINOR_MULT * 35), 'công thức Tiên cao');
 // --- đột phá thật qua dotpha: đi liên tiếp từ Luyện Khí Tầng 1 tới Siêu Thoát Viên Mãn (ép may mắn), rồi bị chặn
 Cu.createCultivator(901);
 const origRand = Math.random; Math.random = () => 0.0001;
@@ -84,8 +88,9 @@ ok(EM.realmEmoji(99) === EM.realmEmoji(28) && EM.realmEmoji(-3) === EM.realmEmoj
 for (const k of ['so_ky', 'trung_ky', 'hau_ky', 'vien_man']) { ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'emoji', `${k}.png`)) && EM.FALLBACK[k], `emoji ${k}`); }
 ok(EM.stageEmoji(19, 0) && EM.stageEmoji(19, 0) !== EM.stageEmoji(19, 3) && EM.stageEmoji(1, 5) === '' && EM.stageEmoji(0, 0) === '', 'stageEmoji');
 ok(EM.remoteName('canhgioi_14') === 'tg7_canhgioi_14_v18' && EM.remoteName('canhgioi_13') === 'tg7_canhgioi_13' && EM.remoteName('canhgioi_14').length <= 32, 'tên emoji trên Discord');
-// canhgioi_19 = tranh vương miện của Tiên Đế cũ (giữ nguyên)
-ok(crc(19) === '5eeefd55934b6569f3811f427d4593f2', 'canhgioi_19 phải là vương miện Tiên Đế cũ'); ok(crc(14) !== crc(19), 'canhgioi_14 mới khác vương miện');
+// v18.1: emoji 14–28 là tranh người dùng tự vẽ (cắt từ sheet) — phải có nền trong suốt (alpha) và không rỗng
+for (let i = 14; i <= 28; i++) { const png = fs.readFileSync(path.join(__dirname, '..', 'assets', 'emoji', `canhgioi_${i}.png`)); ok(png[25] === 6, `canhgioi_${i}.png phải là RGBA`); ok(png.length > 3000, `canhgioi_${i}.png quá nhỏ`); }
+ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'source', 'canhgioi_sheet_v18_1.png')), 'thiếu sheet gốc canhgioi_sheet_v18_1.png');
 // cố định: realm cấp thấp (0–13) giữ nguyên ảnh? đã có trong git; kiểm tra tên file còn đủ
 ok(Object.keys(EM.FALLBACK).filter((k) => /^canhgioi_\d+$/.test(k)).length >= 29, 'fallback đủ 29');
 console.log(`✅ test_realms_v18 OK (${n} kiểm tra)`);

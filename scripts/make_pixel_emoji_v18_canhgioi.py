@@ -13,6 +13,7 @@ make_pixel_emoji_v18_canhgioi.py — vẽ emoji pixel cho 15 cảnh giới MỚI
   canhgioi_28 Siêu Thoát        cổng vượt ngoài vũ trụ
   so_ky / trung_ky / hau_ky / vien_man   4 tiểu cảnh giới (đĩa ngọc đầy 1/4, 1/2, 3/4, trọn vẹn)
 
+LƯU Ý v18.1: emoji cảnh giới 14–28 hiện dùng TRANH DO NGƯỜI DÙNG TỰ VẼ, cắt bằng scripts/build_emoji_from_sheet_v18_canhgioi.py — script này chỉ còn dùng để vẽ 4 emoji tiểu cảnh giới (vẽ cảnh giới 14–28 chỉ chạy khi chưa có sheet gốc).
 KHÔNG đụng canhgioi_0..13. Ghi luôn emoji Unicode dự phòng vào src/data/emoji_fallback.json.
 Chạy:  python3 scripts/make_pixel_emoji_v18_canhgioi.py [--sheet contact_sheet.png]
 """
@@ -347,8 +348,9 @@ def build(sheet=None):
     # Tiên Đế (19): giữ NGUYÊN tranh vương miện cũ. File canhgioi_19.png do bước chuyển (sao chép canhgioi_14 cũ) tạo — script KHÔNG ghi đè.
     if not os.path.exists(os.path.join(OUT, 'canhgioi_19.png')):
         raise SystemExit('thiếu canhgioi_19.png (bản sao vương miện Tiên Đế cũ): chạy `cp assets/emoji/canhgioi_14.png assets/emoji/canhgioi_19.png` TRƯỚC khi vẽ lại canhgioi_14')
-    for idx, (fn, _uni) in REALMS.items():
-        im = fn(); save(im, f'canhgioi_{idx}', OUT)
+    if not os.path.exists(os.path.join(OUT, '..', 'source', 'canhgioi_sheet_v18_1.png')):
+        for idx, (fn, _uni) in REALMS.items():
+            im = fn(); save(im, f'canhgioi_{idx}', OUT)
     for idx, uni in UNI.items(): fb[f'canhgioi_{idx}'] = uni
     for key, (frac, col, uni) in STAGES.items():
         save(stage_disc(frac, col, final=(frac >= 1)), key, OUT); fb[key] = uni

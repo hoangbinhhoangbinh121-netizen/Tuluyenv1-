@@ -35,7 +35,7 @@ const MODALS = {
   gear: { view: 'vp', title: 'Cho trang bị', fields: [U, { id: 't', label: 'Trang bị (tên hoặc mã)', maxLength: 80, placeholder: 'Thanh Phong Kiếm' }, { id: 'q', label: 'Phẩm chất 1–5 (mặc định 3)', required: false, maxLength: 1, placeholder: '3' }], run: (a, g) => A.gear(a, g('u'), g('t'), g('q')) },
   prof: { view: 'vp', title: 'Đặt cấp nghề', fields: [U, { id: 'p', label: 'Nghề', maxLength: 30, placeholder: 'Đan Sư / Luyện Khí Sư / Trận Pháp Sư / Linh Thực Sư' }, { id: 'l', label: 'Cấp 1–9', maxLength: 1, placeholder: '5' }, { id: 'e', label: 'EXP nghề (bỏ trống = đúng ngưỡng cấp)', required: false, maxLength: 12 }], run: (a, g) => A.profLevel(a, g('u'), g('p'), g('l'), g('e')) },
   jobs: { view: 'vp', title: 'Hoàn tất lò chế đang chạy', fields: [U], run: (a, g) => A.finishJobs(a, g('u')) },
-  realm: { view: 'nv', title: 'Đặt cảnh giới', fields: [U, { id: 'r', label: 'Cảnh giới (số 0–14 hoặc tên)', maxLength: 30, placeholder: 'Độ Kiếp  hoặc  9' }, { id: 's', label: 'Tầng (bắt đầu từ 1)', required: false, maxLength: 3, placeholder: '1' }], run: (a, g) => A.realm(a, g('u'), g('r'), g('s')) },
+  realm: { view: 'nv', title: 'Đặt cảnh giới', fields: [U, { id: 'r', label: 'Cảnh giới (số 0–28 hoặc tên)', maxLength: 30, placeholder: 'Độ Kiếp  hoặc  9' }, { id: 's', label: 'Tầng (bắt đầu từ 1)', required: false, maxLength: 3, placeholder: '1' }], run: (a, g) => A.realm(a, g('u'), g('r'), g('s')) },
   tuvi: { view: 'nv', title: 'Đặt tu vi', fields: [U, { id: 'n', label: 'Tu vi: số, +số, -số hoặc full', maxLength: 20, placeholder: 'full' }], run: (a, g) => A.tuvi(a, g('u'), g('n')) },
   lt: { view: 'nv', title: 'Đặt Linh Thạch', fields: [U, { id: 'n', label: 'Số: 1000000, +5000 hoặc -5000', maxLength: 20 }], run: (a, g) => A.currency(a, g('u'), 'linh_thach', g('n')) },
   lti: { view: 'nv', title: 'Đặt Linh Tinh', fields: [U, { id: 'n', label: 'Số: 100, +10 hoặc -10', maxLength: 20 }], run: (a, g) => A.currency(a, g('u'), 'linh_tinh', g('n')) },
@@ -45,7 +45,7 @@ const MODALS = {
     { id: 'b', label: `Tiểu cảnh giới (mặc định ${A.ORIG.minor})`, required: false, maxLength: 12 },
     { id: 'c', label: `Đại cảnh giới (mặc định ${A.ORIG.major})`, required: false, maxLength: 12 }],
   run: (a, g) => ['exp:a', 'minor:b', 'major:c'].map((x) => { const [k, f] = x.split(':'); return A.ecoSet(a, k, g(f)); }).filter((r) => !r.skip).map((r) => r.msg).join('\n') || 'ℹ️ Không có gì thay đổi.' },
-  tien: { view: 'kt', title: 'Hệ số cảnh giới Tiên', fields: [{ id: 'a', label: `x EXP khi đột phá trên Độ Kiếp (mặc định ${A.ORIG.tien})`, maxLength: 12, placeholder: '7' }], run: (a, g) => A.ecoSet(a, 'tien', g('a')).msg },
+  tien: { view: 'kt', title: 'Hệ số cảnh giới Tiên', fields: [{ id: 'a', label: `x EXP khi đột phá trên Độ Kiếp (mặc định ${A.ORIG.tien})`, maxLength: 12, placeholder: '7' }, { id: 'b', label: `x thêm cho Tiên cao (mặc định ${A.ORIG.tiencao})`, maxLength: 12, placeholder: '5', required: false }], run: (a, g) => [A.ecoSet(a, 'tien', g('a')).msg, A.ecoSet(a, 'tiencao', g('b')).msg].filter(Boolean).join('\n') || 'Không đổi gì.' },
   drop: { view: 'kt', title: 'Hệ số rơi nguyên liệu', fields: [{ id: 'a', label: 'Nhân xác suất rơi (0–5, mặc định 1)', maxLength: 8, placeholder: '1.5' }], run: (a, g) => `${A.ecoSet(a, 'drop', g('a')).msg}\nℹ️ Trần rơi theo ngày/tuần/phẩm cấp vẫn áp dụng — không thể rơi vô hạn.` },
   npc: { view: 'kt', title: 'Giá NPC', fields: [
     { id: 'a', label: 'Giá NPC thu mua ×(0.1–3, mặc định 1)', required: false, maxLength: 8 },
@@ -94,7 +94,7 @@ function viewHome(uid) {
     F('🚧 Bảo trì', o.maint ? '🔴 ĐANG BẬT (`/baotri` để tắt)' : '🟢 Tắt', true),
     F('⚡ Tăng tốc tu luyện', o.speed.active ? `×${o.speed.mult} — ${mins(o.speed.until)}` : 'Không có sự kiện', true),
     F('🎁 Tăng tỉ lệ rơi', o.evDrop.active ? `×${o.evDrop.mult} — ${mins(o.evDrop.until)}` : 'Không có sự kiện', true),
-    F('📈 Hệ số hiện hành', `EXP gốc **${A.ecoGet('exp')}** · Tiên **×${A.ecoGet('tien')}** · Rơi **×${A.ecoGet('drop')}** · NPC thu **×${A.ecoGet('sell')}** / bán **×${A.ecoGet('buy')}**`),
+    F('📈 Hệ số hiện hành', `EXP gốc **${A.ecoGet('exp')}** · Tiên **×${A.ecoGet('tien')}** · Tiên cao **×${A.ecoGet('tiencao')}** · Rơi **×${A.ecoGet('drop')}** · NPC thu **×${A.ecoGet('sell')}** / bán **×${A.ecoGet('buy')}**`),
   );
   return { embeds: [e], components: [navRow(uid, 'home')] };
 }
@@ -114,7 +114,7 @@ function viewKt(uid) {
   const R = require('../game/realm'); const o = A.overview(); const e = new EmbedBuilder().setTitle('💰 Kinh Tế').setColor(0xf39c12);
   e.setDescription(fit('Chỉnh **ngay trong game**, lưu vào cơ sở dữ liệu (còn sau khi khởi động lại), có biên an toàn. Khoảng trống bỏ qua = giữ nguyên; gõ `mac dinh` để về giá trị gốc.', 500));
   const row = (k) => { const v = A.ecoGet(k); const d = A.ORIG[k]; return `${A.ECO[k].label}: **${v}**${v === d ? '' : ` _(gốc ${d})_`}`; };
-  e.addFields(F('📊 Hệ số', ['exp', 'minor', 'major', 'tien', 'drop', 'sell', 'buy'].map(row).join('\n')),
+  e.addFields(F('📊 Hệ số', ['exp', 'minor', 'major', 'tien', 'tiencao', 'drop', 'sell', 'buy'].map(row).join('\n')),
     F('🎯 Mốc tu vi để đột phá (xem trước)', `Luyện Khí tầng 1: **${fmtNum(o.gates.tuvi0)}**\nHóa Thần Viên Mãn: **${fmtNum(o.gates.hoathan)}**\nĐộ Kiếp Viên Mãn → Chân Tiên: **${fmtNum(o.gates.dokiep)}**\nChân Tiên tầng 1: **${fmtNum(o.gates.chantien)}**`));
   return { embeds: [e], components: [navRow(uid, 'kt'), rowOf(btn(cid(uid, 'm', 'expc'), 'EXP đột phá', '📈', ButtonStyle.Primary), btn(cid(uid, 'm', 'tien'), 'Hệ số Tiên', '👑'), btn(cid(uid, 'm', 'drop'), 'Rơi đồ', '🎁'), btn(cid(uid, 'm', 'npc'), 'Giá NPC', '🏪'), btn(cid(uid, 'm', 'reset'), 'Mặc định', '↩️', ButtonStyle.Danger))] };
 }

@@ -8,7 +8,7 @@ let n = 0;
 for (let r = 1; r < K.REALMS.length; r++) {
   const cnt = K.totalStageCount(r);
   for (let s = 0; s < cnt; s++) for (const w of [0, 1, 2]) {
-    const exp = (r > K.DOKIEP_REALM_IDX || (r === K.DOKIEP_REALM_IDX && s === K.DOKIEP_VIENMAN_STAGE)) ? 7 : 1;
+    const exp = (r > K.DOKIEP_REALM_IDX || (r === K.DOKIEP_REALM_IDX && s === K.DOKIEP_VIENMAN_STAGE)) ? 7 * (r >= K.HIGH_TIEN_START_IDX ? K.HIGH_TIEN_EXP_MULT : 1) : 1;   // v18.2: Tiên cao (≥ Chuẩn Tiên Vương) x7 x5
     assert.strictEqual(R.tuViRequired(r, s, w), Math.min(K.TU_VI_REQUIRED_CAP, Math.trunc(raw(r, s, w) * exp)), `r${r} s${s} w${w}`);   // v18.0: có trần chống tràn số
     assert.strictEqual(R.tienExpMult(r, s), exp); n++;
   }

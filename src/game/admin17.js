@@ -120,18 +120,19 @@ function heal(admin, userText) {
 }
 
 // ------------------------------------------------------------------ kinh tế (chỉnh lúc chạy)
-const ORIG = { exp: K.EXP_REQUIRED_MULT, minor: K.EXP_GATE_MINOR_MULT, major: K.EXP_GATE_MAJOR_MULT, tien: K.TIEN_EXP_MULT, drop: 1, sell: 1, buy: 1 };
+const ORIG = { exp: K.EXP_REQUIRED_MULT, minor: K.EXP_GATE_MINOR_MULT, major: K.EXP_GATE_MAJOR_MULT, tien: K.TIEN_EXP_MULT, tiencao: K.HIGH_TIEN_EXP_MULT, drop: 1, sell: 1, buy: 1 };
 const ECO = {
   exp: { label: 'EXP cần đột phá (gốc)', prop: 'EXP_REQUIRED_MULT', min: 1, max: 100000 },
   minor: { label: 'Hệ số tiểu cảnh giới', prop: 'EXP_GATE_MINOR_MULT', min: 0.01, max: 10 },
   major: { label: 'Hệ số đại cảnh giới', prop: 'EXP_GATE_MAJOR_MULT', min: 0.01, max: 10 },
   tien: { label: 'Hệ số cảnh giới Tiên', prop: 'TIEN_EXP_MULT', min: 1, max: 1000 },
+  tiencao: { label: 'Hệ số Tiên cao (từ Chuẩn Tiên Vương)', prop: 'HIGH_TIEN_EXP_MULT', min: 1, max: 1000 },
   drop: { label: 'Tỉ lệ rơi nguyên liệu', min: 0, max: 5 },
   sell: { label: 'Giá NPC thu mua', min: 0.1, max: 3 },
   buy: { label: 'Giá NPC bán', min: 0.1, max: 5 },
 };
 function ecoGet(key) { const v = ST.get(`eco_${key}`, ''); const n = Number(v); return v !== '' && Number.isFinite(n) ? n : ORIG[key]; }
-function applyEco() { for (const k of ['exp', 'minor', 'major', 'tien']) K[ECO[k].prop] = ecoGet(k); }
+function applyEco() { for (const k of ['exp', 'minor', 'major', 'tien', 'tiencao']) K[ECO[k].prop] = ecoGet(k); }
 /** Đặt 1 hệ số. value rỗng/'mac_dinh' = về mặc định. Trả { ok, msg }. */
 function ecoSet(admin, key, value) {
   const d = ECO[key]; if (!d) return { ok: false, msg: '❌ Hệ số lạ.' };

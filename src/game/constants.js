@@ -35,8 +35,8 @@ const TIEN_DE_REALM_IDX = REALMS.findIndex((r) => r.name === 'Tiên Đế');   /
 
 // v18.0: với 29 cảnh giới, công thức ×3 / đại cảnh giới (và ×1,35 hệ số tốc độ) sẽ TRÀN số nguyên khi lên tới Siêu Thoát (3^28 × 50^tier > 2^63).
 // Từ SAU Đại La Kim Tiên (idx 13) tăng chậm hơn: mỗi đại cảnh giới ×3^(1/6) mốc tu vi, ×1,35^(1/6) hệ số tốc độ — nên 6 bậc sau Đại La Kim Tiên (tức Tiên Đế mới, idx 19)
-// ra ĐÚNG mức 1 bậc cũ (Tiên Đế cũ, idx 14) → người chơi Tiên Đế cũ không bị lạm phát/thiếu hụt tu vi, linh thạch khi chuyển sang cảnh giới mới.
-const HIGH_REALM_GROWTH = 3 ** (1 / 6);
+// ra ĐÚNG mức tốc độ/linh thạch của Tiên Đế cũ (idx 14) → người chơi Tiên Đế cũ không bị lạm phát linh thạch khi chuyển sang cảnh giới mới.
+const HIGH_REALM_GROWTH = 1.165;   // v18.2 (v18.0: 3^(1/6)≈1,2009): chậm hơn một chút để Siêu Thoát Viên Mãn sau khi nhân x35 vẫn dưới trần ở Tiên Giới (thế giới bậc 2)
 const HIGH_REALM_SPEED_STEP = 1.35 ** (1 / 6);
 // Trần an toàn của mốc tu vi: 9×10^15 < Number.MAX_SAFE_INTEGER (2^53-1) — số lớn hơn không còn chính xác trong JS / cột INTEGER đọc về bằng number.
 const TU_VI_REQUIRED_CAP = 9e15;
@@ -62,6 +62,10 @@ const EXP_GATE_MAJOR_MULT = _gm('EXP_GATE_MAJOR_MULT', 0.12)   // v16.1: giảm 
 // v17.1: mốc tu vi để đột phá TRÊN Độ Kiếp Viên Mãn (tức bước vào & đi trong các cảnh giới Tiên) nhân thêm hệ số này (mặc định x7).
 // Chỉ tác động R.tuViRequired (điều kiện đột phá/hiển thị); tốc độ & phần thưởng tu vi tính từ mốc GỐC nên KHÔNG đổi. Env TIEN_EXP_MULT để chỉnh.
 const TIEN_EXP_MULT = _gm('TIEN_EXP_MULT', 7);
+// v18.2: các cảnh giới TIÊN CAO (từ Chuẩn Tiên Vương, tức sau Đại La Kim Tiên) cần thêm x5 EXP đột phá, NHÂN CHỒNG với x7 ở trên (tổng x35 so với trước v17.1).
+// Cùng nguyên tắc: chỉ đổi mốc tu vi (R.tuViRequired); tốc độ/phần thưởng không đổi. Env HIGH_TIEN_EXP_MULT; /quantri → Kinh tế → "Hệ số Tiên" chỉnh được.
+const HIGH_TIEN_EXP_MULT = _gm('HIGH_TIEN_EXP_MULT', 5);
+const HIGH_TIEN_START_IDX = 14;   // = DAILA_REALM_IDX + 1 (Chuẩn Tiên Vương)
 
 const HOATHAN_REALM_IDX = 5;
 const HOATHAN_VIENMAN_STAGE = totalStageCount(HOATHAN_REALM_IDX) - 1;
@@ -87,6 +91,6 @@ module.exports = {
   ...C,
   ADMIN_CODE_APPROVER_IDS, ADMIN_DISCORD_IDS, addAdmin, REALMS, TANG_20, TANG_23, totalStageCount,
   MAX_REALM_IDX, DAILA_REALM_IDX, HIGH_REALM_GROWTH, HIGH_REALM_SPEED_STEP, TU_VI_REQUIRED_CAP, OLD_TIENDE_REALM_IDX, TIEN_DE_REALM_IDX,
-  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE, EXP_REQUIRED_MULT, EXP_GATE_MINOR_MULT, EXP_GATE_MAJOR_MULT, TIEN_EXP_MULT,
+  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE, EXP_REQUIRED_MULT, EXP_GATE_MINOR_MULT, EXP_GATE_MAJOR_MULT, TIEN_EXP_MULT, HIGH_TIEN_EXP_MULT, HIGH_TIEN_START_IDX,
   _REALM_SPEED_MAX_KNOWN: Math.max(...Object.keys(C.REALM_SPEED_MULT).map(Number)),
 };
