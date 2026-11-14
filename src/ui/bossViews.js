@@ -113,7 +113,7 @@ function personalResult(res, user) {
   else if (res.action === 'skill') line = `[Lượt ${num(res.turn)}] ${nm} thi triển **Thần Thông**${res.crit ? ' — **BẠO KÍCH!**' : ''}, gây **${num(res.dmg)}** sát thương.`;
   else line = `[Lượt ${num(res.turn)}] ${nm} tung đòn, gây **${num(res.dmg)}** sát thương.`;
   const log = [line];
-  if (res.counter > 0) log.push(`[Lượt ${num(res.turn)}] ${boss.name} phản công, gây **${num(res.counter)}** sát thương.`);
+  if (res.counter > 0) log.push(`[Lượt ${num(res.turn)}] ${boss.name} phản công, gây **${num(res.counter)}** sát thương${res.counterCut ? ` _(trang bị/đan/trận giảm ${Math.round(res.counterCut * 100)}%)_` : ''}.`);
   if (res.finished) log.push(`${E.cup} **Đòn kết liễu!** ${boss.name} đã gục ngã.`);
   return buildBattle({
     status: res.finished ? 'Chiến thắng' : 'Đang giao chiến', title: `${boss.name}`,

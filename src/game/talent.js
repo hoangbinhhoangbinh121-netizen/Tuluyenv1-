@@ -283,7 +283,8 @@ function elementAdv(rowX, rowY) {
 /** Thành phần chiến đấu cho Đấu Pháp / Chiến Tông Môn (roundAction). */
 function combatMods(row) {
   const b = bundle(row);
-  return { crit: b.crit, critMult: b.critMult, dodge: b.dodge, dr: b.dr, pierce: b.pierce, lifesteal: b.lifesteal };
+  const x = require('./fx17').get(row);   // v17: trang bị / đan / trận pháp (đã chặn trần)
+  return { crit: b.crit + x.crit, critMult: b.critMult, dodge: b.dodge + x.dodge, dr: b.dr + x.dr, pierce: b.pierce + x.pierce, lifesteal: b.lifesteal + x.lifesteal };
 }
 // v16: công pháp mới (tier ≥ 1001) có hành CỐ ĐỊNH theo loại (data/congphap_v16.js); công pháp cũ giữ công thức cũ.
 const congphapElement = (tier) => {

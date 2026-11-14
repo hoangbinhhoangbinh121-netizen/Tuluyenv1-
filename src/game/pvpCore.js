@@ -159,6 +159,14 @@ function settlePvpAtomic(userId, targetId, winnerId, stake, loserNewHp, roundsPl
       const s = D.get('SELECT exp, level FROM sects WHERE sect_id = ?', w.sect_id);
       if (s && s.exp >= s.level * 1000) D.run('UPDATE sects SET level = level + 1 WHERE sect_id = ?', w.sect_id);
     }
+    // v17: Phong Ấn tiêu 1 lượt · trang bị đang mặc hao độ bền (trong cùng transaction)
+    for (const id of [userId, targetId]) {
+      try {
+        const FXm = require('./fx17'); const r = D.get('SELECT fx17 FROM cultivators WHERE user_id = ?', id);
+        if (r && FXm.stat(r, 'foe') > 0) require('./tran17').consumeSeal(id);
+        require('./gear17').wear(id, 'pvp');
+      } catch (e) { console.warn('⚠️ hook v17 PvP:', e.message); }
+    }
     return real;
   });
 }
@@ -178,7 +186,7 @@ function doPvp(userId, targetId) {
   a = Cu.getCultivator(userId); b = Cu.getCultivator(targetId);
   const atkA = Cu.effectiveAtk(a); const defA = Cu.effectiveDef(a); const spdA = Cu.effectiveSpd(a);
   const atkB = Cu.effectiveAtk(b); const defB = Cu.effectiveDef(b); const spdB = Cu.effectiveSpd(b);
-  const PW = BAL.pvpPowers(a, b, Cu); const powerA = PW.powerA; const powerB = PW.powerB;
+  const PW = BAL.pvpPowers(a, b, Cu, { foe: true }); const powerA = PW.powerA; const powerB = PW.powerB;
   const selfBuff = PW.buffA; const enemyDebuff = PW.debuffA;
   const buffNote = (selfBuff || enemyDebuff || PW.buffB || PW.debuffB) ? `\n🌀 Công pháp phát động: 🅰️ +${int(PW.buffA * 100)}%/-${int(PW.debuffA * 100)}% · 🅱️ +${int(PW.buffB * 100)}%/-${int(PW.debuffB * 100)}% (buff / debuff đối thủ).` : '';
   const realmA = R.realmDisplay(a.realm_index, a.stage_index); const realmB = R.realmDisplay(b.realm_index, b.stage_index);

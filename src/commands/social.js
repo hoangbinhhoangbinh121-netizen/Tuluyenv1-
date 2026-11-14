@@ -21,10 +21,13 @@ defineCommand({
   name: 'giaodich', description: 'Đề xuất giao dịch 2 chiều (Linh Thạch/Đan Dược) với người chơi khác', ...needs,
   options: [user('nguoi_nhan', 'Người nhận'),
     { name: 'linh_thach_gui', type: 'int', description: 'Linh Thạch muốn gửi' }, { name: 'dan_duoc_gui', type: 'int', description: 'Đan Dược muốn gửi' },
-    { name: 'linh_thach_nhan', type: 'int', description: 'Linh Thạch muốn nhận' }, { name: 'dan_duoc_nhan', type: 'int', description: 'Đan Dược muốn nhận' }],
+    { name: 'linh_thach_nhan', type: 'int', description: 'Linh Thạch muốn nhận' }, { name: 'dan_duoc_nhan', type: 'int', description: 'Đan Dược muốn nhận' },
+    { name: 'vat_pham_gui', type: 'string', description: 'Vật phẩm muốn gửi, VD: Thanh Linh Thảo x5, Tụ Khí Đan (Thượng Phẩm) x2' }, { name: 'vat_pham_nhan', type: 'string', description: 'Vật phẩm muốn nhận (cùng cách ghi)' }],
   async run(c) {
     const a = c.args;
-    const res = T.createOffer(c.user.id, a.nguoi_nhan.id, a.linh_thach_gui || 0, a.dan_duoc_gui || 0, false, false, a.linh_thach_nhan || 0, a.dan_duoc_nhan || 0, false, false);
+    const Inv17 = require('../game/invsvc'); const gi = Inv17.parseList(a.vat_pham_gui); const wi = Inv17.parseList(a.vat_pham_nhan);
+    if (!gi.ok) return c.send(`❌ Vật phẩm gửi: ${gi.err}`); if (!wi.ok) return c.send(`❌ Vật phẩm nhận: ${wi.err}`);
+    const res = T.createOffer(c.user.id, a.nguoi_nhan.id, a.linh_thach_gui || 0, a.dan_duoc_gui || 0, false, false, a.linh_thach_nhan || 0, a.dan_duoc_nhan || 0, false, false, gi.items, wi.items);
     if (res !== 'ok') return c.send(res);
     return c.send({ content: SV.offerAnnouncement(c.user.id, a.nguoi_nhan.id, `<@${a.nguoi_nhan.id}>`), components: SV.tradeConfirmView(c.user.id, a.nguoi_nhan.id).components() });
   },

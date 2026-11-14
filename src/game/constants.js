@@ -38,6 +38,10 @@ const _gm = (name, def) => { const v = Number(process.env[name]); return Number.
 const EXP_GATE_MINOR_MULT = _gm('EXP_GATE_MINOR_MULT', 0.20)   // v16.1: giảm tiếp (v16.0: 0.40; v14.x: 0.90);
 const EXP_GATE_MAJOR_MULT = _gm('EXP_GATE_MAJOR_MULT', 0.12)   // v16.1: giảm tiếp (v16.0: 0.25; v14.x: 0.65);
 
+// v17.1: mốc tu vi để đột phá TRÊN Độ Kiếp Viên Mãn (tức bước vào & đi trong các cảnh giới Tiên) nhân thêm hệ số này (mặc định x7).
+// Chỉ tác động R.tuViRequired (điều kiện đột phá/hiển thị); tốc độ & phần thưởng tu vi tính từ mốc GỐC nên KHÔNG đổi. Env TIEN_EXP_MULT để chỉnh.
+const TIEN_EXP_MULT = _gm('TIEN_EXP_MULT', 7);
+
 const HOATHAN_REALM_IDX = 5;
 const HOATHAN_VIENMAN_STAGE = totalStageCount(HOATHAN_REALM_IDX) - 1;
 const DOKIEP_REALM_IDX = 9;
@@ -61,6 +65,6 @@ function addAdmin(id) {
 module.exports = {
   ...C,
   ADMIN_CODE_APPROVER_IDS, ADMIN_DISCORD_IDS, addAdmin, REALMS, TANG_20, TANG_23, totalStageCount,
-  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE, EXP_REQUIRED_MULT, EXP_GATE_MINOR_MULT, EXP_GATE_MAJOR_MULT,
+  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE, EXP_REQUIRED_MULT, EXP_GATE_MINOR_MULT, EXP_GATE_MAJOR_MULT, TIEN_EXP_MULT,
   _REALM_SPEED_MAX_KNOWN: Math.max(...Object.keys(C.REALM_SPEED_MULT).map(Number)),
 };

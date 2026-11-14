@@ -129,6 +129,8 @@ const SHOP_DAILY_LIMIT = { ban_menh_huyet: 2, than_thu_dan: 20 };    // mỗi ng
 
 // ------------------------------------------------------------------ thức ăn cơ bản bằng nguyên liệu (không cần mua)
 const BASIC_FEED = { nguyen_lieu: 5, exp: 120, bond: 1, cooldown: 20 };
+// v17: nguyên liệu Yêu Thú dùng làm thức ăn (đi qua Inventory Service)
+const MAT_FEED = { yt_yeu_dan: { exp: 500, bond: 1 } };
 
 // ------------------------------------------------------------------ kỹ năng
 const SKILL_UNLOCK = { a1: 1, p1: 15, a2: 40 };            // cấp mở khóa kỹ năng thứ 1 / bị động / thứ 2
@@ -218,7 +220,7 @@ module.exports = {
   CONTRACTS, CONTRACT_BREAK_BOND, SLOT_COUNT, VIEN_CAPACITY, EGG_CAPACITY,
   PURITY_STAGES, STAGE_NAMES, STAGE_TALENT, purityStage, REFINE, INHERIT,
   suppression, rating, statsOf, BOND_MAX, PLAY, BOND_PER_PVP_WIN, BOND_PER_PVP_LOSS, BOND_PER_FEED, bondGain, bondCap,
-  COMPANION_EXP_SHARE, expPvp, expBicanh, expBoss, ITEMS, ITEM_ORDER, SHOP_ITEMS, SHOP_DAILY_LIMIT, HANH, HANH_KEY, BASIC_FEED,
+  COMPANION_EXP_SHARE, expPvp, expBicanh, expBoss, ITEMS, ITEM_ORDER, SHOP_ITEMS, SHOP_DAILY_LIMIT, HANH, HANH_KEY, BASIC_FEED, MAT_FEED,
   SKILL_UNLOCK, SKILL_RANK_MAX, skillRankMult, SKILL_UPGRADE, EVO_LEVEL, EVO, EGG, CAPTURE, captureChance, SOURCE_IDX, EGG_CHANCE, WILD_CHANCE, ITEM_DROP,
   tierWeights, WILD_LEVEL, WILD_PURITY, EGG_PURITY, LEGACY, COMBAT, PASSIVE_CAPS, passiveScale, procChance, LEGACY_MAP, RELEASE, RENAME_MAX, CHANGE_SLOT_COST,
 };

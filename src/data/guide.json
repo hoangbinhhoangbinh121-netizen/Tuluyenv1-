@@ -154,24 +154,44 @@
   },
   {
     "key": "luyendan",
-    "label": "🧪 Luyện Đan, Luyện Khí & Chợ",
-    "desc": "Luyện đan dược, pháp bảo và đổi Linh Thạch/quay Công Pháp.",
+    "label": "⚒️ Nghề Nghiệp, Chế Tạo & NPC",
+    "desc": "Bách nghề V17: Đan Sư · Luyện Khí Sư · Trận Pháp Sư · Linh Thực Sư; kho đồ phân loại; NPC thu mua.",
     "commands": [
       [
-        "muadanphuong",
-        "Mua Đan Phương — bắt buộc trước khi Luyện Đan."
+        "nghenghiep",
+        "Bảng Nghề Nghiệp: cấp nghề, công thức (nguyên liệu/tỉ lệ/phẩm chất), lò chế, kỹ thuật, thành tựu, lịch sử, thăng cấp."
       ],
       [
         "luyendan",
-        "Luyện đan dược từ nguyên liệu."
-      ],
-      [
-        "danduoc",
-        "Mở menu Dùng Đan Dược — chọn đúng viên đang sở hữu để cắn (tăng tu vi / bỏ 5p chờ Đột Phá). (= /dungdan)"
+        "Mở bảng Đan Sư (16 loại đan có tác dụng thật). Mẻ đan CŨ còn đang luyện vẫn thu được ở đây."
       ],
       [
         "luyenkhi",
-        "Luyện pháp bảo từ nguyên liệu."
+        "Mở bảng Luyện Khí Sư: rèn 8 món trang bị 7 ô (không còn cộng chỉ số vĩnh viễn; chỉ số cũ được giữ)."
+      ],
+      [
+        "danduoc",
+        "Mở menu Dùng Đan Dược — cắn đan theo phẩm, xem buff đang chạy (có giới hạn mỗi ngày). (= /dungdan)"
+      ],
+      [
+        "trangbi",
+        "Trang Bị 7 ô: mặc/tháo, cường hoá, tinh luyện, sửa chữa, khoá, phân giải, bán NPC."
+      ],
+      [
+        "linhdien",
+        "Linh Điền của Linh Thực Sư: gieo, tưới, bón, thu hoạch (tốn Linh Thổ, có sâu héo)."
+      ],
+      [
+        "khophanloai",
+        "Kho Đồ phân loại theo danh mục & phẩm cấp: chi tiết, nguồn nhận, công dụng, giá NPC, khoá/bán."
+      ],
+      [
+        "npcthumua",
+        "NPC thu mua/bán: bán 1 món / theo số lượng / hàng loạt có xem trước; đồ nhiệm vụ & đồ khoá không bán được."
+      ],
+      [
+        "muadanphuong",
+        "Mua Đan Phương: cộng tỉ lệ thành công & phẩm chất cho Đan Sư (cấp Đan Phương càng cao càng tốt)."
       ],
       [
         "quaycongphap",
@@ -324,6 +344,10 @@
       [
         "tangtoctuluyen",
         "[Admin] Tăng tốc tu luyện toàn server (có thông báo kênh thế giới, tự hết hạn)."
+      ],
+      [
+        "doichieuv17",
+        "[Admin] Bảng đối chiếu V16→V17: tình trạng migration + tổng số từng loại vật phẩm (xuất file)."
       ]
     ]
   }

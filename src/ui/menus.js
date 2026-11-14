@@ -29,8 +29,6 @@ async function animate(interaction, userId, { kind, cooldown, lastCol, run }) {
   const unlock = tryUserLock(userId);
   if (!unlock) return interaction.reply({ embeds: [N.warning('Bạn đang thao tác quá nhanh, vui lòng chờ lượt trước xử lý xong rồi thử lại.', { footer: 'E008 · Dữ liệu đang được xử lý' })], flags: EPHEMERAL });
   try {
-    const lk = require('../game/cultLock').get(userId);
-    if (lk) return await interaction.reply({ embeds: [CULT.locked(lk)], flags: EPHEMERAL });   // /khoatuluyen
     const row = Cu.getCultivator(userId);
     const remain = cooldown - (now() - row[lastCol]);
     if (remain > 0) return await interaction.reply({ embeds: [CULT.cooldown(kind, remain)], flags: EPHEMERAL });
@@ -40,7 +38,7 @@ async function animate(interaction, userId, { kind, cooldown, lastCol, run }) {
       await interaction.editReply({ embeds: [CULT.inProgress(kind, st, ANIM_STEPS)] }).catch(() => {});
     }
     const res = run(userId);
-    const emb = res.ok ? CULT.result(res) : res.kind === 'locked' ? CULT.locked(res.lock) : CULT.cooldown(kind, res.remain);
+    const emb = res.ok ? CULT.result(res) : CULT.cooldown(kind, res.remain);
     try { await interaction.editReply({ embeds: [emb] }); }
     catch (_) { await interaction.followUp({ embeds: [emb], flags: EPHEMERAL }).catch(() => {}); }  // kết quả không bao giờ bị nuốt
   } finally { unlock(); }
@@ -53,7 +51,7 @@ function tuLuyenGroupView(userId) {
   v.button({ key: 'tuluyen', label: 'Tu Luyện', emoji: E.tuluyen, style: 'green' }, (i) => animateTuluyen(i, userId));
   v.button({ key: 'bequan', label: 'Bế Quan', emoji: E.bequan, style: 'blurple' }, (i) => animateDongquan(i, userId));
   v.button({ key: 'canngo', label: 'Cảm Ngộ', emoji: E.linhngo, style: 'grey' }, (i) => i.reply({ embeds: [CULT.simple(A.doCanngo(userId), 'CẢM NGỘ')], flags: EPHEMERAL }));
-  v.button({ key: 'danduoc', label: 'Dùng Đan Dược', emoji: E.danduoc, style: 'grey' }, (i) => SV.open(i, `${E.danduoc} Chọn Đan Dược muốn dùng:`, SV.danDuocView(userId)));
+  v.button({ key: 'danduoc', label: 'Dùng Đan Dược', emoji: E.danduoc, style: 'grey' }, (i) => require('./ngheViews').open(i, userId, 'pill'));
   v.button({ key: 'hoihp', label: 'Hồi HP', emoji: E.hoihp, style: 'green' }, (i) => i.reply({ embeds: [CULT.simple(A.doHoiHp(userId), 'HỒI PHỤC')], flags: EPHEMERAL }));
   return v;
 }
@@ -94,7 +92,7 @@ const GROUP_HANDLERS = {
     await SV.open(i, '🧘 **Tu Hành** — Công Pháp / Pháp Bảo / Linh Mạch:', SV.tuHanhGroupView(userId));
   },
   async nghenghiep(i, userId) {
-    await SV.open(i, '⚒️ **Nghề Nghiệp** — Luyện Đan / Luyện Khí:', SV.ngheNghiepGroupView(userId));
+    await require('./ngheViews').open(i, userId, 'home');
   },
   async phithang(i, userId) {
     const { phiThangGroupView } = require('./phithang');

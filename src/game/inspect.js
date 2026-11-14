@@ -18,7 +18,7 @@ const { fmtNum } = require('../util');
 
 const TABS = [
   ['tq', 'Tổng quan', '📋'], ['cs', 'Chỉ số & nguồn cộng', '📊'], ['tn', 'Tài nguyên & vật phẩm', '💰'],
-  ['cp', 'Công pháp', '📜'], ['cc', 'Linh căn & Thể chất', '🧬'], ['xh', 'Xã hội & hoạt động', '🏯'], ['tg', 'Thời gian / cooldown', '⏱️'],
+  ['cp', 'Công pháp', '📜'], ['cc', 'Linh căn & Thể chất', '🧬'], ['xh', 'Xã hội & hoạt động', '🏯'], ['tg', 'Thời gian / cooldown', '⏱️'], ['ng', 'Nghề nghiệp, trang bị & hiệu ứng (V17)', '⚒️'],
 ];
 const RES = {
   linh_thach: 'Linh Thạch', linh_tinh: 'Linh Tinh', linh_luc: 'Linh Lực', linh_gioi_lenh: 'Linh Giới Lệnh', linh_phu: 'Linh Phù', tien_lenh: 'Tiên Lệnh', tien_phu: 'Tiên Phù',
@@ -68,7 +68,7 @@ function statBreakdown(row, stat) {
   const tal = stat === 'spd' ? 1 : safe(() => T.statMult(row, stat), 1);
   const flat = n0(row[`ruong_bonus_${stat}`]);
   const eff = { atk: Cu.effectiveAtk, def: Cu.effectiveDef, spd: Cu.effectiveSpd, hp: Cu.effectiveMaxHp }[stat](row);
-  return `**${fmtNum(eff)}** ← gốc ${fmtNum(base)} × (1 + cổ điển ${pc(oldCp)} + pháp bảo ${pc(pb)} + đặc biệt ${pc(sp)} + công pháp mới ${pc(nw)}) × thể/linh căn ${tal.toFixed(3)} (×ngũ suy)${flat ? ` + rương ${fmtNum(flat)}` : ''}`;
+  return `**${fmtNum(eff)}** ← gốc ${fmtNum(base)} × (1 + cổ điển ${pc(oldCp)} + pháp bảo ${pc(pb)} + đặc biệt ${pc(sp)} + công pháp mới ${pc(nw)} + trang bị/trận/đan V17 ${pc(safe(() => require('./fx17').stat(row, stat), 0))}) × thể/linh căn ${tal.toFixed(3)} (×ngũ suy)${flat ? ` + rương ${fmtNum(flat)}` : ''}`;
 }
 function tabChiSo(row) {
   const agg = CPX.aggregate(row); const bun = safe(() => T.bundle(row), {});
@@ -154,7 +154,22 @@ function tabThoiGian(row) {
   return { title: '⏱️ Thời gian / cooldown', description: 'Các mốc thời gian đã ghi (cột last_*, treo_*, *_start).', fields: [{ name: 'Mốc', value: fit(lines, 1000), inline: false }] };
 }
 
-const BUILDERS = { tq: tabTongQuan, cs: tabChiSo, tn: tabTaiNguyen, cp: tabCongPhap, cc: tabCanCot, xh: tabXaHoi, tg: tabThoiGian };
+function tabNghe(row) {
+  const u = row.user_id; const X = require('./craft17'); const C = require('../data/craft_v17'); const G = require('./gear17'); const Inv = require('./invsvc'); const FX = require('./fx17'); const Tr = require('./tran17'); const Dan = require('./dan17'); const { I } = require('./catalog17');
+  const fmtT = (x) => require('./format').fmtTime(x);
+  const fields = [];
+  fields.push({ name: 'Nghề nghiệp', value: fit(C.PROF_ORDER.map((p) => { const st = X.state(u, p); const j = X.jobsOf(u, p); return `**${C.PROFS[p].name}**: ${X.levelName(st.level)} (Lv.${st.level}) · EXP ${fmtNum(st.exp)} · chế ${fmtNum(st.crafts)} (✅${fmtNum(st.successes)}/💥${fmtNum(st.fails)})${j.length ? ` · lò ${j.length}` : ''}`; }), 1000), inline: false });
+  const eq = G.equippedOf(u);
+  fields.push({ name: `Trang bị đang mặc (${eq.length}/7) · tổng ${G.listOf(u).length} món`, value: fit(eq.map((g) => `${G.name(g)} (${I.qName(g.q)}) bền ${Math.ceil(g.dura)}/${g.dura_max}${g.locked ? ' 🔒' : ''} → ${G.fmtStats(G.statsOf(g))}`), 1000), inline: false });
+  const fx = FX.get(row); fields.push({ name: 'Hiệu ứng tổng V17 (đã chặn trần)', value: fit(Object.entries(fx).filter(([, v]) => v).map(([k, v]) => `${k} ${k === 'ngo' ? v : pc(v)} / trần ${k === 'ngo' ? FX.CAP[k] : pc(FX.CAP[k])}`), 1000), inline: false });
+  const act = Tr.active(u); fields.push({ name: 'Trận pháp & buff đang chạy', value: fit([...act.personal.map((b) => `🧿 ${b.id} (${I.qName(b.q)}) còn ${fmtT(b.left)}${b.charges ? ` · ${b.charges} lượt` : ''}`), ...(act.sect ? [`🏯 Hộ Tông ${act.sect.id} còn ${fmtT(act.sect.left)}`] : []), ...Dan.activeList(u).map((b) => `💊 ${b.key} còn ${fmtT(b.left)}`)], 1000), inline: false });
+  const cnt = {}; for (const x of Inv.list(u)) cnt[x.item.cat] = (cnt[x.item.cat] || 0) + x.qty;
+  fields.push({ name: 'Kho vật phẩm theo danh mục (tổng số lượng)', value: fit(Object.entries(cnt).map(([c, n]) => `${I.CATEGORIES[c]?.label || c}: ${fmtNum(n)}`), 1000), inline: false });
+  const ld = safe(() => require('./field17').status(u), null);
+  fields.push({ name: 'Linh Điền', value: ld && ld.f ? `Cấp ${ld.f.level} · ${ld.plots.length}/${ld.max} ô đang trồng · ${ld.plots.filter((p) => p.ready).length} ô chín` : 'Chưa mở.', inline: false });
+  return { title: '⚒️ Nghề nghiệp, trang bị & hiệu ứng (V17)', description: 'Chỉ đọc — số liệu lấy thẳng từ Inventory Service / fx17.', fields };
+}
+const BUILDERS = { ng: tabNghe, tq: tabTongQuan, cs: tabChiSo, tn: tabTaiNguyen, cp: tabCongPhap, cc: tabCanCot, xh: tabXaHoi, tg: tabThoiGian };
 function page(userId, tab = 'tq') {
   const row = Cu.getCultivator(userId);
   if (!row) return null;
@@ -173,6 +188,7 @@ function fullText(userId) {
   L.push(`Công/Thủ/Tốc/HP hiệu dụng: ${Cu.effectiveAtk(row)} / ${Cu.effectiveDef(row)} / ${Cu.effectiveSpd(row)} / ${Cu.effectiveMaxHp(row)}`);
   L.push(`Lực chiến: ${Cu.calcLucChien(row)}`);
   L.push(`Hệ số tu vi công pháp: ×${Cu.cpTuMult(row).toFixed(3)}`);
+  try { const t = tabNghe(row); for (const f of t.fields) L.push(`[V17] ${f.name}: ${String(f.value).replace(/\n/g, ' | ')}`); } catch (e) { L.push(`[V17] lỗi: ${e.message}`); }
   for (const s of ['atk', 'def', 'spd', 'hp']) L.push(`Nguồn ${s}: ${statBreakdown(row, s).replace(/\*\*/g, '')}`);
   L.push(`Công pháp V16 (aggregate): ${JSON.stringify(CPX.aggregate(row), (k, v) => (k === 'book' ? { tier: v.tier, name: v.name } : v))}`);
   L.push(`Talent bundle: ${JSON.stringify(safe(() => T.bundle(row), {}))}`);

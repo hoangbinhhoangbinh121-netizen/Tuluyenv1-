@@ -46,9 +46,6 @@ function result(r) {
   });
 }
 
-/** Bị admin khóa tu luyện (/khoatuluyen). */
-function locked(lock) { return N.warning(require('../../game/cultLock').text(lock), { footer: 'Tu luyện đang bị khóa' }); }
-
 function cooldown(kind, remain) {
   const verb = kind === 'dongquan' ? 'bế quan' : 'tu luyện';
   return N.cooldown(`Còn **${dur(remain)}** nữa mới ${verb} tiếp được.`);
@@ -59,4 +56,4 @@ function simple(text, header) {
   if (/^⏳/.test(text)) return N.cooldown(text.replace(/^⏳\s*/, ''));
   return createEmbed({ cat: 'tuluyen', header, description: String(safe(text, '')) });
 }
-module.exports = { inProgress, result, cooldown, locked, simple, MULT };
+module.exports = { inProgress, result, cooldown, simple, MULT };

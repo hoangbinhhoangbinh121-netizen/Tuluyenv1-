@@ -55,8 +55,3 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - v12: khi khởi động và khi gõ `/dungluong` bot in báo cáo: dung lượng DB/WAL/backup, thử GHI THẬT 1 MB vào thư mục DB + thư mục tạm, và 6 file lớn nhất — để biết chính xác cái gì làm đầy.
 - v12.1: sao lưu tự động CHỈ GIỮ BẢN MỚI NHẤT (mỗi loại: tự động / thủ công / trước-khôi-phục giữ 1 bản), bản cũ tự xoá; tạo bản mới ngay 1 phút sau khi bot khởi động rồi mỗi `AUTO_BACKUP_HOURS` giờ. Muốn giữ nhiều hơn: đặt `AUTO_BACKUP_KEEP`, `BACKUP_KEEP_MANUAL`, `BACKUP_KEEP_PRE`.
 - v12.2: **cấu hình tự động** (`src/autoconfig.js`) — chỉ cần `DISCORD_TOKEN`. Biến thiếu tự lấy mặc định; chủ bot tự là admin; slash tự đăng ký ngay cho mọi server (và server mới); intent bị từ chối thì tự hạ cấu hình (content+members → content → members → không); nhóm biến sao lưu cố định ở mức "giữ bản mới nhất" (bỏ qua biến trên host trừ khi `CONFIG_FROM_ENV=1`); lỗi tự nhắn riêng cho chủ bot (5 phút/lần).
-
-## v16.8.1 — sửa `SqliteError: no such table: store_wallet`
-- Triệu chứng: `/tutienstore` (và mọi thao tác ví/đơn của TuTienStore) báo `no such table: store_wallet` dù trước đó shop chạy bình thường.
-- Nguyên nhân: bảng store chỉ được tạo bởi `store/schema.js` và nhớ cờ `ready = true` suốt vòng đời tiến trình. Khi DB bị thay (`/restore_db`, `/nhapdb`, import DB cũ, đổi/xoá file DB trên host) thì DB mới không có bảng store nhưng cờ vẫn `true` → không tạo lại. Cơ chế tự cứu `withRescue` chỉ chạy `migrate()` của bảng game nên cũng không tạo được bảng store.
-- Sửa: bảng store chuyển vào `src/db/schema_store.js` và được `D.migrate()` tạo luôn (khởi động, sau restore, và khi tự cứu "no such table"); `store/schema.ensure()` gắn cờ theo thế hệ kết nối DB (`D.generation()`).

@@ -10,8 +10,11 @@ const { View } = require('../ui/kit');
 const { fmtNum } = require('../util');
 
 const simple = (name, description, fn) => defineCommand({ name, description, needsCultivator: true, run: (ctx) => ctx.send(fn(ctx.user.id, ctx)) });
-simple('luyendan', 'Luyện đan dược từ nguyên liệu', (u) => Dan.doLuyendan(u));
-simple('luyenkhi', 'Luyện pháp bảo từ nguyên liệu', (u) => Dan.doLuyenkhi(u));
+// V17: Luyện Đan / Luyện Khí chuyển sang bảng Nghề Nghiệp (Đan Sư · Luyện Khí Sư). Mẻ đan CŨ đang luyện vẫn thu được bằng /luyendan.
+const NGHE = require('./nghe');
+defineCommand({ name: 'luyendan', description: 'Luyện đan: mở bảng Đan Sư (thu mẻ đan cũ nếu còn)', needsCultivator: true,
+  run: (ctx) => { const row = require('../game/cultivator').getCultivator(ctx.user.id); if (row && row.luyendan_start > 0) return ctx.send(Dan.doLuyendan(ctx.user.id)); return NGHE.openPanel(ctx, 'cg.dan'); } });
+defineCommand({ name: 'luyenkhi', description: 'Luyện khí: mở bảng Luyện Khí Sư (rèn trang bị 7 ô)', needsCultivator: true, run: (ctx) => NGHE.openPanel(ctx, 'cg.khi') });
 simple('quaycongphap', 'Quay ngẫu nhiên 1 Công Pháp (không chọn tầng, giá cố định)', (u) => CP.doRandomCongphap(u));
 simple('taytuydan', 'Luyện Đan Tẩy Tủy Trọng Sinh — roll lại Linh Căn + Thể Chất', (u) => Dan.doTaytuyReroll(u));
 defineCommand({
@@ -19,11 +22,11 @@ defineCommand({
   options: [{ name: 'so_luong', type: 'int', description: 'Số Linh Tinh muốn đổi (mặc định 1)' }],
   run: (ctx) => ctx.send(Ec.doiLinhTinh(ctx.user.id, ctx.args.so_luong ?? 1)),
 });
-const danDuoc = (ctx) => ctx.send({ content: `${E.danduoc} **Dùng Đan Dược** — chọn đúng viên bạn đang sở hữu để cắn:`, components: SV.danDuocView(ctx.user.id).components() });
+const danDuoc = (ctx) => NGHE.openPanel(ctx, 'pill');
 defineCommand({ name: 'danduoc', description: 'Mở menu Dùng Đan Dược (chọn đúng viên đang sở hữu để cắn)', needsCultivator: true, run: danDuoc });
 defineCommand({ name: 'dungdan', description: '(= /danduoc) Mở menu Dùng Đan Dược', needsCultivator: true, run: danDuoc });
 defineCommand({
-  name: 'muadanphuong', description: 'Mua Đan Phương (bắt buộc trước khi Luyện Đan)', needsCultivator: true,
+  name: 'muadanphuong', description: 'Mua Đan Phương (tăng tỉ lệ & phẩm chất khi luyện đan ở Đan Sư)', needsCultivator: true,
   run: (ctx) => {
     const v = new View({ ownerId: ctx.user.id, timeout: 120 });
     v.select({

@@ -30,6 +30,14 @@ function buildKhodoEmbed(user, row) {
       `${E.tienkim} ${row.tien_kim}  ${E.tienngoc} ${row.tien_ngoc}  ${E.thienhoatinh} ${row.thien_hoa_tinh}  ${E.hukhongkettinh} ${row.hu_khong_ket_tinh}\n` +
       `${E.thiendaothach} ${row.thien_dao_thach}  ${E.manhtiengioilenh} ${row.manh_tien_gioi_lenh}  ${E.daonguyentinh} ${row.dao_nguyen_tinh}  ${E.thiendaoan} ${row.thien_dao_an}\n${E.thienkiepchiluc} ${row.thien_kiep_chi_luc}`, false);
   }
+  try {   // V17: tóm tắt vật phẩm phân loại (Nguyên Liệu · Đan · Trận · Trang bị) — chi tiết ở nút Phân Loại
+    const IS = require('../game/invsvc'); const cnt = {}; for (const x of IS.list(row.user_id)) cnt[x.item.cat] = (cnt[x.item.cat] || 0) + 1;
+    const gn = require('../game/gear17').listOf(row.user_id).length; const CATS = require('../data/items_v17').CATEGORIES;
+    const parts = Object.entries(cnt).sort((a, b) => (CATS[a[0]]?.order || 99) - (CATS[b[0]]?.order || 99)).map(([c, n]) => `${CATS[c]?.icon || '📦'} ${CATS[c]?.label || c}: **${n}**`);
+    if (gn) parts.push(`⚒️ Trang bị: **${gn}**`);
+    if (parts.length) f('🎒 Vật phẩm phân loại (V17)', `${parts.join(' · ')}
+_Bấm **Phân Loại** để xem chi tiết, nguồn nhận, công dụng và bán NPC._`.slice(0, 1024), false);
+  } catch (_) { /* bỏ qua */ }
   try { const ps = require('../game/pets').inventorySummary(row.user_id); if (ps.text) f(`${E.dongthanh} Linh Thú & Trứng`, ps.text.slice(0, 1024), false); } catch (_) { /* bỏ qua */ }
   const owned = [...Cu.ownedCongphapTiers(row)].sort((a, b) => a - b);
   if (owned.length) {
@@ -110,6 +118,7 @@ function khoDoView(userId) {
   v.button({ key: 'pb', label: 'Pháp Bảo', emoji: E.phapbao, style: 'secondary', row: 0 }, (i) =>
     i.reply({ content: `${E.phapbao} Chọn Pháp Bảo muốn trang bị (mua ở **Cửa Hàng** nếu chưa có):`, components: SV.phapBaoView(userId).components(), flags: EPHEMERAL }));
   v.button({ key: 'tt', label: 'Đan Tẩy Tủy', emoji: E.taytuydan, style: 'secondary', row: 0 }, (i) => eph(i, require('../game/dan').doTaytuyReroll(userId)));
+  v.button({ key: 'pl', label: 'Phân Loại', emoji: E.khodo || '🎒', style: 'blurple', row: 1 }, (i) => require('./ngheViews').open(i, userId, 'inv'));
   v.button({ key: 'ttn', label: 'Đan Tẩy Tủy (Nửa)', emoji: E.taytuydan, style: 'secondary', row: 1 }, (i) => SV.taytuyNuabanPrompt(i, userId));
   return v;
 }

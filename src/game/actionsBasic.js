@@ -4,7 +4,6 @@ const K = require('./constants');
 const CD = require('./cooldowns');
 const R = require('./realm');
 const Cu = require('./cultivator');
-const Lock = require('./cultLock');
 const F = require('./format');
 const { E } = require('./emoji');
 const { getSectExpBuffMult } = require('./sectBase');
@@ -66,7 +65,6 @@ function tuluyenFatigue(userId, t, record = true) {
 
 /** Tu luyện — trả dữ liệu có cấu trúc (UI v7 dựng Embed từ đây). */
 function tuluyenR(userId) {
-  const lk = Lock.get(userId); if (lk) return { ok: false, kind: 'locked', lock: lk, remain: 0 };   // /khoatuluyen
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_TULUYEN - (t - row.last_tuluyen);
@@ -76,7 +74,8 @@ function tuluyenR(userId) {
   const need = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier); // mốc GỐC: tốc độ không đổi khi tăng exp đột phá
   const oldBase = randInt(8, 15) * COMPENSATION * R.realmSpeedMult(row.realm_index);   // công thức cũ làm sàn (Phàm Nhân)
   const base = Math.max(oldBase, BAL.tuluyenBase(need, row.realm_index, row.stage_index, CD.COOLDOWN_TULUYEN) * randUniform(0.85, 1.15));
-  const fatigue = tuluyenFatigue(userId, t);
+  const fatigue0 = tuluyenFatigue(userId, t);
+  const fatigue = 1 - (1 - fatigue0) * (1 - require('./fx17').stat(row, 'fatigueCut'));   // v17: Thanh Tâm Đan giảm mệt tu luyện dồn dập
   let gained = Math.max(1, int(base * mult * BAL.B.TULUYEN_SPEED_MULT * fatigue));
   const proc = random() < T.bundle(row).proc;      // v13.6: Hỗn Độn Diễn Sinh / Thời Quang...: cơ hội nhận gấp đôi
   if (proc) gained *= 2;
@@ -85,7 +84,6 @@ function tuluyenR(userId) {
 }
 function doTuluyen(userId) {
   const r = tuluyenR(userId);
-  if (r.kind === 'locked') return Lock.text(r.lock);
   if (!r.ok) return `⏳ Còn ${F.fmtTime(r.remain)} nữa mới tu luyện tiếp được.`;
   let note = r.sectBuff ? ' (đã gồm buff +5% EXP Tông Môn Chiến)' : '';
   if (r.buff) note += ' (✨ đang có buff Tu Luyện, hấp thụ linh khí nhanh hơn hẳn)';
@@ -95,7 +93,6 @@ function doTuluyen(userId) {
 }
 
 function dongquanR(userId) {
-  const lk = Lock.get(userId); if (lk) return { ok: false, kind: 'locked', lock: lk, remain: 0 };
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_DONGQUAN - (t - row.last_dongquan);
@@ -114,7 +111,6 @@ function dongquanR(userId) {
 }
 function doDongquan(userId) {
   const r = dongquanR(userId);
-  if (r.kind === 'locked') return Lock.text(r.lock);
   if (!r.ok) return `⏳ Còn ${F.fmtTime(r.remain)} nữa mới bế quan tiếp được.`;
   const note = r.sectBuff ? ' (đã gồm buff +5% EXP Tông Môn Chiến)' : '';
   return `${E.bequan} Bế quan xong, nhận được **${fmtNum(r.gained)}** tu vi và **${fmtNum(r.linhThachGain)}** ${E.linhthach} Linh Thạch${note}.`;
@@ -124,13 +120,12 @@ function doDongquan(userId) {
 function kyNgo(userId, row) { try { return require('./congphapV16').rollKyNgo(userId, row); } catch (e) { console.error('⚠️ Kỳ Ngộ:', e.message); return ''; } }
 
 function doCanngo(userId) {
-  const lk = Lock.get(userId); if (lk) return Lock.text(lk);
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_CANNGO - (t - row.last_canngo);
   if (remain > 0) return `⏳ Còn ${F.fmtTime(remain)} nữa mới cảm ngộ tiếp được.`;
   const fxN = T.bundle(row);
-  if (random() < Math.min(0.6, 0.35 + fxN.ngo)) {     // v13.6: Thể Chất/Linh Căn tăng tỉ lệ Ngộ đạo (tối đa +12%)
+  if (random() < Math.min(0.6, 0.35 + fxN.ngo + require('./fx17').stat(row, 'ngo') * 0.01)) {   // v17: + Ngưng Thần Đan     // v13.6: Thể Chất/Linh Căn tăng tỉ lệ Ngộ đạo (tối đa +12%)
     const gained = Math.max(1, Math.round(randInt(1, 3) * Math.min(1.4, T.absorbMult(row))));
     Cu.updateCultivator(userId, { ngo_tinh: row.ngo_tinh + gained, last_canngo: t });
     return `${E.linhngo} Ngộ đạo! Nhận thêm **${gained}** Độ Lĩnh Ngộ.${kyNgo(userId, row)}`;
@@ -140,7 +135,6 @@ function doCanngo(userId) {
 }
 
 function doLinhmach(userId) {
-  const lk = Lock.get(userId); if (lk) return Lock.text(lk);
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_LINHMACH - (t - row.last_linhmach);

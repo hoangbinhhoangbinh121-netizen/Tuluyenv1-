@@ -25,7 +25,7 @@ function buildSession(guildId, channelId, aId, bId) {
   const a = Cu.getCultivator(aId); const b = Cu.getCultivator(bId);
   const atkA = Cu.effectiveAtk(a); const defA = Cu.effectiveDef(a); const spdA = Cu.effectiveSpd(a);
   const atkB = Cu.effectiveAtk(b); const defB = Cu.effectiveDef(b); const spdB = Cu.effectiveSpd(b);
-  const PW = BAL.pvpPowers(a, b, Cu); const powerA = PW.powerA; const powerB = PW.powerB;
+  const PW = BAL.pvpPowers(a, b, Cu, { foe: true }); const powerA = PW.powerA; const powerB = PW.powerB;
   const selfBuff = PW.buffA; const enemyDebuff = PW.debuffA;
   const buffNote = (selfBuff || enemyDebuff || PW.buffB || PW.debuffB) ? `\n🌀 Công pháp phát động: 🅰️ +${int(PW.buffA * 100)}%/-${int(PW.debuffA * 100)}% · 🅱️ +${int(PW.buffB * 100)}%/-${int(PW.debuffB * 100)}% (buff / debuff đối thủ).` : '';
   const realmA = R.realmDisplay(a.realm_index, a.stage_index); const realmB = R.realmDisplay(b.realm_index, b.stage_index);

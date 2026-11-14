@@ -108,13 +108,22 @@ function attack(guildId, userId, action = 'atk') {
     try { require('./pets').onBoss(userId); } catch (_) { /* Linh Thú không được làm hỏng đòn đánh Boss */ }
 
     // Phản đòn (không có khi vừa kết liễu)
-    let counter = 0;
+    let counter = 0; let v17cut = 0;
     if (!killed) {
       counter = int(maxHp * randUniform(0.04, 0.09) * (1 + 0.15 * (boss.tier - 1)));
+      // v17: giảm phản đòn — giảm sát thương (dr) + giảm đòn Boss (bossDr: Phong Ấn / Trấn Hồn Linh) + kháng nguyên tố của Boss (Đan Hàn Ngọc/Liệt Dương). Tổng tối đa 60%.
+      try {
+        const FXb = require('./fx17'); const fx = FXb.get(row0); const el = T.bossElement(boss.tier);
+        const res = el === 'Hỏa' ? fx.res_hoa : (el === 'Băng' || el === 'Thủy') ? fx.res_han : 0;
+        const cut = Math.min(0.60, fx.dr + fx.bossDr + res);
+        if (cut > 0) { counter = Math.max(1, int(counter * (1 - cut))); v17cut = cut; }
+        if (FXb.activeBuff(userId, 'tran:tp_phong_an')) require('./tran17').consumeSeal(userId);
+      } catch (e) { console.warn('⚠️ hook v17 Boss:', e.message); }
       curHp = Math.max(1, curHp - counter);
     }
+    try { require('./gear17').wear(userId, 'boss'); } catch (_) { /* độ bền không được làm hỏng đòn đánh */ }
     Cu.updateCultivator(userId, { cur_hp: curHp, linh_luc: mp, last_hp_regen: now(), ...TO.progFields(row, { lc: 1 }) });
-    return { ok: true, action, boss, turn, dmg: dealt, crit, counter, hp: curHp, maxHp, mp, bossHp: Math.max(0, bossHp), finished: killed, killerId: killed ? userId : null };
+    return { ok: true, action, boss, turn, dmg: dealt, crit, counter, counterCut: v17cut, hp: curHp, maxHp, mp, bossHp: Math.max(0, bossHp), finished: killed, killerId: killed ? userId : null };
   });
 }
 
@@ -146,6 +155,7 @@ function finish(bossId, reason, killerId = null) {
         const dr = TO.rollDropItems(c.user_id, 'boss', TO.lootMultOf(crow));
         if (dr.text) out.drops.push({ user_id: c.user_id, kind: 'talent', text: `nhận ${dr.text} từ xác Boss!` });
         TO.addProg(c.user_id, { lc: 5, tc: 2 });
+        try { const dr17 = require('./drops17').roll(c.user_id, require('./drops17').bossSource(boss.tier), { extra: TO.lootMultOf(crow) - 1 }); if (dr17.text) out.drops.push({ user_id: c.user_id, kind: 'mat17', text: dr17.text.replace(/^\n🎁 Thu được: /, 'thu được ').replace(/\.$/, ' từ xác Boss!') }); } catch (e) { console.error('⚠️ rơi nguyên liệu Boss v17:', e.message); }
         try { for (const text of require('./congphapV16').rollBossContrib(c.user_id, crow, boss.tier)) out.drops.push({ user_id: c.user_id, kind: 'frag', text }); } catch (e) { console.error('⚠️ rơi mảnh bí tịch Boss:', e.message); }   // v16
       }
     }

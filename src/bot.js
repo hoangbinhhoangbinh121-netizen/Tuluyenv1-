@@ -18,6 +18,7 @@ require('./commands/guideTalent');
 require('./commands/admin');
 require('./commands/adminXem');
 require('./commands/dan');
+require('./commands/nghe');
 require('./commands/pets');
 require('./commands/kho');
 require('./commands/chiendau');
@@ -28,8 +29,6 @@ require('./commands/pvp');
 require('./commands/sectwar');
 require('./commands/daiphu');
 require('./commands/guide');
-require('./commands/store');   // v16.8: TuTienStore — nạp tiền thật, nhận vật phẩm
-require('./commands/khoatuluyen');   // v16.8: /khoatuluyen — admin khóa tu luyện người chơi
 const { startBackground } = require('./background');
 
 const TOKEN = process.env.DISCORD_TOKEN;
@@ -89,7 +88,6 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
     await detectOwner(c);
     try { await registerSlash(c); } catch (e) { console.error('❌ Đăng ký slash lỗi:', e.message, '— kiểm tra bot đã được mời với quyền "applications.commands" (và GUILD_ID nếu có đặt).'); }
     startBackground(client);
-    try { require('./store').start(c); } catch (e) { console.error('⚠️ TuTienStore không khởi động được:', e.message); }   // v16.8
   });
   // Server mới mời bot vào → lệnh slash hiện ngay (chỉ khi không ghim GUILD_ID).
   client.on(Events.GuildCreate, async (g) => {
@@ -131,7 +129,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v16.7 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v17.1 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);
@@ -142,6 +140,7 @@ async function main() {
   try { const m = require('./game/talentOps').migrateAll(); console.log(`🧬 Thể Chất/Linh Căn v13.9: ${m.total} nhân vật, đã đồng bộ hồ sơ cho ${m.written} người.`); } catch (e) { console.error('⚠️ migrate Thể Chất/Linh Căn:', e); }
   try { const n = require('./game/pets').migrateAll(); console.log(`🐾 Linh Thú v14.0: đã chuyển đổi ${n} Linh Thú kiểu cũ sang hệ thống mới.`); } catch (e) { console.error('⚠️ migrate Linh Thú:', e.message); }
   try { const m = require('./game/migrateV16').run(); console.log(m.skipped ? '📜 Công Pháp v16: đã migrate trước đó.' : `📜 Công Pháp v16: chuẩn hoá ${m.fixed}/${m.players} người có công pháp (bỏ ô lỗi: ${m.cleaned}). Sao lưu: ${m.backup || 'KHÔNG sao lưu được — xem log'}`); } catch (e) { console.error('⚠️ migrate Công Pháp v16:', e.message); }
+  try { const m = require('./game/migrateV17').run(); console.log(m.skipped ? '🏮 Bách Nghề v17: đã migrate trước đó.' : `🏮 Bách Nghề v17: ${m.players} người chơi, dữ liệu V16 nguyên vẹn (${m.ok ? 'đối chiếu KHỚP' : 'LỆCH — xem log'}). Sao lưu: ${m.backup || 'KHÔNG sao lưu được — xem log'}`); } catch (e) { console.error('⚠️ migrate v17:', e.message); }
   await syncPixelEmoji();
 
   process.on('unhandledRejection', (e) => console.error('⚠️ unhandledRejection:', e));

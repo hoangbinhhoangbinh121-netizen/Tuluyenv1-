@@ -106,7 +106,9 @@ function doBicanh(userId, tierIdx = 0) {
   }
   try { msg += CP16.rollBicanhThuong(userId, row, up, tierIdx); } catch (e) { console.error('⚠️ rơi công pháp Bí Cảnh:', e.message); }   // v16: công pháp Nhân Giới
   Cu.updateCultivator(userId, up);
-  return msg + TO.rollDrops(userId, 'bicanh', lootM) + Pets.onBicanh(userId, PB.SOURCE_IDX.thuong(tierIdx));   // v14.0: Linh Thú — trứng/thú hoang/vật phẩm/EXP
+  let mat17 = '';
+  try { const DR = require('./drops17'); mat17 = DR.text(userId, DR.bicanhSource(tierIdx), { extra: lootM - 1 }); if (isBoss) mat17 += DR.text(userId, 'vlc_boss', { extra: lootM - 1 }); } catch (e) { console.error('⚠️ rơi nguyên liệu Bí Cảnh v17:', e.message); }   // v17
+  return msg + mat17 + TO.rollDrops(userId, 'bicanh', lootM) + Pets.onBicanh(userId, PB.SOURCE_IDX.thuong(tierIdx));   // v14.0: Linh Thú — trứng/thú hoang/vật phẩm/EXP
 }
 
 function doBicanhDacBiet(userId, group) {
@@ -115,16 +117,19 @@ function doBicanhDacBiet(userId, group) {
   const g = DACBIET_GROUPS[group];
   if (!g) return '❌ Loại Bí Cảnh Đặc Biệt không hợp lệ.';
   const ve = row.ve_bicanh_dac_biet || 0;
-  if (ve <= 0) return `❌ Bạn không có ${E.vebicanhdacbiet} Vé Bí Cảnh Đặc Biệt nào — hạ gục Boss Thế Giới (ra đòn kết liễu) để có 10% cơ hội rơi ra.`;
+  const hasTele = ve <= 0 && require('./tran17').chargesLeft(userId, 'tp_khong_gian') > 0;   // v17: Không Gian Trận Bàn thay vé
+  if (ve <= 0 && !hasTele) return `❌ Bạn không có ${E.vebicanhdacbiet} Vé Bí Cảnh Đặc Biệt nào — hạ gục Boss Thế Giới (ra đòn kết liễu) để có 10% cơ hội rơi ra.`;
   const ri = row.realm_index;
   if (!(g.min_realm <= ri && ri <= g.max_realm)) return `🔒 **${g.label}** chỉ dành cho người tu luyện từ ${K.REALMS[g.min_realm].name} đến ${K.REALMS[g.max_realm].name}.`;
+  let viaTele = false;
+  if (ve <= 0) { if (!require('./tran17').teleportTicket(userId)) return '❌ Hết lượt Không Gian Trận Bàn.'; viaTele = true; }
   const cpBonus = Cu.cpTuMult(row);
   const PFD = group === 'linh_gioi' ? 1 : BAL.paceFactor(row);
   const tuVi = int(rr(g.base_tu_vi) * (1 + ri * 0.25) * cpBonus * K.BICANH_DACBIET_MULT * PFD);
   const lt = int(tuVi / PFD * 200);
-  const up = { tu_vi: row.tu_vi + tuVi, linh_thach: row.linh_thach + lt, ve_bicanh_dac_biet: ve - 1, ...TO.progFields(row, { lc: 3, tc: 2 }) };
+  const up = { tu_vi: row.tu_vi + tuVi, linh_thach: row.linh_thach + lt, ve_bicanh_dac_biet: Math.max(0, ve - 1), ...TO.progFields(row, { lc: 3, tc: 2 }) };
   const cpNote = cpBonus > 1 ? ` (đã gồm +${int((cpBonus - 1) * 100)}% công pháp)` : '';
-  let msg = `${E.bicanh}✨ Khám phá **${g.label}**! Dùng hết 1 ${E.vebicanhdacbiet} Vé (còn ${ve - 1}). Nhận **${fmtNum(tuVi)}** tu vi, **${fmtNum(lt)}** ${E.linhthach} Linh Thạch.${cpNote}`;
+  let msg = `${E.bicanh}✨ Khám phá **${g.label}**! ${viaTele ? '🌀 Dịch chuyển bằng Không Gian Trận Bàn (thay Vé).' : `Dùng hết 1 ${E.vebicanhdacbiet} Vé (còn ${ve - 1}).`} Nhận **${fmtNum(tuVi)}** tu vi, **${fmtNum(lt)}** ${E.linhthach} Linh Thạch.${cpNote}`;
   if (random() < BICANH_DACBIET_CONGPHAP_CHANCE) {
     const owned = Cu.ownedCongphapTiers(row);
     const elig = K.CONG_PHAP_TIER_DEF.filter((t) => !owned.has(t.tier) && !t.boss_drop_only && row.realm_index >= t.require_realm && row.world_tier >= t.require_world);
@@ -136,7 +141,9 @@ function doBicanhDacBiet(userId, group) {
   }
   try { msg += CP16.rollBicanhDacBiet(userId, row, up); } catch (e) { console.error('⚠️ rơi công pháp Bí Cảnh Đặc Biệt:', e.message); }   // v16
   Cu.updateCultivator(userId, up);
-  return msg + TO.rollDrops(userId, 'bicanh', TO.lootMultOf(row) * 2) + Pets.onBicanh(userId, PB.SOURCE_IDX.dacbiet());   // Bí Cảnh Đặc Biệt: cơ duyên gấp đôi
+  let mat17 = '';
+  try { mat17 = require('./drops17').text(userId, group === 'linh_gioi' ? 'bc_linh' : 'bc_nhan', { extra: TO.lootMultOf(row) - 1 }); } catch (e) { console.error('⚠️ rơi nguyên liệu Bí Cảnh ĐB v17:', e.message); }
+  return msg + mat17 + TO.rollDrops(userId, 'bicanh', TO.lootMultOf(row) * 2) + Pets.onBicanh(userId, PB.SOURCE_IDX.dacbiet());   // Bí Cảnh Đặc Biệt: cơ duyên gấp đôi
 }
 
 function doChePhithangLenh(userId) {
@@ -240,8 +247,10 @@ function doBicanhLinhgioi(userId, subKey) {
   }
   let cpDrop = '';
   try { cpDrop = CP16.rollBicanhLinhgioi(userId, row, up, chain.key); } catch (e) { console.error('⚠️ rơi công pháp Bí Cảnh Linh Giới:', e.message); }   // v16
+  let mat17 = '';
+  try { const DR = require('./drops17'); mat17 = DR.text(userId, `chain_${chain.key}`, { extra: require('./talentOps').lootMultOf(row) - 1 }); if (bossNote) mat17 += DR.text(userId, 'chain_dokiep_boss'); } catch (e) { console.error('⚠️ rơi nguyên liệu Bí Cảnh Linh Giới v17:', e.message); }
   Cu.updateCultivator(userId, up);
-  return `${E.bicanhlinhgioi} Khám phá **${subName}** (${chain.name}): nhận ${loot.join(', ')}.${bossNote}${ach}${tc}${cpDrop}${allDone}${Pets.onBicanh(userId, PB.SOURCE_IDX.linhgioi[chain.key] || 6)}`;
+  return `${E.bicanhlinhgioi} Khám phá **${subName}** (${chain.name}): nhận ${loot.join(', ')}.${bossNote}${ach}${tc}${cpDrop}${mat17}${allDone}${Pets.onBicanh(userId, PB.SOURCE_IDX.linhgioi[chain.key] || 6)}`;
 }
 
 module.exports = {

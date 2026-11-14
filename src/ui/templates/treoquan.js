@@ -41,8 +41,6 @@ function progressField(row, extra = 0) {
 
 function view(r) {
   switch (r.kind) {
-    case 'locked':
-      return N.warning(require('../../game/cultLock').text(r.lock), { footer: 'Tu luyện đang bị khóa' });
     case 'batdau':
       return createEmbed({
         cat: 'treoquan', header: 'BẾ QUAN TREO', status: 'Nhập định thành công', color: COLORS.CULTIVATION,

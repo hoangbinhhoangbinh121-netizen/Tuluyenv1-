@@ -5,11 +5,11 @@ const BAL = require('./balance');
 const CD = require('./cooldowns');
 const R = require('./realm');
 const Cu = require('./cultivator');
-const Lock = require('./cultLock');
 const T = require('./talent');
 const TO = require('./talentOps');
 const F = require('./format');
 const { E } = require('./emoji');
+const X17 = require('./fx17');
 const { now, int, random, randUniform, fmtNum } = require('../util');
 
 function resolveCuuLoiKiep(userId, row) {
@@ -19,7 +19,9 @@ function resolveCuuLoiKiep(userId, row) {
   const maxHp = Cu.effectiveMaxHp(row);
   let curHp = Cu.syncHpRegen(userId, row);
   const fx = T.bundle(row);   // v13.6: Linh Căn Lôi / Thể Chất hộ thể giảm sát thương & tăng né Lôi Kiếp (đã chặn trần)
-  const dodgeRate = Math.min(0.88, K.CUULOIKIEP_DODGE_BASE + row.ngo_tinh * 0.01) + fx.kiepDodge;
+  const fx17 = X17.get(row);   // v17: Đan Độ Kiếp (giảm sát thương kiếp, tiêu 1 lượt) · Ngưng Thần Đan (Ngộ Tính tạm thời) · trang bị
+  if (X17.activeBuff(userId, 'do_kiep')) X17.consume(userId, 'do_kiep');
+  const dodgeRate = Math.min(0.88, K.CUULOIKIEP_DODGE_BASE + (row.ngo_tinh + fx17.ngo) * 0.01) + fx.kiepDodge;
   const log = [];
   for (let i = 1; i <= K.CUULOIKIEP_SO_DAO; i++) {
     if (phuAvailable > phuUsed) {
@@ -28,7 +30,7 @@ function resolveCuuLoiKiep(userId, row) {
       continue;
     }
     if (random() < dodgeRate) { log.push(`⚡ Đạo lôi ${i}/9: tự thân chống đỡ thành công, không hề hấn gì.`); continue; }
-    const dmg = int(maxHp * randUniform(K.CUULOIKIEP_DMG_PCT_MIN, K.CUULOIKIEP_DMG_PCT_MAX) * (1 - fx.kiepDmg));
+    const dmg = int(maxHp * randUniform(K.CUULOIKIEP_DMG_PCT_MIN, K.CUULOIKIEP_DMG_PCT_MAX) * Math.max(0.2, 1 - fx.kiepDmg - fx17.kiep - fx17.dr));
     curHp -= dmg;
     log.push(`💥 Đạo lôi ${i}/9: trúng đòn, mất ${fmtNum(dmg)} Sinh Mệnh (còn ${fmtNum(Math.max(curHp, 0))}/${fmtNum(maxHp)}).`);
     if (curHp <= 0) {
@@ -42,7 +44,6 @@ function resolveCuuLoiKiep(userId, row) {
 }
 
 function doDotpha(userId) {
-  const lk = Lock.get(userId); if (lk && Number(lk.block_dotpha)) return Lock.text(lk);   // /khoatuluyen ca_dotpha:Có
   const row = Cu.getCultivator(userId);
   if (Cu.ngusuyActive(row)) {
     const idx = Math.min(row.ngusuy_stage, K.NGUSUY_STAGES.length - 1);
@@ -59,11 +60,14 @@ function doDotpha(userId) {
   const nxt = R.nextStage(realmIdx, stageIdx);
   if (nxt === null) return '♾️ Bạn đã đạt đến Tiên Đế, cảnh giới tối cao!';
 
-  let rate = K.BASE_BREAKTHROUGH_RATE - realmIdx * 0.005 + row.ngo_tinh * 0.01 + row.khi_van * 0.005;
+  const fxd = X17.get(row);   // v17: trang bị / Phá Cảnh Đan / Hộ Mạch Đan / Ngưng Thần Đan
+  let rate = K.BASE_BREAKTHROUGH_RATE - realmIdx * 0.005 + (row.ngo_tinh + fxd.ngo) * 0.01 + row.khi_van * 0.005;
   const fxb = T.bundle(row);
   // v13.6: Thể Chất/Linh Căn: +bt (tối đa +8%) và độ tinh khiết ±2% — vẫn chặn trần 97%
-  rate = Math.max(0.15, Math.min(0.97, rate + fxb.bt + ((T.profile(row).lc.purity - 50) / 50) * 0.02));
-  const keep = 0.85 + fxb.failKeep;     // giữ lại tu vi khi thất bại (mặc định 85%, tối đa 95%)
+  rate = Math.max(0.15, Math.min(0.97, rate + fxb.bt + fxd.bt + ((T.profile(row).lc.purity - 50) / 50) * 0.02));
+  const keep = Math.min(0.98, 0.85 + fxb.failKeep + fxd.failKeep);
+  const lockT = t - CD.COOLDOWN_DOTPHA_FAIL * fxd.lockCut;     // Hộ Mạch Đan / Hộ Tâm Kính: rút ngắn thời gian khoá khi hỏng
+  if (X17.activeBuff(userId, 'pha_canh')) X17.consume(userId, 'pha_canh');     // giữ lại tu vi khi thất bại (mặc định 85%, tối đa 95%)
   if (realmIdx === K.DOKIEP_REALM_IDX) rate = Math.max(0.15, Math.min(0.75, rate - 0.10));
 
   if (random() < rate) {
@@ -80,7 +84,8 @@ function doDotpha(userId) {
       const [passed, log, phuUsed] = resolveCuuLoiKiep(userId, row);
       kiepLog = `\n${E.thienkiep} **CỬU LÔI KIẾP** (${phuUsed}/9 đạo dùng ${R.linhphuLabel(row)}):\n${log}`;
       if (!passed) {
-        Cu.updateCultivator(userId, { tu_vi: int(row.tu_vi * keep), last_dotpha_fail: now() });
+        Cu.updateCultivator(userId, { tu_vi: int(row.tu_vi * keep), last_dotpha_fail: now() - CD.COOLDOWN_DOTPHA_FAIL * fxd.lockCut });
+        if (X17.activeBuff(userId, 'ho_mach')) X17.consume(userId, 'ho_mach');
         return `${kiepLog}\n💥 KHÔNG VƯỢT QUA ĐƯỢC CỬU LÔI KIẾP — đột phá **${K.REALMS[newRealm].name}** thất bại, trọng thương phải dưỡng thương **${F.fmtTime(CD.COOLDOWN_DOTPHA_FAIL)}** (dùng ${E.phagioidan} Đan Dược Phá Giới ở nút **Dùng Đan Dược** để bỏ bớt, tối đa 5 phút/viên).`;
       }
       const cur = Cu.calcLucChien(row);
@@ -110,7 +115,8 @@ function doDotpha(userId) {
     const heal = curHpAfter !== null ? '\n💚 Vượt qua Cửu Đại Lôi Kiếp — Sinh Mệnh được hồi ĐẦY hoàn toàn!' : '';
     return `${E.dotpha} ĐỘT PHÁ THÀNH CÔNG! Tiến lên **${R.realmDisplay(newRealm, newStage)}**!${majorNote}${kiepLog}${heal}`;
   }
-  Cu.updateCultivator(userId, { tu_vi: int(row.tu_vi * keep), ngo_tinh: row.ngo_tinh + 1, last_dotpha_fail: t });
+  Cu.updateCultivator(userId, { tu_vi: int(row.tu_vi * keep), ngo_tinh: row.ngo_tinh + 1, last_dotpha_fail: lockT });
+  if (X17.activeBuff(userId, 'ho_mach')) X17.consume(userId, 'ho_mach');
   return `💢 Đột phá thất bại, tổn thất tu vi nhưng nhận thêm 1 Độ Lĩnh Ngộ (tỉ lệ lần sau tăng).\n⏳ Bị khóa Đột Phá **20 phút** để dưỡng thương — dùng ${E.phagioidan} Đan Dược Phá Giới (nút **Dùng Đan Dược**) để bỏ bớt thời gian chờ, mỗi viên bỏ tối đa 5 phút.`;
 }
 

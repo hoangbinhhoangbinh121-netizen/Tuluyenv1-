@@ -41,7 +41,9 @@ function tuViRequiredBase(realmIdx, stageIdx, worldTier = 0) {
 /** Mốc cũ (trước v14.0, chưa áp hệ số ĐẠI/TIỂU cảnh giới) — chỉ dùng để tính mốc Lực Chiến Thiên Kiếp cho khỏi lệch. */
 const tuViRequiredLegacy = (realmIdx, stageIdx, worldTier = 0) => int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT);
 const isMajorGate = (realmIdx, stageIdx) => stageIdx >= K.totalStageCount(realmIdx) - 1;      // tầng cuối của cảnh giới = cửa ải sang ĐẠI cảnh giới kế
-const tuViRequired = (realmIdx, stageIdx, worldTier = 0) => int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT * (isMajorGate(realmIdx, stageIdx) ? K.EXP_GATE_MAJOR_MULT : K.EXP_GATE_MINOR_MULT));
+/** v17.1: đột phá TRÊN Độ Kiếp Viên Mãn (cửa ải Độ Kiếp Viên Mãn → Chân Tiên và mọi tầng của Chân Tiên … Tiên Đế) cần tu vi x K.TIEN_EXP_MULT (7). */
+const tienExpMult = (realmIdx, stageIdx) => (realmIdx > K.DOKIEP_REALM_IDX || (realmIdx === K.DOKIEP_REALM_IDX && stageIdx >= K.DOKIEP_VIENMAN_STAGE)) ? K.TIEN_EXP_MULT : 1;
+const tuViRequired = (realmIdx, stageIdx, worldTier = 0) => int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT * (isMajorGate(realmIdx, stageIdx) ? K.EXP_GATE_MAJOR_MULT : K.EXP_GATE_MINOR_MULT) * tienExpMult(realmIdx, stageIdx));
 
 /** [realmIdx, stageIdx] kế tiếp, hoặc null nếu đã ở Tiên Đế. */
 function nextStage(realmIdx, stageIdx) {
@@ -67,6 +69,6 @@ const linhgioilenhLabel = (row) => (row.world_tier > 0 ? 'Tiên Lệnh' : 'Linh 
 const linhphuLabel = (row) => (row.world_tier > 0 ? 'Tiên Phù' : 'Linh Phù');
 
 module.exports = {
-  realmSpeedMult, realmDisplay, tuViRequired, tuViRequiredBase, tuViRequiredLegacy, isMajorGate, nextStage, rollWeighted, getMult,
+  realmSpeedMult, realmDisplay, tuViRequired, tienExpMult, tuViRequiredBase, tuViRequiredLegacy, isMajorGate, nextStage, rollWeighted, getMult,
   worldTierName, worldMult, worldTierFlavor, lenhCol, phuCol, linhgioilenhLabel, linhphuLabel,
 };

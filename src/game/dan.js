@@ -75,6 +75,7 @@ function doLuyendan(userId) {
   }
   const remainCd = CD.COOLDOWN_LUYENDAN - (t - row.last_luyendan);
   if (remainCd > 0) return `⏳ Còn ${F.fmtTime(remainCd)} nữa mới bắt đầu luyện đan mẻ mới được.`;
+  if (!process.env.V17_LEGACY_BREW) return '🔥 Từ V17, luyện đan do **Đan Sư** đảm nhiệm — dùng `/nghenghiep` → **Đan Sư** → **Công Thức** (Nguyên Liệu cũ vẫn dùng được làm nguyên liệu).';
   if (row.dan_phuong_quality <= 0) return `❌ Bạn chưa có Đan Phương nào — cần **mua Đan Phương** trước khi Luyện Đan (ở **Cửa Hàng**, tối thiểu 10.000 ${E.linhthach} Linh Thạch).`;
   if (row.nguyen_lieu < K.LUYENDAN_COST) return `❌ Cần ${K.LUYENDAN_COST} nguyên liệu để luyện đan (hiện có ${row.nguyen_lieu}).`;
   Cu.updateCultivator(userId, { nguyen_lieu: row.nguyen_lieu - K.LUYENDAN_COST, luyendan_start: t });
@@ -91,6 +92,7 @@ function doSudungdan(userId) {
 }
 
 function doLuyenkhi(userId) {
+  if (!process.env.V17_LEGACY_BREW) return '⚒️ Từ V17, rèn pháp khí do **Luyện Khí Sư** đảm nhiệm (trang bị 7 ô, không còn cộng chỉ số vĩnh viễn) — dùng `/nghenghiep` → **Luyện Khí Sư**. Chỉ số Luyện Khí cũ của bạn vẫn được giữ nguyên.';
   const row = Cu.getCultivator(userId);
   const t = now();
   const remain = CD.COOLDOWN_LUYENKHI - (t - row.last_luyenkhi);

@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { CREATE_TABLES, ADD_COLUMNS } = require('./schema');
 const { CREATE_V7 } = require('./schema_v7');
-const { CREATE_STORE, INDEX_STORE, ADD_COLUMNS_STORE } = require('./schema_store');
+const { CREATE_V17, ADD_COLUMNS_V17 } = require('./schema_v17');
 
 const DB_PATH = process.env.TULUYEN_DB_PATH
   ? path.resolve(process.env.TULUYEN_DB_PATH)
@@ -40,8 +40,6 @@ const normParams = (p) => p.map((x) => (typeof x === 'boolean' ? (x ? 1 : 0) : x
 
 let _db = null;
 let _driver = '';
-/** Tăng mỗi lần mở kết nối DB mới (khởi động, sau closeDb/restore) — để cache "đã tạo bảng" ở nơi khác biết mà làm lại. */
-let _gen = 0;
 
 /** better-sqlite3: nhanh nhưng cần file biên dịch sẵn — trên một số host/Node mới (VD Node 24) có thể không tải được. */
 function _openBetterSqlite() {
@@ -110,7 +108,7 @@ function _open() {
 }
 
 function db() {
-  if (!_db) { _db = _open(); _gen++; }
+  if (!_db) _db = _open();
   return _db;
 }
 
@@ -145,9 +143,13 @@ const all = (sql, ...p) => withRescue(() => db().prepare(sql).all(...p));
 const run = (sql, ...p) => withRescue(() => db().prepare(sql).run(...p));
 
 /** Chạy fn trong 1 transaction (BEGIN IMMEDIATE ... COMMIT / ROLLBACK khi lỗi). */
+let _txDepth = 0;
 function transaction(fn) {
+  // v17: cho phép LỒNG (Inventory Service được gọi từ bên trong transaction của Boss/PvP...): lớp trong chỉ chạy fn, lỗi → lớp ngoài ROLLBACK.
+  if (_txDepth > 0) return fn();
   const d = db();
   d.exec('BEGIN IMMEDIATE');
+  _txDepth = 1;
   try {
     const r = fn();
     d.exec('COMMIT');
@@ -155,18 +157,18 @@ function transaction(fn) {
   } catch (e) {
     try { d.exec('ROLLBACK'); } catch (_) { /* bỏ qua */ }
     throw e;
-  }
+  } finally { _txDepth = 0; }
 }
 
-/** Tạo bảng thiếu + thêm cột thiếu (an toàn chạy lại nhiều lần). Gồm cả bảng TuTienStore. */
+/** Tạo bảng thiếu + thêm cột thiếu (an toàn chạy lại nhiều lần). */
 function migrate() {
   const d = db();
   for (const sql of CREATE_TABLES) d.exec(sql);
   for (const sql of CREATE_V7) d.exec(sql);
-  for (const sql of CREATE_STORE) d.exec(sql);
-  const addCols = {};
-  for (const src of [ADD_COLUMNS, ADD_COLUMNS_STORE]) for (const [t, c] of Object.entries(src)) addCols[t] = { ...(addCols[t] || {}), ...c };
-  for (const [table, cols] of Object.entries(addCols)) {
+  for (const sql of CREATE_V17) d.exec(sql);
+  const ALLCOLS = {};
+  for (const src of [ADD_COLUMNS, ADD_COLUMNS_V17]) for (const [t, c] of Object.entries(src)) ALLCOLS[t] = { ...(ALLCOLS[t] || {}), ...c };
+  for (const [table, cols] of Object.entries(ALLCOLS)) {
     const existing = new Set(d.prepare(`PRAGMA table_info(${table})`).all().map((r) => r.name));
     for (const [col, decl] of Object.entries(cols)) {
       if (existing.has(col)) continue;
@@ -180,7 +182,6 @@ function migrate() {
       }
     }
   }
-  for (const sql of INDEX_STORE) d.exec(sql);
 }
 
 function initDb() {
@@ -210,4 +211,4 @@ function closeDb() {
   if (_db) { _db.close(); _db = null; }
 }
 
-module.exports = { DB_PATH, db, get, all, run, transaction, initDb, migrate, closeDb, driver: () => _driver, generation: () => _gen };
+module.exports = { DB_PATH, db, get, all, run, transaction, initDb, migrate, closeDb, driver: () => _driver };

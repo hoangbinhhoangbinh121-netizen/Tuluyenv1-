@@ -47,10 +47,12 @@ function doVuotthienkiep(userId) {
     rate = K.THIENKIEP_RATE_KHONG_DU_LUC_CHIEN;
     note = `⚠️ Lực Chiến **${fmtNum(lc)}/${fmtNum(minLc)}** — CHƯA ĐỦ mốc tối thiểu, tỉ lệ thành công bị ép cứng về **${int(rate * 100)}%** (còn lại ${100 - int(rate * 100)}% = thất bại).`;
   } else {
-    rate = Math.max(0.05, Math.min(0.9, 0.45 + row.ngo_tinh * 0.02 + (row.linh_luc / 100) * 0.15 + T.bundle(row).bt));   // v13.6: + Thể Chất/Linh Căn (tối đa +8%)
+    const fx17 = require('./fx17').get(row);   // v17: Đan Độ Kiếp (tk) · Ngưng Thần Đan (ngo) · trang bị
+    rate = Math.max(0.05, Math.min(0.9, 0.45 + (row.ngo_tinh + fx17.ngo) * 0.02 + (row.linh_luc / 100) * 0.15 + T.bundle(row).bt + fx17.tk));   // v13.6: + Thể Chất/Linh Căn (tối đa +8%)
     note = `✅ Lực Chiến **${fmtNum(lc)}/${fmtNum(minLc)}** đủ mốc tối thiểu, tỉ lệ thành công **${int(rate * 100)}%**.`;
   }
   if (!Cu.updateCultivator(userId, { linh_thach: new Delta(-cost), last_thienkiep: t }, { linh_thach: cost })) return Cu.MSG_BALANCE_CHANGED;
+  if (require('./fx17').activeBuff(userId, 'do_kiep')) require('./fx17').consume(userId, 'do_kiep');
   if (random() < rate) {
     Cu.updateCultivator(userId, { vuot_thienkiep: 1, ...TO.progFields(row, { tc: 10 }) });   // v13.6: +10 tiến độ Thể Chất
     return `${E.thienkiep} VƯỢT ${label.toUpperCase()} THÀNH CÔNG! Thân thể được tôi luyện, sẵn sàng cho một bước phi thăng.\n${note}${TO.rollDrops(userId, 'thienkiep')}`;

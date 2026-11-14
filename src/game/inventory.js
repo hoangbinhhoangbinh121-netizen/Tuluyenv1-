@@ -76,6 +76,7 @@ function rewardLinesForCode(c) {
   if (c.dan_pha_gioi) r.push(`⚗️ **${c.dan_pha_gioi}** × ${E.phagioidan} Đan Dược Phá Giới (bỏ bớt cooldown Đột Phá thất bại)`);
   if (c.cong_phap && require('./congphapV16').isNew(c.cong_phap)) r.push(`📜 Công Pháp **${require('./congphapV16').nameOf(c.cong_phap)}**`);
   if (c.ruong_than_bi) r.push(`📦 **${c.ruong_than_bi}** × ${E.ruong} Rương Thần Bí`);
+  if (c.items) r.push(`🎒 Vật phẩm: ${require('./invsvc').fmtItems(Object.entries(c.items).map(([id, qty]) => ({ id, q: 0, qty })))}`);   // v17: mã code tặng vật phẩm V17 (items: { item_id: số lượng })
   return r;
 }
 
@@ -90,6 +91,7 @@ function grantCodeRewards(userId, code, c) {
   redeemed.add(code);
   up.redeemed_codes = [...redeemed].sort().join(',');
   Cu.updateCultivator(userId, up);
+  if (c.items) { try { require('./invsvc').addMany(userId, c.items, `code ${code}`); } catch (e) { console.error('⚠️ code items v17:', e.message); } }
   if (c.max_uses !== null && c.max_uses !== undefined && !c.requires_admin_approval) codeIncrementUse(code);
   return `✅ Đổi mã **${code}** thành công — ${c.label}!\n${rewardLinesForCode(c).join('\n')}\n\nVào ${E.khodo} **Kho Đồ** để xem lại vật phẩm.`;
 }

@@ -1,15 +1,13 @@
 {
   "name": "tien-gioi-bot-v12",
-  "version": "16.8.1",
+  "version": "17.1.0",
   "description": "Bot Discord Tu Tiên — Node.js + discord.js + SQLite (file data/tutien.db)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "import-db": "node scripts/import-old-db.js",
     "check": "node scripts/selfcheck.js",
-    "redeploy": "bash scripts/redeploy.sh",
-    "test:store": "node scripts/test_store_v16_8.js && node scripts/test_store_webhook_v16_8.js",
-    "test:lock": "node scripts/test_khoatuluyen_v16_8.js"
+    "redeploy": "bash scripts/redeploy.sh"
   },
   "engines": {
     "node": ">=22.5"

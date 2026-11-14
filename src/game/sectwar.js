@@ -120,8 +120,9 @@ function doAttack(warId, attackerId, targetId, opts = {}) {
   if (!target) return '❌ Mục tiêu không còn ở cứ điểm này nữa (đã di chuyển/bị hạ) — hãy chọn lại.';
   const atkRow = Cu.getCultivator(attackerId); const defRow = Cu.getCultivator(target.user_id);
   const admin = !!opts.admin;
-  if (!admin && random() < DODGE_CHANCE) return `🌀 <@${target.user_id}> đã né tránh đòn tấn công của <@${attackerId}> tại **${NODES[nodeKey].name}**!`;
-  const isCrit = !admin && random() < CRIT_CHANCE;
+  const FXw = require('./fx17'); const fxA = atkRow ? FXw.get(atkRow) : FXw.ZERO; const fxD = defRow ? FXw.get(defRow) : FXw.ZERO; const sectD = defRow ? FXw.sectFx(defRow) : FXw.ZERO;   // v17: trang bị / đan / trận pháp / Hộ Tông Đại Trận
+  if (!admin && random() < DODGE_CHANCE + fxD.dodge) return `🌀 <@${target.user_id}> đã né tránh đòn tấn công của <@${attackerId}> tại **${NODES[nodeKey].name}**!`;
+  const isCrit = !admin && random() < CRIT_CHANCE + fxA.crit;
   const maxHp = target.max_hp || Math.max(1, defRow ? Cu.effectiveMaxHp(defRow) : 1);
   // v12.3: cùng mô hình % sinh mệnh với PvP (chênh cảnh giới/chỉ số quyết định có kiểm soát, không còn atk - def tuyệt đối)
   let damage;
@@ -130,7 +131,8 @@ function doAttack(warId, attackerId, targetId, opts = {}) {
     const frac = (atkRow && defRow) ? BAL.warHitFrac(atkRow, defRow, Cu) : 0.1;
     damage = int(maxHp * frac * randUniform(0.6, 1.4));
     if (isCrit) damage = int(damage * CRIT_MULT);
-    damage = Math.max(1, damage);
+    damage = Math.max(1, int(damage * (1 - Math.min(0.5, fxD.dr + sectD.sectDr)) * (1 + Math.min(0.1, fxA.pierce))));
+    try { const G = require('./gear17'); G.wear(attackerId, 'war'); G.wear(target.user_id, 'war'); } catch (_) { /* độ bền không được làm hỏng đòn đánh */ }
   }
   const hp = (target.hp ? target.hp : maxHp) - damage;
   const critTxt = isCrit ? ' 💥 **Bạo Kích!**' : '';
@@ -183,6 +185,8 @@ function finishWar(warId, winnerSectId) {
     if (won) D.run('UPDATE sects SET title = ?, exp_buff_until = ? WHERE sect_id = ?', REWARD_WIN_TITLE, t + REWARD_WIN_BUFF_SECONDS, sectId);
     const share = Math.floor(ch / Math.max(1, uids.length));
     for (const uid of uids) D.run('UPDATE cultivators SET sect_contribution = sect_contribution + ? WHERE user_id = ?', share, uid);
+    // v17: nguyên liệu Chiến Tông Môn — chỉ người có tham chiến thật (hạ gục / gây sát thương)
+    for (const p of parts) if (String(p.sect_id) === String(sectId) && (p.kills > 0 || p.assists > 0)) { try { require('./drops17').roll(p.user_id, won ? 'sectwar_win' : 'sectwar_lose', { noText: true }); } catch (e) { console.error('⚠️ rơi Chiến Tông Môn v17:', e.message); } }
   }
   return mvp;
 }

@@ -135,6 +135,7 @@ function onBicanh(userId, srcIdx) {
     }
     const ex = shareExp(owner, PB.expBicanh(srcIdx, (getFighter(owner) || { level: 1 }).level), 'đồng hành thám hiểm');
     if (ex) lines.push(ex);
+    if (getFighter(owner)) { try { const DR = require('./drops17'); const m = DR.text(userId, DR.petSource(srcIdx)); if (m) lines.push(m.replace(/^\n/, '').replace('Thu được', '🐾 Linh Thú tha về')); } catch (e) { console.error('⚠️ rơi nguyên liệu Linh Thú v17:', e.message); } }   // v17
     return lines.length ? `\n${lines.join('\n')}` : '';
   } catch (e) { console.error('⚠️ pets.onBicanh:', e.message); return ''; }
 }
@@ -195,6 +196,10 @@ function feed(owner, petId, foodKey, qty = 1) {
     const b = PB.BASIC_FEED; const need = b.nguyen_lieu * qty;
     if (!Cu.updateCultivator(owner, { nguyen_lieu: new Delta(-need) }, { nguyen_lieu: need })) return bad(`Cần ${need} ${E.nguyenlieu} nguyên liệu.`);
     exp = b.exp * qty; bondBase = b.bond * qty; costLine = `-${need} ${E.nguyenlieu} nguyên liệu`;
+  } else if (PB.MAT_FEED[foodKey]) {   // v17: Yêu Đan / Tinh Huyết Yêu Thú
+    const m = PB.MAT_FEED[foodKey]; const Inv17 = require('./invsvc'); const nm = require('../data/items_v17').BY_ID[foodKey].name;
+    if (!Inv17.take(owner, foodKey, qty, { why: 'cho thú ăn' })) return bad(`Không đủ ${nm} (cần ${qty}).`);
+    exp = m.exp * qty; bondBase = m.bond * qty; costLine = `-${qty} ${nm}`;
   } else {
     const it = PB.ITEMS[foodKey]; if (!it || !it.exp) return bad('Vật phẩm này không dùng để cho thú ăn.');
     if (!takeItem(owner, foodKey, qty)) return bad(`Không đủ ${it.name} (cần ${qty}).`);

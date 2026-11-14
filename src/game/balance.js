@@ -66,15 +66,17 @@ function realmProgress(row) {
 
 // ------------------------------------------------------------------ PvP
 /** Sức mạnh PvP đã hiệu chỉnh cho 2 bên (đối xứng: mỗi bên được buff của mình và làm yếu bên kia bằng debuff của mình). */
-function pvpPowers(a, b, Cu) {
+function pvpPowers(a, b, Cu, opts = {}) {
   const gap = Math.max(-B.PVP_GAP_CAP, Math.min(B.PVP_GAP_CAP, realmProgress(a) - realmProgress(b)));
   const fa = Math.max(0.5, 1 + B.PVP_REALM_GAP * gap);
   const fb = Math.max(0.5, 1 - B.PVP_REALM_GAP * gap);
   const bA = Cu.pvpBuffPct(a) * B.PVP_CP_BUFF_SCALE; const dA = Cu.pvpDebuffPct(a) * B.PVP_CP_BUFF_SCALE;
   const bB = Cu.pvpBuffPct(b) * B.PVP_CP_BUFF_SCALE; const dB = Cu.pvpDebuffPct(b) * B.PVP_CP_BUFF_SCALE;
   const eA = 1 + T.elementAdv(a, b); const eB = 1 + T.elementAdv(b, a);      // v13.6: tương khắc linh căn (+4%, loãng theo số hành)
-  const powerA = Math.max(1, Cu.calcLucChien(a) * fa * (1 + bA) * (1 - dB) * eA);
-  const powerB = Math.max(1, Cu.calcLucChien(b) * fb * (1 + bB) * (1 - dA) * eB);
+  // v17: Phong Ấn Phù (chỉ Đấu Pháp, opts.foe) làm yếu sức mạnh đối thủ
+  const foeA = opts.foe ? require('./fx17').stat(a, 'foe') : 0; const foeB = opts.foe ? require('./fx17').stat(b, 'foe') : 0;
+  const powerA = Math.max(1, Cu.calcLucChien(a) * fa * (1 + bA) * (1 - dB) * eA * (1 - foeB));
+  const powerB = Math.max(1, Cu.calcLucChien(b) * fb * (1 + bB) * (1 - dA) * eB * (1 - foeA));
   return { powerA: int(powerA), powerB: int(powerB), gap, buffA: bA, debuffA: dA, buffB: bB, debuffB: dB };
 }
 /** Chiến Tông Môn: sát thương 1 đòn = % sinh mệnh tối đa của mục tiêu, cùng mô hình armor/power với PvP (không còn atk - def tuyệt đối). */

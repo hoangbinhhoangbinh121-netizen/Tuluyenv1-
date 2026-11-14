@@ -8,6 +8,7 @@
  * quyền sở hữu pet_id theo (owner, pet_id) nên không thể giả mạo.
  */
 const DJS = require('discord.js');
+const Inv17 = require('../game/invsvc');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = DJS;
 
 /**
@@ -185,9 +186,9 @@ function renderNuoi(uid, petId) {
   const v = P.view(pet); const has = P.itemMap(owner); const row = Cu.getCultivator(uid);
   e.addFields(...detailFields(v).slice(0, 1));
   e.addFields({ name: 'Cấp tối đa', value: `Trần cấp theo cảnh giới của bạn: **Lv.${v.cap}** (${K.REALMS[row.realm_index].name}: 15 + 6/đại cảnh giới${v.contract === 'ban_menh' ? ' + 10 Bản Mệnh' : '; Bản Mệnh Khế +10'}).\nCho ăn → EXP & thân mật · Dạo Chơi (miễn phí, hồi ${P.fmtDur(PB.PLAY.cooldown)}) → EXP & thân mật.`, inline: false });
-  e.addFields({ name: '🎒 Thức ăn', value: `Linh Thú Lương ×${has.linh_thu_luong || 0} (+${PB.ITEMS.linh_thu_luong.exp} EXP) · Linh Thú Đan ×${has.linh_thu_dan || 0} (+${fmtNum(PB.ITEMS.linh_thu_dan.exp)}) · Thần Thú Đan ×${has.than_thu_dan || 0} (+${fmtNum(PB.ITEMS.than_thu_dan.exp)}) · Nguyên liệu: ${fmtNum(row.nguyen_lieu || 0)} (${PB.BASIC_FEED.nguyen_lieu} nguyên liệu → +${PB.BASIC_FEED.exp} EXP)`, inline: false });
+  e.addFields({ name: '🎒 Thức ăn', value: `Linh Thú Lương ×${has.linh_thu_luong || 0} (+${PB.ITEMS.linh_thu_luong.exp} EXP) · Linh Thú Đan ×${has.linh_thu_dan || 0} (+${fmtNum(PB.ITEMS.linh_thu_dan.exp)}) · Thần Thú Đan ×${has.than_thu_dan || 0} (+${fmtNum(PB.ITEMS.than_thu_dan.exp)}) · Nguyên liệu: ${fmtNum(row.nguyen_lieu || 0)} (${PB.BASIC_FEED.nguyen_lieu} nguyên liệu → +${PB.BASIC_FEED.exp} EXP) · Yêu Đan ×${Inv17.qty(uid, 'yt_yeu_dan')} (+${PB.MAT_FEED.yt_yeu_dan.exp} EXP)`, inline: false });
   const f = (key, n) => ['feed', key, n];
-  const mk = (n) => rowOf(btn(cid(uid, 'fd', pet.pet_id, `linh_thu_luong:${n}`), `Lương ×${n}`, '🍖', ButtonStyle.Success, (has.linh_thu_luong || 0) < n), btn(cid(uid, 'fd', pet.pet_id, `linh_thu_dan:${n}`), `Đan ×${n}`, '💊', ButtonStyle.Success, (has.linh_thu_dan || 0) < n), btn(cid(uid, 'fd', pet.pet_id, `than_thu_dan:${n}`), `Thần Đan ×${n}`, '✨', ButtonStyle.Success, (has.than_thu_dan || 0) < n), btn(cid(uid, 'fd', pet.pet_id, `basic:${n}`), `Nguyên Liệu ×${n}`, E.nguyenlieu || '🌿', ButtonStyle.Primary, (row.nguyen_lieu || 0) < PB.BASIC_FEED.nguyen_lieu * n));
+  const mk = (n) => rowOf(btn(cid(uid, 'fd', pet.pet_id, `linh_thu_luong:${n}`), `Lương ×${n}`, '🍖', ButtonStyle.Success, (has.linh_thu_luong || 0) < n), btn(cid(uid, 'fd', pet.pet_id, `linh_thu_dan:${n}`), `Đan ×${n}`, '💊', ButtonStyle.Success, (has.linh_thu_dan || 0) < n), btn(cid(uid, 'fd', pet.pet_id, `than_thu_dan:${n}`), `Thần Đan ×${n}`, '✨', ButtonStyle.Success, (has.than_thu_dan || 0) < n), btn(cid(uid, 'fd', pet.pet_id, `basic:${n}`), `Nguyên Liệu ×${n}`, E.nguyenlieu || '🌿', ButtonStyle.Primary, (row.nguyen_lieu || 0) < PB.BASIC_FEED.nguyen_lieu * n), btn(cid(uid, 'fd', pet.pet_id, `yt_yeu_dan:${n}`), `Yêu Đan ×${n}`, '🔮', ButtonStyle.Primary, Inv17.qty(uid, 'yt_yeu_dan') < n));
   const comps = [navRow(uid, 'nd', pet.pet_id), petSelRow(uid, 'nd', pets, pet), mk(1), mk(10), rowOf(btn(cid(uid, 'play', pet.pet_id), 'Dạo Chơi', '🌿', ButtonStyle.Primary), btn(cid(uid, 'shop'), 'Cửa Hàng', E.shop))];
   return { embeds: [e], components: comps };
 }
