@@ -80,6 +80,10 @@ function upgradeCost(b, level) {
   const pos = n - prevMax - 1;
   return Math.max(1, Math.ceil(b.up_base * mult * (1 + 0.02 * pos)));
 }
+/** v19.0: quyển nhóm Đế Cảnh qua mốc giai đoạn (cấp 10/30/50/70/90 → lên cấp kế) cần thêm 1 vật liệu giai đoạn (spec §4.4). Trả id vật phẩm hoặc null. */
+const stageMat = (b, level) => (b && b.group === 'de' ? (require('../data/items_v19').STAGE_MAT_AT[level] || null) : null);
+const matQty = (userId, id) => { try { return require('./invsvc').qty(String(userId), id, 0); } catch (_) { return 0; } };
+const matName = (id) => { try { return require('../data/items_v17').BY_ID[id].name; } catch (_) { return id; } };
 function upgradeTotal(b, from = 0) { let t = 0; for (let l = from; l < D16.MAX_LEVEL; l += 1) t += upgradeCost(b, l); return t; }
 
 function upgrade(userId, tier, expect = null) {
@@ -92,7 +96,13 @@ function upgrade(userId, tier, expect = null) {
   const cost = upgradeCost(b, cur); const c = b.up_currency;
   const stale = CP.priceChangedMsg(expect, cost, c); if (stale) return stale;
   if (row[c] < cost) return `❌ Không đủ ${curLabel(c)} để nâng cấp (cần ${fmtNum(cost)}, hiện có ${fmtNum(row[c])}).`;
+  const sm = stageMat(b, cur);
+  if (sm && matQty(userId, sm) < 1) return `🔒 Qua mốc giai đoạn (Cấp ${cur} → ${cur + 1}) cần **1 × ${matName(sm)}** (rơi từ Bí Cảnh Tiên Giới) — bạn chưa có.`;
   if (!Cu.updateCultivator(userId, { [c]: new Delta(-cost) }, { [c]: cost })) return Cu.MSG_BALANCE_CHANGED;
+  if (sm) {
+    let took = false; try { took = require('./invsvc').take(String(userId), sm, 1, { why: `nâng công pháp ${b.tier} cấp ${cur + 1}` }); } catch (_) { took = false; }
+    if (!took) { Cu.updateCultivator(userId, { [c]: new Delta(cost) }); return `🔒 Không trừ được **${matName(sm)}** (vừa bị dùng ở nơi khác) — chưa tốn gì.`; }
+  }
   levels[b.tier] = cur + 1; Cu.saveCongphapLevels(userId, levels);
   const equipped = Cu.equippedCongphapTiers(row).includes(b.tier);
   if (equipped) CP.recomputeEquippedCongphap(userId);
@@ -120,11 +130,13 @@ function nextUpgrade(row, tier) { return costAt(row, Number(tier), levelOf(row, 
 /** Mô phỏng (không ghi DB): với số dư hiện có, nâng liên tiếp tối đa `steps` cấp được bao nhiêu. → { levels, from, to, spent:{tiền tệ: số}, stop:'cap'|'money'|'steps', need } */
 function planUpgrade(row, tier, steps = Infinity) {
   tier = Number(tier); const from = levelOf(row, tier); const bal = { linh_thach: row.linh_thach, linh_tinh: row.linh_tinh };
-  const spent = {}; let lvl = from; let stop = 'steps'; let need = null;
+  const spent = {}; const matUsed = {}; let lvl = from; let stop = 'steps'; let need = null;
   while (lvl - from < steps) {
     const c = costAt(row, tier, lvl);
     if (!c) { stop = 'cap'; break; }
     if ((bal[c[1]] || 0) < c[0]) { stop = 'money'; need = c; break; }
+    const sm = stageMat(book(tier), lvl);     // v19: mốc giai đoạn cần vật liệu (mỗi mốc 1 cái, tối đa qua 1 mốc/lần mô phỏng nếu chỉ có 1 cái)
+    if (sm) { matUsed[sm] = (matUsed[sm] || 0) + 1; if (matQty(row.user_id, sm) < matUsed[sm]) { stop = 'mat'; need = c; break; } }
     bal[c[1]] -= c[0]; spent[c[1]] = (spent[c[1]] || 0) + c[0]; lvl += 1;
   }
   return { levels: lvl - from, from, to: lvl, spent, stop, need };
@@ -327,7 +339,7 @@ function rollKyNgo(userId, row) {
   for (const lv of kyngoLevels(row)) {
     if (random() >= S[lv].chance) continue;
     if (lv === 'thuong') {
-      const cand = D16.FRAGMENTS.filter((f) => !Cu.ownedCongphapTiers(row).has(f.book));
+      const cand = D16.FRAGMENTS.filter((f) => !f.v19 && !Cu.ownedCongphapTiers(row).has(f.book));   // v19: mảnh Đế Cảnh chỉ rơi từ Bí Cảnh Tiên Giới
       if (!cand.length) continue;
       const f = choice(cand); const tot = addFrag(userId, f.id, 1);
       msg = `\n🌠 **Kỳ Ngộ!** Trong lúc cảm ngộ, bạn nhặt được 1 ${f.icon} **${f.name}** (${tot}/${f.need}).`; break;

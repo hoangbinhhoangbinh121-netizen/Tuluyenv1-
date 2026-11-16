@@ -58,6 +58,10 @@ function doDotpha(userId) {
   const nxt = R.nextStage(realmIdx, stageIdx);
   // v18.0: Siêu Thoát Viên Mãn là đỉnh cao nhất hiện tại — kiểm tra TRƯỚC điều kiện tu vi để báo đúng lý do.
   if (nxt === null) return `♾️ Bạn đã đạt đến **${R.realmDisplay(K.MAX_REALM_IDX, K.totalStageCount(K.MAX_REALM_IDX) - 1, true)}** — cảnh giới cao nhất hiện tại, không thể đột phá thêm!`;
+  // v19.0: Chuẩn Tiên Đế Viên Mãn → Tiên Đế BẮT BUỘC qua Chứng Đạo Đại Kiếp (12 đạo lôi) — không đột phá thường được nữa.
+  if (realmIdx === require('./chungdao19').GATE_REALM && stageIdx === require('./chungdao19').GATE_STAGE) {
+    return `👑 **${R.realmDisplay(realmIdx, stageIdx, true)}** là cửa ải cuối trước **Tiên Đế**: phải vượt **Chứng Đạo Đại Kiếp** (12 đạo Đế Kiếp) — dùng \`/chungdao\` để xem điều kiện và bắt đầu.`;
+  }
   const required = R.tuViRequired(realmIdx, stageIdx, row.world_tier);
   if (row.tu_vi < required) return `❌ Chưa đủ tu vi để đột phá (cần ${required}, hiện có ${row.tu_vi}).`;
 

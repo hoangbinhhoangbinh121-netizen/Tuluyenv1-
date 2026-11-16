@@ -25,7 +25,7 @@ const TABS = [
 ];
 const TAB_KEYS = TABS.map((t) => t[0]);
 
-const nameOf = (u) => safe(u.displayName || u.globalName || u.username, 'Đạo hữu');
+const nameOf = (u) => { const base = safe(u.displayName || u.globalName || u.username, 'Đạo hữu'); try { const h = u.id && require('../../game/fx19').hieuOf(u.id); return h ? `「${h}」${base}` : base; } catch (_) { return base; } };   // v19.0: kèm Đế Hiệu
 
 function tongquan(user, row) {
   const required = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);

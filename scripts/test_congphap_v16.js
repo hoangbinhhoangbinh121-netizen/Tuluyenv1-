@@ -16,7 +16,7 @@ const eq = (a, b, m) => { assert.strictEqual(a, b, m); pass += 1; };
 let seq = 9000; const mk = (f = {}) => { const id = String(++seq); Cu.createCultivator(id); Cu.updateCultivator(id, { linh_thach: 1e12, linh_tinh: 100000, ...f }); return id; };
 
 // ---- (1) 40 công pháp, ID duy nhất, tên không trùng, mô tả, 4 chiêu, giá/giới vực
-const B = D16.BOOKS; eq(B.length, 40, '40 công pháp');
+const B = D16.BOOKS.filter((x) => x.group !== 'de'); eq(B.length, 40, '40 công pháp'); eq(D16.BOOKS.length, 55, '55 công pháp (40 V16 + 15 V19)');   // v19.0: B chỉ còn 40 quyển V16
 eq(new Set(B.map((b) => b.tier)).size, 40); eq(new Set(B.map((b) => b.id)).size, 40);
 for (const g of ['nhan', 'linh', 'tien', 'doc']) eq(B.filter((b) => b.group === g).length, 10, `10 quyển nhóm ${g}`);
 const oldNames = new Set(CP.getCurrentCongphapList().map((c) => c.name));
@@ -34,7 +34,7 @@ for (const g of ['nhan', 'linh', 'tien']) { const l = B.filter((b) => b.group ==
 // tên cố định sau khi nạp lại module
 const snap = JSON.stringify(B.map((b) => [b.tier, b.name, b.desc, b.skills.map((s) => s.name)]));
 for (const k of Object.keys(require.cache)) if (k.includes('congphap_v16')) delete require.cache[k];
-eq(JSON.stringify(require('../src/data/congphap_v16').BOOKS.map((b) => [b.tier, b.name, b.desc, b.skills.map((s) => s.name)])), snap, 'tên/mô tả/chiêu không đổi khi khởi động lại');
+eq(JSON.stringify(require('../src/data/congphap_v16').BOOKS.filter((x) => x.group !== 'de').map((b) => [b.tier, b.name, b.desc, b.skills.map((s) => s.name)])), snap, 'tên/mô tả/chiêu không đổi khi khởi động lại');
 // cũ không đổi
 eq(K.CONG_PHAP_TIER_DEF.map((t) => t.tier).join(','), '1,2,3,4,5,6,7,101,102,201', 'danh sách công pháp cũ nguyên vẹn');
 

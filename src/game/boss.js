@@ -29,6 +29,9 @@ const BOSS_TIERS = [
   { name: 'Thôn Thiên Mãng', realm: 'Hợp Thể' }, { name: 'Hỗn Độn Hung Thú', realm: 'Đại Thừa' },
   { name: 'Thiên Cổ Chân Long', realm: 'Độ Kiếp' }, { name: 'Hư Không Cự Thú', realm: 'Chân Tiên' },
   { name: 'Thái Cổ Ma Thần', realm: 'Kim Tiên' },
+  // v19.0 — Sự kiện thế giới: 10 = Đế Cảnh Xuất Thế (Boss Đế Cấp, toàn server từ Chân Tiên, tối đa 60 người); 11 = Siêu Thoát Chi Môn (từ Đại Đạo Chí Tôn, tối đa 25 người, có bảng thành tích riêng)
+  { name: 'Đế Cảnh Hỗn Độn Thần Ma', realm: 'Tiên Đế', minRealm: 10, cap: 60, ev: 'dicanh' },
+  { name: 'Hư Vô Siêu Thoát Chủ', realm: 'Siêu Thoát', minRealm: 26, cap: 25, ev: 'sieuthoat' },
 ];
 const MAX_CAPDO = BOSS_TIERS.length;
 
@@ -39,7 +42,8 @@ const getAliveBoss = (guildId) => D.get("SELECT * FROM wb7_boss WHERE guild_id =
 function suggestedHp(capdo) {
   const rows = D.all('SELECT * FROM cultivators ORDER BY atk DESC LIMIT 10');
   const avg = rows.length ? rows.reduce((s, r) => s + Cu.effectiveAtk(r), 0) / rows.length : 100;
-  return Math.max(20000, int(avg * 150 * (1.8 ** (capdo - 1))));
+  const exp = Math.min(capdo, 9) - 1; const over = Math.max(0, capdo - 9);   // v19: cấp Đế Cảnh / Siêu Thoát không tăng theo lũy thừa nữa, chỉ +60% mỗi cấp
+  return Math.max(20000, int(avg * 150 * (1.8 ** exp) * (1 + 0.6 * over)));
 }
 
 function summon({ guildId, channelId, by, capdo = 1, hp = null, minutes = DEFAULT_MINUTES }) {
@@ -73,6 +77,9 @@ function attack(guildId, userId, action = 'atk') {
     if (!boss) return { ok: false, code: 'E009', error: 'Hiện không có Boss Thế Giới nào — chờ admin triệu hồi.' };
     if (boss.expires_at <= now()) return { ok: false, code: 'E007', error: 'Boss đã hết thời hạn và sắp biến mất.', expired: true, bossId: boss.boss_id };
     const mine = myStat(boss.boss_id, userId);
+    const meta = BOSS_TIERS[boss.tier - 1] || {};
+    if (meta.minRealm && row0.realm_index < meta.minRealm) return { ok: false, code: 'E009', error: `**${boss.name}** chỉ cho phép cảnh giới **${K.REALMS[meta.minRealm].name}** trở lên tham chiến.`, boss };
+    if (meta.cap && !mine) { const n = D.get('SELECT COUNT(*) AS n FROM wb7_damage WHERE boss_id = ?', boss.boss_id).n || 0; if (n >= meta.cap) return { ok: false, code: 'E009', error: `Sự kiện đã đủ **${meta.cap}** người tham chiến — hãy chờ lần sau.`, boss }; }
     const t = now();
     const remain = mine ? ACTION_CD - (t - (mine.last_hit || 0)) : 0;
     if (remain > 0) return { ok: false, code: 'E005', cooldown: remain, error: `Còn **${Math.ceil(remain)} giây** nữa mới ra chiêu tiếp được.`, boss };
@@ -186,6 +193,7 @@ function finish(bossId, reason, killerId = null) {
         }
       }
     }
+    try { require('./event19').bossRewards(boss, out, reason, killerId); } catch (e) { console.error('⚠️ thưởng Boss sự kiện V19:', e.message); }
     return out;
   });
 }

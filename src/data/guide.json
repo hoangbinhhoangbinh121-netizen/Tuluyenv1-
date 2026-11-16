@@ -350,5 +350,32 @@
         "[Admin] Bảng đối chiếu V16→V17: tình trạng migration + tổng số từng loại vật phẩm (xuất file)."
       ]
     ]
+  },
+  {
+    "key": "v19",
+    "label": "👑 Tiên Giới V19",
+    "desc": "Bí Cảnh Tiên Giới, Chứng Đạo Thành Đế, Đế Đạo/Đế Binh/Đế Hiệu, Công Pháp Bản Mệnh và sự kiện thế giới.",
+    "commands": [
+      [
+        "bicanhtiengioi",
+        "Bí Cảnh Tiên Giới: 19 bí cảnh × 5 tầng, solo hoặc tổ đội 2–5 người, boss 3 giai đoạn. Từ Chân Tiên trở lên."
+      ],
+      [
+        "chungdao",
+        "Chứng Đạo Thành Đế: vượt 12 đạo Đế Kiếp tại Đại Đạo Chí Tôn · Viên Mãn. Sau khi thành Đế mở Đế Đạo, Đế Binh, Đế Hiệu."
+      ],
+      [
+        "benmenh",
+        "Công Pháp Bản Mệnh: chọn 1 quyển, lĩnh ngộ và thức tỉnh ở cấp 30/60/90."
+      ],
+      [
+        "dehieu",
+        "Đặt Đế Hiệu bằng lệnh chữ (?dehieu <tên>); trên slash dùng nút Đế Hiệu trong /chungdao."
+      ],
+      [
+        "sukienthegioi",
+        "Xem sự kiện thế giới (Dị Biến, Truyền Thừa, Đế Cảnh, Siêu Thoát). Admin: thêm tham số khoi để mở sự kiện."
+      ]
+    ]
   }
 ]

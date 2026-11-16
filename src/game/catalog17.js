@@ -21,6 +21,9 @@ const LEGACY_SRC = {
   tdc_diem_linh_ngo: ['chain_hopthe', 'chain_daithua', 'chain_dokiep'],
   dan_tu_khi: [], dan_pha_gioi: ['shop_dan'], dan_tay_tuy_ts: ['code'], dan_tay_tuy_nua: ['code'], vp_ruong_than_bi: ['event', 'code'], vp_ve_bicanh_db: ['boss_kill'],
 };
+// v19.0: nguồn/công dụng của vật phẩm Bí Cảnh Tiên Giới
+const I19 = require('../data/items_v19');
+Object.assign(LEGACY_SRC, I19.SRC);
 // Nơi TIÊU THỤ / SỬ DỤNG ngoài công thức
 const EXTRA_USES = {
   nl_tap: ['pet_feed'], yt_yeu_dan: ['pet_feed'],
@@ -35,6 +38,7 @@ const EXTRA_USES = {
   tdc_tan_quyen_dan_phuong: ['use_tanquyen'], tdc_dan_hoa_tinh_: [],
   dan_pha_gioi: ['use_dan'], dan_tay_tuy_ts: ['taytuy'], dan_tay_tuy_nua: ['taytuy'], vp_ruong_than_bi: ['moruong'], vp_ve_bicanh_db: ['bicanh_db'],
 };
+Object.assign(EXTRA_USES, I19.USES);
 for (const id of Object.keys(C.SEEDS)) { (EXTRA_USES[id] = EXTRA_USES[id] || []).push('field'); }
 for (const id of Object.keys(C.PILLS)) (EXTRA_USES[id] = EXTRA_USES[id] || []).push('use_dan');
 for (const id of Object.keys(C.TRANS)) (EXTRA_USES[id] = EXTRA_USES[id] || []).push('deploy');
@@ -108,10 +112,12 @@ const usages = (id) => {
 };
 /** Cho nguồn nhận/tiêu thụ ra chữ dễ đọc. */
 const SRC_LABEL = {
+  ...I19.SRC_LABEL,
   field: 'Linh Điền (thu hoạch/biến dị)', field_seed: 'Linh Điền (thu hồi hạt giống)', npc_shop: 'NPC bán (Linh Thạch)', dismantle: 'Phân giải trang bị', code: 'Mã code', phithang: 'Phi Thăng',
   shop_dan: 'Cửa Hàng Đan Dược', event: 'Sự kiện Đại Phú', boss_kill: 'Boss Thế Giới (kết liễu)',
 };
 const USE_LABEL = {
+  ...I19.USE_LABEL,
   pet_feed: 'Cho Linh Thú ăn', talent_exchange: 'Đổi Bảo Thạch Thể Chất/Linh Căn', phithang: 'Con Đường Phi Thăng', thiendao: 'Thiên Đạo', gear_enh: 'Cường hoá trang bị', gear_refine: 'Tinh luyện trang bị',
   gear_repair: 'Sửa trang bị', catalyst_khi: 'Xúc tác Luyện Khí', catalyst_dan: 'Xúc tác Đan Sư', catalyst_tran: 'Xúc tác Trận Pháp', field: 'Linh Điền (gieo/tưới)', field_up: 'Nâng cấp Linh Điền',
   field_fert: 'Bón Linh Điền', use_tanquyen: 'Đọc để tăng EXP Đan Sư', use_dan: 'Dùng (cắn đan)', deploy: 'Triển khai trận pháp', taytuy: 'Tẩy Tủy', moruong: 'Mở Rương', bicanh_db: 'Vào Bí Cảnh Đặc Biệt',

@@ -39,11 +39,11 @@ function buildHistoryEmbed(target, rows) {
     const won = String(r.winner_id) === String(target.id); const opp = won ? r.loser_id : r.winner_id; const ts = `<t:${Math.trunc(r.ended_at)}:R>`;
     return won ? `🏆 Thắng <@${opp}> (+${r.stake} tu vi) — ${ts}` : `💀 Thua <@${opp}> (-${r.stake} tu vi) — ${ts}`;
   });
-  return new EmbedBuilder().setTitle(`📜 Lịch Sử PvP — ${target.displayName || target.username}`).setDescription(lines.join('\n')).setColor(0xc27c0e);
+  return new EmbedBuilder().setTitle(`📜 Lịch Sử PvP — ${require('../game/fx19').withHieu(target.id, target.displayName || target.username)}`).setDescription(lines.join('\n')).setColor(0xc27c0e);
 }
 function buildStatsEmbed(target, row) {
   const w = row.pvp_wins; const l = row.pvp_losses; const t = w + l;
-  return new EmbedBuilder().setTitle(`⚔️ Thống Kê PvP — ${target.displayName || target.username}`).setColor(0x5865f2).addFields(
+  return new EmbedBuilder().setTitle(`⚔️ Thống Kê PvP — ${require('../game/fx19').withHieu(target.id, target.displayName || target.username)}`).setColor(0x5865f2).addFields(
     { name: 'Thắng', value: String(w), inline: true }, { name: 'Thua', value: String(l), inline: true }, { name: 'Tỉ lệ thắng', value: t > 0 ? `${(w / t * 100).toFixed(1)}%` : '—', inline: true });
 }
 module.exports = { pvpTargetView, challengeFromInteraction, buildHistoryEmbed, buildStatsEmbed };

@@ -36,7 +36,7 @@ for (const x of D16.BOOKS.filter((y) => y.group === 'linh')) for (const k of sta
 // 2) quyển chuyên 1 chỉ số: mỗi chỉ số chính vượt công pháp cũ cùng khoảng giá
 for (const b of D16.BOOKS) { if (['tu'].includes(b.cat)) continue; if (b.group === 'nhan') ok(maxStat(b) > oldStat(3), `${b.tier} Nhân > Tầng 3 cũ`); if (b.group === 'linh') ok(maxStat(b) >= oldStat(7) * 0.9, `${b.tier} Linh ≈/≥ Tầng 7 cũ`); if (b.group === 'tien' || b.group === 'doc') ok(maxStat(b) > oldStat(7), `${b.tier} > Tầng 7 cũ`); }
 // 3) tu vi: mọi quyển có tu; quyển Tu Luyện vượt công pháp cũ cùng bậc; Tiên Giới/Độc quyền tu ≥ Tầng 7
-for (const b of D16.BOOKS) ok(b.fx.tu > 0, `${b.tier} có tu vi`);
+for (const b of D16.BOOKS.filter((x) => x.group !== 'de')) ok(b.fx.tu > 0, `${b.tier} có tu vi`);   // v19.0: 15 công pháp nhóm 'de' theo kiểu chuyên biệt (có quyển thiên phòng thủ không cộng Tu Vi)
 ok(B.get(1004).fx.tu > oldTu(4), '1004 > Tầng 4 cũ'); ok(B.get(1015).fx.tu > oldTu(7), '1015 > Tầng 7 cũ'); ok(B.get(1021).fx.tu > oldTu(7) && B.get(1029).fx.tu > oldTu(102) && B.get(1038).fx.tu > oldTu(201), 'tu Tiên/độc quyền');
 // 4) kiểu hiệu ứng mới có thật ở cả 4 nhóm & tính đúng 1 lần qua talent.bundle
 const NEW = ['proc', 'failKeep', 'kiepDmg', 'kiepDodge', 'thach'];

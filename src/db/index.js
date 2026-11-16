@@ -10,6 +10,7 @@ const path = require('node:path');
 const { CREATE_TABLES, ADD_COLUMNS } = require('./schema');
 const { CREATE_V7 } = require('./schema_v7');
 const { CREATE_V17, ADD_COLUMNS_V17 } = require('./schema_v17');
+const { CREATE_V19 } = require('./schema_v19');
 
 const DB_PATH = process.env.TULUYEN_DB_PATH
   ? path.resolve(process.env.TULUYEN_DB_PATH)
@@ -166,6 +167,7 @@ function migrate() {
   for (const sql of CREATE_TABLES) d.exec(sql);
   for (const sql of CREATE_V7) d.exec(sql);
   for (const sql of CREATE_V17) d.exec(sql);
+  for (const sql of CREATE_V19) d.exec(sql);   // v19.0
   const ALLCOLS = {};
   for (const src of [ADD_COLUMNS, ADD_COLUMNS_V17]) for (const [t, c] of Object.entries(src)) ALLCOLS[t] = { ...(ALLCOLS[t] || {}), ...c };
   for (const [table, cols] of Object.entries(ALLCOLS)) {

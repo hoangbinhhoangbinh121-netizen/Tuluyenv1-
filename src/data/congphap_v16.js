@@ -17,8 +17,9 @@ const GROUPS = {
   linh: { key: 'linh', label: 'Công Pháp Linh Giới', short: 'Linh Giới', icon: '🔮', world: 1 },
   tien: { key: 'tien', label: 'Công Pháp Tiên Giới', short: 'Tiên Giới', icon: '☁️', world: 2 },
   doc: { key: 'doc', label: 'Công Pháp Đặc Biệt (độc quyền)', short: 'Đặc Biệt', icon: '🌟', world: 0 },
+  de: { key: 'de', label: 'Công Pháp Đế Cảnh (V19)', short: 'Đế Cảnh', icon: '👑', world: 2 },   // v19.0: 15 công pháp Tiên Giới cao cấp (tier 1041–1055)
 };
-const GROUP_ORDER = ['nhan', 'linh', 'tien', 'doc'];
+const GROUP_ORDER = ['nhan', 'linh', 'tien', 'doc', 'de'];
 
 const CATS = {
   tu: { label: 'Tu luyện', icon: '🧘', element: 'Mộc' },
@@ -38,7 +39,7 @@ const CATS = {
 const CAT_ORDER = Object.keys(CATS);
 
 /** Phẩm cấp hiển thị (quy ước mới của V16). */
-const PHAM = ['Hoàng Phẩm', 'Huyền Phẩm', 'Địa Phẩm', 'Thiên Phẩm', 'Tiên Phẩm', 'Thần Phẩm', 'Hỗn Độn Phẩm'];
+const PHAM = ['Hoàng Phẩm', 'Huyền Phẩm', 'Địa Phẩm', 'Thiên Phẩm', 'Tiên Phẩm', 'Thần Phẩm', 'Hỗn Độn Phẩm', 'Tiên Vương Phẩm', 'Tiên Tôn Phẩm', 'Đế Phẩm', 'Tổ Phẩm', 'Đạo Phẩm', 'Siêu Thoát Phẩm'];   // v19.0: + 6 phẩm cấp (chỉ số 7–12)
 
 const FX_LABEL = {
   atk: 'Công kích', def: 'Phòng ngự', hp: 'Sinh mệnh', spd: 'Thân pháp (tốc độ)', tu: 'Tu vi nhận được', boss: 'Sát thương lên Boss',
@@ -60,6 +61,9 @@ const FX_CAP = {   // v16.2: nâng trần chỉ số/tu vi (để 3 quyển mớ
 // ----- nâng cấp -----
 const MAX_LEVEL = 100;
 const LEVEL_FX_GROWTH = 0.018;       // fx(level) = fx × (1 + 0.018 × level) → tối đa ×2,8 ở cấp 100 (v16.4: tầng cao mạnh hơn; v16.0–16.3 = 0,012) (rồi chặn bởi FX_CAP)
+/** V19 (spec §4.4): công pháp nhóm 'de' tăng theo GIAI ĐOẠN thay vì tuyến tính. [cấp tối đa của giai đoạn, tên, hiệu quả chỉ số cơ bản] */
+const DE_STAGES = [[10, 'Nhập Môn', 1.00], [30, 'Tiểu Thành', 1.10], [50, 'Đại Thành', 1.20], [70, 'Viên Mãn', 1.35], [90, 'Hóa Cảnh', 1.50], [100, 'Đăng Phong', 1.70]];
+const deStage = (level) => { const l = Math.max(0, level); for (let i = 0; i < DE_STAGES.length; i += 1) if (l <= DE_STAGES[i][0]) return { i, name: DE_STAGES[i][1], mult: DE_STAGES[i][2], max: DE_STAGES[i][0] }; const j = DE_STAGES.length - 1; return { i: j, name: DE_STAGES[j][1], mult: DE_STAGES[j][2], max: 100 }; };
 const LEVEL_PVP_STEP = 0.0025;       // buff/debuff đấu pháp cộng thêm mỗi cấp (công pháp cũ: 0,01/cấp)
 /** Khung chi phí: [cấp tối đa của khung, hệ số khung] — chi phí cấp L = ceil(base × hệ số × (1 + 0,02 × vị trí trong khung)). */
 const UP_BRACKETS = [[10, 1], [20, 1.6], [40, 2.6], [60, 4.2], [80, 6.8], [100, 11]];
@@ -179,6 +183,37 @@ const RAW = [
     { def: 0.36, hp: 0.30, dr: 0.03, tu: 0.08 }, ['Càn Khôn Hộ Giới', 'Trấn Giới Ấn', 'Càn Khôn Phong Tỏa', 'Càn Khôn Trấn Giới'], ['Hộ giới càn khôn', 'Trấn giới ấn, thủ và hồi', 'Phong tỏa càn khôn', 'Trấn giới: hộ thể + hồi mạnh']],
   [1040, 'cp_vo_cuc_thien_dao', 'Vô Cực Thiên Đạo Kinh', 'Thiên đạo vô cực — chỉ có thể gặp qua Kỳ Ngộ cực hiếm. Công pháp độc quyền cấp cao nhất của nhóm mới.', 'doc', 'toanien', 6, 5, 2, 'linh_tinh', null, 0.18, 0.14, 1.3,
     { atk: 0.20, def: 0.20, hp: 0.20, spd: 0.15, tu: 0.28, boss: 0.10 }, ['Vô Cực Thiên Đạo', 'Thiên Đạo Hộ Thân', 'Vô Cực Phá Hư', 'Thiên Đạo Vô Cực'], ['Vô cực thiên đạo', 'Thiên đạo hộ thân, né thêm', 'Phá hư, xuyên giáp + bạo kích', 'Thiên đạo vô cực: tuyệt kỹ toàn diện']],
+  // ============ E. ĐẾ CẢNH (V19.0) — Tiên Giới cao cấp, yêu cầu cảnh giới thật (require_realm = chỉ số cảnh giới) ============
+  [1041, 'cp_cuu_chuyen_tien_nguyen', 'Cửu Chuyển Tiên Nguyên Quyết', 'Chín lần chuyển hóa tiên nguyên: công pháp toàn diện nhập môn Tiên Giới, thêm hiệu quả hồi phục.', 'de', 'toanien', 4, 10, 2, 'linh_tinh', 1500, 0.10, 0.06, 1.1,
+    { atk: 0.08, def: 0.08, hp: 0.10, tu: 0.12, regen: 0.05 }, ['Tiên Nguyên Tụ Khí', 'Cửu Chuyển Hộ Thể', 'Tiên Nguyên Phá Pháp', 'Cửu Chuyển Tiên Nguyên'], ['Tụ khí tiên nguyên, đòn nhẹ kèm hồi', 'Cửu chuyển hộ thể, né thêm', 'Phá pháp, xuyên giáp và bạo kích', 'Cửu chuyển tiên nguyên: đòn mạnh + hộ thể + suy yếu']],
+  [1042, 'cp_thai_so_bat_diet', 'Thái Sơ Bất Diệt Kinh', 'Bất diệt chi thể từ thái sơ: HP và phòng ngự dày, giảm sát thương nhận vào, thoi thóp vẫn có thể dựng khiên.', 'de', 'luyenthe', 7, 14, 2, 'linh_tinh', 2600, 0.12, 0.07, 1.15,
+    { hp: 0.18, def: 0.15, dr: 0.05 }, ['Thái Sơ Hộ Thể', 'Bất Diệt Kim Thân', 'Bất Diệt Chi Thể', 'Thái Sơ Bất Diệt'], ['Thái sơ hộ thể giảm sát thương', 'Kim thân bất diệt, vừa thủ vừa phản', 'Bất diệt chi thể, đòn kèm hồi sinh lực', 'Thái sơ bất diệt: hộ thể + hồi mạnh']],
+  [1043, 'cp_van_kiem_quy_tong', 'Vạn Kiếm Quy Tông Kinh', 'Vạn kiếm quy về một tông: công kích, xuyên giáp, bạo kích; chiêu Vạn Kiếm Quy Nhất gây 2,2× công kích.', 'de', 'kiem', 7, 15, 2, 'linh_tinh', 4200, 0.18, 0.08, 1.2,
+    { atk: 0.20, pierce: 0.08, crit: 0.05 }, ['Kiếm Khí Tung Hoành', 'Vạn Kiếm Triều Tông', 'Kiếm Vực Phong Tỏa', 'Vạn Kiếm Quy Nhất'], ['Kiếm khí tung hoành', 'Vạn kiếm triều tông, bạo kích', 'Kiếm vực phong tỏa, xuyên giáp', 'Vạn kiếm quy nhất: tuyệt kỹ 2,2×']],
+  [1044, 'cp_hon_nguyen_thon_thien', 'Hỗn Nguyên Thôn Thiên Quyết', 'Thôn thiên nuốt đất: công kích và sinh mệnh cao, hồi một phần sát thương thực gây ra.', 'de', 'am', 8, 16, 2, 'linh_tinh', 6000, 0.16, 0.12, 1.2,
+    { atk: 0.16, hp: 0.15, lifesteal: 0.03 }, ['Hỗn Nguyên Phệ Khí', 'Thôn Thiên Ấn', 'Thôn Thiên Phệ Hồn', 'Hỗn Nguyên Thôn Thiên'], ['Phệ khí, hút nhẹ sinh lực', 'Thôn thiên ấn, đối thủ suy yếu', 'Phệ hồn, đòn kèm suy yếu và hồi', 'Hỗn nguyên thôn thiên: đòn mạnh + hút máu']],
+  [1045, 'cp_cuu_u_luan_hoi', 'Cửu U Luân Hồi Kinh', 'Luân hồi cửu u: né tránh tốt, ngã xuống vẫn có cơ hội sống sót với 1 sinh mệnh.', 'de', 'am', 8, 17, 2, 'linh_tinh', 8500, 0.12, 0.10, 1.2,
+    { hp: 0.12, def: 0.10, dodge: 0.06 }, ['Luân Hồi Ảnh', 'Cửu U Hộ Thân', 'Luân Hồi Phản Chiếu', 'Cửu U Luân Hồi'], ['Luân hồi ảnh, né thêm', 'Cửu u hộ thân giảm sát thương', 'Phản chiếu luân hồi, suy yếu đối thủ', 'Cửu u luân hồi: hộ thể + hồi + suy yếu']],
+  [1046, 'cp_vo_thuong_de_kinh', 'Vô Thượng Đế Kinh', 'Đế kinh vô thượng — rơi từ Boss Vô Thượng Đế Cung. Toàn diện, đặc biệt mạnh khi đối đầu Boss.', 'de', 'toanien', 9, 19, 2, 'linh_tinh', null, 0.22, 0.12, 1.3,
+    { atk: 0.25, def: 0.18, hp: 0.20, boss: 0.15 }, ['Đế Uy Giáng Thế', 'Vô Thượng Hộ Thân', 'Đế Đạo Phá Pháp', 'Vô Thượng Đế Kinh'], ['Đế uy giáng thế', 'Vô thượng hộ thân, né thêm', 'Đế đạo phá pháp, xuyên giáp + bạo kích', 'Vô thượng đế kinh: tuyệt kỹ toàn diện']],
+  [1047, 'cp_thien_de_tran_the', 'Thiên Đế Trấn Thế Quyết', 'Thiên đế trấn thế: phòng ngự và kháng sát thương cực cao; chiêu Thiên Đế Trấn Thế gây 2,5× công kích.', 'de', 'phongngu', 9, 19, 2, 'linh_tinh', null, 0.20, 0.14, 1.3,
+    { atk: 0.22, def: 0.25, dr: 0.07 }, ['Thiên Đế Hộ Giáp', 'Trấn Thế Ấn', 'Thiên Đế Phong Tỏa', 'Thiên Đế Trấn Thế'], ['Hộ giáp thiên đế', 'Trấn thế ấn, thủ và hồi', 'Phong tỏa, đối thủ suy yếu', 'Thiên đế trấn thế: 2,5×, giảm công đối thủ']],
+  [1048, 'cp_vinh_hang_bat_hu', 'Vĩnh Hằng Bất Hủ Kinh', 'Bất hủ vĩnh hằng: HP khổng lồ, hồi phục định kỳ trong chiến đấu.', 'de', 'sinhco', 9, 19, 2, 'linh_tinh', null, 0.16, 0.10, 1.25,
+    { hp: 0.30, def: 0.20, regen: 0.10 }, ['Vĩnh Hằng Hồi Xuân', 'Bất Hủ Kim Thân', 'Vĩnh Hằng Sinh Cơ', 'Vĩnh Hằng Bất Hủ'], ['Hồi xuân vĩnh hằng', 'Bất hủ kim thân', 'Sinh cơ vĩnh hằng, hồi mạnh', 'Vĩnh hằng bất hủ: hồi + hộ thể']],
+  [1049, 'cp_hu_khong_dai_dao', 'Hư Không Đại Đạo Kinh', 'Đại đạo hư không: tốc độ, né tránh, xuyên giáp; chiêu Hư Không Trảm gây 2,8× công kích.', 'de', 'than', 9, 19, 2, 'linh_tinh', null, 0.20, 0.10, 1.3,
+    { atk: 0.20, spd: 0.18, dodge: 0.08, pierce: 0.10 }, ['Hư Không Ảnh Bộ', 'Đại Đạo Vô Tung', 'Hư Không Loạn Ảnh', 'Hư Không Trảm'], ['Ảnh bộ hư không, né và đánh nhanh', 'Đại đạo vô tung, bạo kích', 'Loạn ảnh, né mạnh', 'Hư không trảm: 2,8× công kích']],
+  [1050, 'cp_thoi_gian_chi_chu', 'Thời Gian Chi Chủ Chân Kinh', 'Chúa tể thời gian: tốc độ, bạo kích, có cơ hội làm đối thủ mất lượt.', 'de', 'than', 9, 19, 2, 'linh_tinh', null, 0.18, 0.12, 1.3,
+    { spd: 0.20, atk: 0.15, crit: 0.05 }, ['Thời Gian Tĩnh Chỉ', 'Quang Âm Đảo Chuyển', 'Thời Gian Chi Chủ', 'Thời Gian Chung Kết'], ['Thời gian tĩnh chỉ, né thêm', 'Quang âm đảo chuyển, bạo kích', 'Chủ thời gian, né mạnh', 'Thời gian chung kết: tuyệt kỹ']],
+  [1051, 'cp_tien_to_khai_thien', 'Tiên Tổ Khai Thiên Kinh', 'Khai thiên lập địa của Tiên Tổ — rơi từ Vạn Cổ Tiên Tổ Lăng. Mọi chỉ số đều cao, thêm sát thương lên Boss.', 'de', 'toanien', 10, 21, 2, 'linh_tinh', null, 0.24, 0.14, 1.35,
+    { atk: 0.30, hp: 0.25, def: 0.20, boss: 0.12 }, ['Khai Thiên Tích Địa', 'Tiên Tổ Hộ Thể', 'Khai Thiên Phá Pháp', 'Tiên Tổ Khai Thiên'], ['Khai thiên tích địa', 'Tiên tổ hộ thể, né thêm', 'Khai thiên phá pháp, xuyên giáp + bạo kích', 'Tiên tổ khai thiên: tuyệt kỹ toàn diện']],
+  [1052, 'cp_van_dao_quy_nguyen', 'Vạn Đạo Quy Nguyên Kinh', 'Vạn đạo quy nguyên — rơi từ Vạn Đạo Thiên Vực. Cộng đều công/thủ/mệnh và tu vi, khuếch đại hợp linh căn.', 'de', 'nguhanh', 11, 23, 2, 'linh_tinh', null, 0.26, 0.16, 1.35,
+    { atk: 0.25, def: 0.25, hp: 0.25, tu: 0.15 }, ['Vạn Đạo Hội Nguyên', 'Quy Nguyên Hộ Thể', 'Vạn Đạo Tương Khắc', 'Vạn Đạo Quy Nguyên'], ['Vạn đạo hội nguyên', 'Quy nguyên hộ thể, hồi nhẹ', 'Vạn đạo tương khắc, xuyên giáp', 'Vạn đạo quy nguyên: đòn mạnh + hộ thể + suy yếu']],
+  [1053, 'cp_thien_dao_ban_nguyen', 'Thiên Đạo Bản Nguyên Kinh', 'Bản nguyên thiên đạo — rơi từ Thiên Đạo Bản Nguyên. Hộ thể tuyệt đối, giảm sát thương nhận vào.', 'de', 'phongngu', 11, 25, 2, 'linh_tinh', null, 0.22, 0.16, 1.35,
+    { hp: 0.30, def: 0.30, dr: 0.10 }, ['Thiên Đạo Hộ Thể', 'Bản Nguyên Trấn Áp', 'Thiên Đạo Phong Tỏa', 'Thiên Đạo Bản Nguyên'], ['Thiên đạo hộ thể', 'Bản nguyên trấn áp, thủ và hồi', 'Phong tỏa thiên đạo', 'Thiên đạo bản nguyên: hộ thể + hồi mạnh']],
+  [1054, 'cp_chung_cuc_vo_cuc', 'Chung Cực Vô Cực Kinh', 'Vô cực chi thể — cực hiếm, rơi từ Chí Tôn Cấm Địa. Mọi chỉ số tối đa, tăng sát thương Boss.', 'de', 'toanien', 12, 27, 2, 'linh_tinh', null, 0.30, 0.18, 1.4,
+    { atk: 0.35, def: 0.30, hp: 0.35, spd: 0.20, boss: 0.15 }, ['Vô Cực Hiển Hóa', 'Vô Cực Chi Thể', 'Vô Cực Phá Diệt', 'Chung Cực Vô Cực'], ['Vô cực hiển hóa', 'Vô cực chi thể, né thêm', 'Vô cực phá diệt, xuyên giáp + bạo kích', 'Chung cực vô cực: tuyệt kỹ tối thượng']],
+  [1055, 'cp_sieu_thoat_vinh_hang', 'Siêu Thoát Vĩnh Hằng Thiên Chương', 'Thiên chương siêu thoát — chỉ rơi từ Boss Siêu Thoát hoặc truyền thừa đặc biệt. Công pháp cuối cùng.', 'de', 'toanien', 12, 28, 2, 'linh_tinh', null, 0.34, 0.20, 1.45,
+    { atk: 0.40, def: 0.35, hp: 0.40, spd: 0.25, tu: 0.20, boss: 0.10 }, ['Siêu Thoát Chi Quang', 'Vĩnh Hằng Bảo Mệnh', 'Siêu Thoát Phá Giới', 'Siêu Thoát Vĩnh Hằng'], ['Siêu thoát chi quang', 'Vĩnh hằng bảo mệnh, né thêm', 'Siêu thoát phá giới, xuyên giáp + bạo kích', 'Siêu thoát vĩnh hằng: tuyệt kỹ cuối cùng']],
 ];
 
 const SHOP_CAP = 0;   // (giữ chỗ) không giới hạn số lượng mua — mỗi quyển chỉ mua được 1 lần (không mua trùng)
@@ -189,7 +224,8 @@ function upBase(price, currency) {
 }
 
 // Công pháp độc quyền không có giá bán → chi phí nâng cấp tính theo "giá tham chiếu" tương đương cấp bậc của nó (không để quyển hiếm nâng cấp rẻ hơn quyển thường).
-const EXCL_REF = { 1031: 800000, 1032: 1000000, 1033: 90, 1034: 100, 1035: 110, 1036: 200, 1037: 400, 1038: 500, 1039: 90, 1040: 1200 };
+const EXCL_REF = { 1031: 800000, 1032: 1000000, 1033: 90, 1034: 100, 1035: 110, 1036: 200, 1037: 400, 1038: 500, 1039: 90, 1040: 1200,
+  1046: 2500, 1047: 2800, 1048: 3000, 1049: 3200, 1050: 3500, 1051: 5000, 1052: 7000, 1053: 9000, 1054: 14000, 1055: 20000 };   // v19.0
 // ----- v16.2: tăng chỉ số / tốc độ tu luyện / thêm loại hiệu ứng -----
 // Bảng RAW giữ số gốc; hệ số dưới đây nhân lên khi dựng sách (đổi 1 chỗ, không phải sửa 40 dòng). stat = atk/def/hp/spd · tu = tu vi nhận được · route = các hiệu ứng khác.
 const GROUP_SCALE = {
@@ -197,6 +233,7 @@ const GROUP_SCALE = {
   linh: { stat: 2.0, tu: 3.2, route: 1.5, pvp: 2.2 },
   tien: { stat: 1.9, tu: 2.9, route: 1.4, pvp: 2.6 },
   doc: { stat: 2.0, tu: 2.6, route: 1.4, pvp: 2.6 },
+  de: { stat: 3.0, tu: 3.0, route: 1.5, pvp: 2.8 },   // v19.0
 };
 const MULTI_STAT_BONUS = 2.8;      // quyển cộng đều ≥ 3 chỉ số (Ngũ Hành / Toàn diện): nhân thêm để vượt các công pháp cũ cộng đều (Tầng 7, 101, 102, 201)
 const MULTI_TU_BONUS = 3.0;        // …và tu vi nhận được của quyển đa chỉ số
@@ -232,6 +269,8 @@ const FLOORS = {
   linh: { stat: () => 0.54, tu: () => 0, buff: () => 0, debuff: () => 0, sk: 0 },
   tien: { stat: (i) => 0.66 + 0.035 * i, tu: (i) => 0.60 + 0.12 * i, buff: (i) => 0.36 + 0.01 * i, debuff: (i) => 0.26 + 0.01 * i, sk: 0.05 },
   doc: { stat: (i, ph) => 0.88 + 0.05 * ph + 0.03 * i, tu: (i, ph) => 2.15 + 0.1 * ph + 0.05 * i, buff: (i, ph) => 0.60 + 0.02 * ph, debuff: (i, ph) => 0.45 + 0.02 * ph, sk: 0.12 },
+  // v19.0: nhóm Đế Cảnh — sàn tăng dần theo thứ tự (i = 0..14): sàn 0,9 → 2,3 (quyển độc quyền V16 tối đa ≈ 1,6 ở sàn) nhưng vẫn dưới FX_CAP
+  de: { stat: (i) => 0.9 + 0.1 * i, tu: (i) => 3.0 + 0.2 * i, buff: (i) => 0.62 + 0.012 * i, debuff: (i) => 0.46 + 0.01 * i, sk: 0.14 },
 };
 const idxInGroup = {};
 const BOOKS = RAW.map((r) => {
@@ -271,6 +310,15 @@ const FRAGMENTS = [
   { id: 'manh_diet_hon', name: 'Mảnh Cửu U Diệt Hồn Kinh', book: 1035, need: 20, icon: '🌙' },
   { id: 'manh_vo_thuong', name: 'Mảnh Vô Thượng Kiếm Đạo Kinh', book: 1037, need: 30, icon: '🗡️' },
   { id: 'manh_thien_ha', name: 'Mảnh Thiên Hà Tinh Thần Quyết', book: 1038, need: 25, icon: '🌌' },
+  // v19.0 — mảnh Công Pháp Đế Cảnh (rơi từ Bí Cảnh Tiên Giới, xem game/bicanh19.js)
+  { id: 'manh19_de_kinh', name: 'Mảnh Vô Thượng Đế Kinh', book: 1046, need: 30, icon: '👑', v19: true },
+  { id: 'manh19_tran_the', name: 'Mảnh Thiên Đế Trấn Thế Quyết', book: 1047, need: 30, icon: '🛡️', v19: true },
+  { id: 'manh19_bat_hu', name: 'Mảnh Vĩnh Hằng Bất Hủ Kinh', book: 1048, need: 30, icon: '♾️', v19: true },
+  { id: 'manh19_hu_khong', name: 'Mảnh Hư Không Đại Đạo Kinh', book: 1049, need: 30, icon: '🌀', v19: true },
+  { id: 'manh19_thoi_gian', name: 'Mảnh Thời Gian Chi Chủ Chân Kinh', book: 1050, need: 30, icon: '⏳', v19: true },
+  { id: 'manh19_khai_thien', name: 'Mảnh Tiên Tổ Khai Thiên Kinh', book: 1051, need: 40, icon: '🌅', v19: true },
+  { id: 'manh19_quy_nguyen', name: 'Mảnh Vạn Đạo Quy Nguyên Kinh', book: 1052, need: 45, icon: '☯️', v19: true },
+  { id: 'manh19_ban_nguyen', name: 'Mảnh Thiên Đạo Bản Nguyên Kinh', book: 1053, need: 50, icon: '🌌', v19: true },
 ];
 const FRAG_BY_ID = new Map(FRAGMENTS.map((f) => [f.id, f]));
 
@@ -302,6 +350,12 @@ const SOURCE_TEXT = {
   1038: 'Bí Cảnh Linh Giới từ Đại Thừa (0,8%/lần) · Mảnh Thiên Hà Tinh Thần',
   1039: 'Sự Kiện Đặc Biệt (admin phát / mã code)',
   1040: 'Kỳ Ngộ cực hiếm (Cảm Ngộ)',
+  1041: 'Cửa Hàng (Linh Tinh) · Bí Cảnh Chân Tiên Cổ Động (mảnh/rơi)', 1042: 'Cửa Hàng (Linh Tinh) · Bí Cảnh Vương Giả Cổ Mộ', 1043: 'Cửa Hàng (Linh Tinh) · Bí Cảnh Vạn Cổ Tiên Vương Điện',
+  1044: 'Cửa Hàng (Linh Tinh) · Bí Cảnh Cửu U Tôn Giả Giới', 1045: 'Cửa Hàng (Linh Tinh) · Bí Cảnh Tôn Giả Thần Điện',
+  1046: 'Bí Cảnh Vô Thượng Đế Cung (Boss cuối) · Mảnh Vô Thượng Đế Kinh', 1047: 'Bí Cảnh Đế Đạo Cổ Lộ / Vô Thượng Đế Cung · Mảnh Thiên Đế Trấn Thế', 1048: 'Bí Cảnh Đế Đạo Cổ Lộ / Vô Thượng Đế Cung · Mảnh Vĩnh Hằng Bất Hủ',
+  1049: 'Bí Cảnh Tiên Tổ Di Giới · Mảnh Hư Không Đại Đạo', 1050: 'Bí Cảnh Tiên Tổ Di Giới · Mảnh Thời Gian Chi Chủ',
+  1051: 'Bí Cảnh Vạn Cổ Tiên Tổ Lăng (Boss cuối) · Mảnh Tiên Tổ Khai Thiên', 1052: 'Bí Cảnh Vạn Đạo Thiên Vực (Boss cuối) · Mảnh Vạn Đạo Quy Nguyên', 1053: 'Bí Cảnh Thiên Đạo Bản Nguyên (Boss cuối) · Mảnh Thiên Đạo Bản Nguyên',
+  1054: 'Bí Cảnh Chí Tôn Cấm Địa (Boss cuối 2%) · Truyền Thừa Đặc Biệt', 1055: 'Bí Cảnh Siêu Thoát Chi Hải (Boss cuối 1%) · Truyền Thừa Đặc Biệt',
 };
 function sourcesOf(b) {
   if (b.shop) {
@@ -314,7 +368,7 @@ function sourcesOf(b) {
 }
 
 module.exports = {
-  GROUPS, GROUP_ORDER, CATS, CAT_ORDER, PHAM, FX_LABEL, STAT_KEYS, ROUTE_KEYS, FX_CAP, MAX_LEVEL, LEVEL_FX_GROWTH, LEVEL_PVP_STEP,
+  GROUPS, GROUP_ORDER, CATS, CAT_ORDER, PHAM, FX_LABEL, STAT_KEYS, ROUTE_KEYS, FX_CAP, MAX_LEVEL, LEVEL_FX_GROWTH, DE_STAGES, deStage, LEVEL_PVP_STEP,
   UP_BRACKETS, UP_BRACKETS_LT, BRACKET_LABEL, ARCH, SKILL_CAP, BOOKS, BY_TIER, BY_ID, BY_SKILL, FRAGMENTS, FRAG_BY_ID, SOURCES,
   KYNGO_BOOK, CHAIN_ORDER, SOURCE_TEXT, sourcesOf, SHOP_CAP,
 };

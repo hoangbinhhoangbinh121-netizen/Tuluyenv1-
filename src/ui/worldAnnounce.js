@@ -9,7 +9,7 @@ const MIN_REALM = Number(process.env.WORLD_ANNOUNCE_MIN_REALM || 5);
 async function announceBreakthrough(client, guildId, user, d) {
   if (!guildId || !get(guildId) || d.after.realm_index < MIN_REALM) return false;   // chỉ khi đã đặt kênh thế giới
   const emb = W.breakthrough({
-    player: `<@${user.id}>`, oldRealm: R.realmDisplay(d.before.realm_index, d.before.stage_index, true), newRealm: R.realmDisplay(d.after.realm_index, d.after.stage_index, true),
+    player: `<@${user.id}>${(() => { const h = require('../game/fx19').hieuOf(user.id); return h ? ` 「${h}」` : ''; })()}`, oldRealm: R.realmDisplay(d.before.realm_index, d.before.stage_index, true), newRealm: R.realmDisplay(d.after.realm_index, d.after.stage_index, true),
     sect: d.after.sect_id ? getSectName(d.after.sect_id) : 'Tán tu', location: 'Thiên Địa',
   });
   return announceWorld(client, guildId, emb);

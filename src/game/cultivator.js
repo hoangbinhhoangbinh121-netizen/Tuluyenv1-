@@ -3,6 +3,7 @@ const K = require('../game/constants');
 const T = require('./talent');
 const CPX = require('./cpfx');
 const X17 = require('./fx17');
+const X19 = require('./fx19');   // v19: Đế Đạo + Đế Binh
 const R = require('./realm');
 const D = require('../db');
 const { now, int } = require('../util');
@@ -123,10 +124,10 @@ function ngusuyStatMult(row) {
 // ---------- chỉ số hiệu dụng ----------
 // v16: hệ số công pháp CỘNG THÊM theo từng chỉ số của 40 công pháp mới (game/cpfx.js) — cộng TRONG cùng ngoặc với cpScale cũ nên mỗi hiệu ứng chỉ tính 1 lần.
 const cpScaleFor = (row, stat) =>
-  (1 + effectiveCongPhapBonus(row) * 0.4 + effectivePhapBaoBonus(row) * 0.4 + specialCongphapBonus(row) * 0.4 + CPX.statBonus(row, stat) + X17.stat(row, stat)) * ngusuyStatMult(row);   // v17: + trang bị / đan / trận (đã chặn trần ở fx17)
+  (1 + effectiveCongPhapBonus(row) * 0.4 + effectivePhapBaoBonus(row) * 0.4 + specialCongphapBonus(row) * 0.4 + CPX.statBonus(row, stat) + X17.stat(row, stat) + X19.statBonus(row, stat)) * ngusuyStatMult(row);   // v17: + trang bị / đan / trận (đã chặn trần ở fx17)
 const cpScale = (row) => cpScaleFor(row, null);
 /** Hệ số nhân tu vi nhận được từ công pháp: công pháp cũ (bonus) + công pháp mới (fx.tu). Thay cho `1 + effectiveCongPhapBonus` ở mọi nơi tính tu vi. */
-const cpTuMult = (row) => 1 + effectiveCongPhapBonus(row) + CPX.tuBonus(row) + X17.tuBonus(row);   // v17: trận Tụ Linh / Hộ Tông / Ngọc Bội
+const cpTuMult = (row) => 1 + effectiveCongPhapBonus(row) + CPX.tuBonus(row) + X17.tuBonus(row) + X19.tuBonus(row);   // v17: trận Tụ Linh / Hộ Tông / Ngọc Bội
 // v13.6: Thể Chất + Linh Căn nhân thêm công/thủ/sinh mệnh (đã chặn trần ≤ +15% mỗi loại — xem game/talent.js CAPS)
 const effectiveAtk = (row) => int(row.atk * cpScaleFor(row, 'atk') * T.statMult(row, 'atk')) + int(row.ruong_bonus_atk || 0);
 const effectiveDef = (row) => int(row.def_ * cpScaleFor(row, 'def') * T.statMult(row, 'def')) + int(row.ruong_bonus_def || 0);
@@ -138,7 +139,7 @@ const pvpDebuffPct = (row) => Number(row.cong_phap_pvp_debuff || 0);
 
 function calcLucChien(row) {
   let base = effectiveAtk(row) * 3 + effectiveDef(row) * 2 + effectiveSpd(row) * 1.5 + effectiveMaxHp(row) * 0.5 + row.tu_vi * 0.01;
-  base *= 1 + CPX.lucBonus(row);          // v16.4: công pháp mới cộng % Lực Chiến (đúng 1 lần, tính từ ô trang bị)
+  base *= 1 + CPX.lucBonus(row) + X19.lucBonus(row);          // v16.4: công pháp mới cộng % Lực Chiến (đúng 1 lần, tính từ ô trang bị)
   base += int(row.ruong_bonus_lucchien || 0);
   return int(base);
 }

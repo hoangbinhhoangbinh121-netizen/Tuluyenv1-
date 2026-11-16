@@ -62,7 +62,11 @@ try {
     const row = Cu.getCultivator(901); const nx = R.nextStage(row.realm_index, row.stage_index);
     if (nx === null) break;
     Cu.updateCultivator(901, { tu_vi: R.tuViRequired(row.realm_index, row.stage_index, row.world_tier), cur_hp: 1e12, last_dotpha_fail: 0 });
-    const out = DP.doDotpha(901); const after = Cu.getCultivator(901);
+    const out = DP.doDotpha(901); let after = Cu.getCultivator(901);
+    if (row.realm_index === 18 && row.stage_index === 3) {   // v19.0: Chuẩn Tiên Đế Viên Mãn phải Chứng Đạo (/chungdao) — đột phá thường bị chặn
+      ok(/chungdao/.test(String(out)) && after.realm_index === 18 && after.stage_index === 3, 'v19: đột phá thường bị chặn ở Chuẩn Tiên Đế Viên Mãn, chỉ đường /chungdao');
+      D.run('UPDATE cultivators SET realm_index = 19, stage_index = 0 WHERE user_id = 901'); after = Cu.getCultivator(901);   // mô phỏng Chứng Đạo thành công
+    }
     ok(after.realm_index === nx[0] && after.stage_index === nx[1], `đột phá ${row.realm_index}/${row.stage_index} → ${after.realm_index}/${after.stage_index} (mong ${nx}): ${String(out).slice(0, 160)}`);
     visited.push(after.realm_index);
   }

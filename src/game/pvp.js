@@ -1,4 +1,5 @@
 'use strict';
+const HX = (id) => { try { const h = require('./fx19').hieuOf(id); return h ? ` 「${h}」` : ''; } catch (_) { return ''; } };   // v19.0: Đế Hiệu hiển thị khi PvP
 /** PvP theo hiệp: khiêu chiến (Chấp Nhận/Từ Chối) + mỗi hiệp 2 bên tự chọn hành động — port từ engine round-by-round */
 const crypto = require('node:crypto');
 const { EmbedBuilder } = require('discord.js');
@@ -31,16 +32,16 @@ function buildSession(guildId, channelId, aId, bId) {
   const realmA = R.realmDisplay(a.realm_index, a.stage_index); const realmB = R.realmDisplay(b.realm_index, b.stage_index);
   const [mAtkA, mAtkB] = P.statArrow(atkA, atkB); const [mDefA, mDefB] = P.statArrow(defA, defB);
   const [mSpdA, mSpdB] = P.statArrow(spdA, spdB); const [mPowA, mPowB] = P.statArrow(powerA, powerB);
-  const header = `🅰️ <@${aId}> (${realmA}) — Công ${atkA}${mAtkA} | Thủ ${defA}${mDefA} | Tốc ${spdA}${mSpdA} | Lực Chiến ${powerA}${mPowA}\n🅱️ <@${bId}> (${realmB}) — Công ${atkB}${mAtkB} | Thủ ${defB}${mDefB} | Tốc ${spdB}${mSpdB} | Lực Chiến ${powerB}${mPowB}${buffNote}`;
+  const header = `🅰️ <@${aId}>${HX(aId)} (${realmA}) — Công ${atkA}${mAtkA} | Thủ ${defA}${mDefA} | Tốc ${spdA}${mSpdA} | Lực Chiến ${powerA}${mPowA}\n🅱️ <@${bId}>${HX(bId)} (${realmB}) — Công ${atkB}${mAtkB} | Thủ ${defB}${mDefB} | Tốc ${spdB}${mSpdB} | Lực Chiến ${powerB}${mPowB}${buffNote}`;
   const hpMax = 100;
   const arena = PetC.buildArena(a, b);
   const s = {
     id: crypto.randomBytes(6).toString('hex'), guild_id: guildId, channel_id: channelId, a_id: aId, b_id: bId,
     arena, mods: { A: PetC.mergeMods(T.combatMods(a), arena.A), B: PetC.mergeMods(T.combatMods(b), arena.B) }, atk: { A: atkA, B: atkB }, def_: { A: defA, B: defB }, spd: { A: spdA, B: spdB }, power: { A: powerA, B: powerB },
     skills: { A: P.pvpActionListFor(a), B: P.pvpActionListFor(b) }, pet: { A: arena.A.pet ? arena.A.pet.name : '', B: arena.B.pet ? arena.B.pet.name : '' },
-    tag: { A: `<@${aId}>`, B: `<@${bId}>` }, hp_max: hpMax, hp_pool: { A: hpMax, B: hpMax }, round: 1,
+    tag: { A: `<@${aId}>${HX(aId)}`, B: `<@${bId}>${HX(bId)}` }, hp_max: hpMax, hp_pool: { A: hpMax, B: hpMax }, round: 1,
     actions: { A: null, B: null }, acted: { A: false, B: false }, resolving: false, round_token: 0, active_view: null,
-    round_blocks: [], battle_data_rounds: [], header, realm_line: `🅰️ <@${aId}>: ${realmA}\n🅱️ <@${bId}>: ${realmB}`,
+    round_blocks: [], battle_data_rounds: [], header, realm_line: `🅰️ <@${aId}>${HX(aId)}: ${realmA}\n🅱️ <@${bId}>${HX(bId)}: ${realmB}`,
     rowA: a, rowB: b, stake_cap: Math.max(10, int(Math.min(a.tu_vi, b.tu_vi) * 0.05)), cur_hp_a: a.cur_hp, cur_hp_b: b.cur_hp, message: null, settled: false, created_at: now(),
   };
   SESSIONS.set(s.id, s); BUSY.set(aId, s.id); BUSY.set(bId, s.id);
@@ -213,7 +214,7 @@ function challengePrecheck(cId, tId) {
   return '';
 }
 const challengeEmbed = (c, t) => new EmbedBuilder().setTitle('⚔️ LỜI KHIÊU CHIẾN ĐẤU PHÁP').setColor(0xe67e22)
-  .setDescription(`<@${c}> khiêu chiến <@${t}>!\n<@${t}> có ${P.PVP_CHALLENGE_TIMEOUT}s để **Chấp Nhận** hoặc **Từ Chối**.`);
+  .setDescription(`<@${c}>${HX(c)} khiêu chiến <@${t}>${HX(t)}!\n<@${t}> có ${P.PVP_CHALLENGE_TIMEOUT}s để **Chấp Nhận** hoặc **Từ Chối**.`);
 
 function challengeView(cId, tId) {
   cId = sid(cId); tId = sid(tId);

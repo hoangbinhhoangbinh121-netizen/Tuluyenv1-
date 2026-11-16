@@ -16,7 +16,8 @@ const isAdminApprover = (id) => require('../game/constants').ADMIN_CODE_APPROVER
 function defineCommand(def) { registry.set(def.name, def); return def; }
 
 function buildSlashJson() {
-  return [...registry.values()].map((c) => {
+  // v19.0: Discord giới hạn 100 lệnh slash mỗi phạm vi → lệnh có cờ prefixOnly vẫn dùng được bằng tiền tố (?/!) nhưng không đăng ký slash.
+  return [...registry.values()].filter((c) => !c.prefixOnly).map((c) => {
     const b = new SlashCommandBuilder().setName(c.name).setDescription(String(c.description).slice(0, 100));
     for (const o of c.options || []) {
       const common = (x) => x.setName(o.name).setDescription(String(o.description || o.name).slice(0, 100)).setRequired(!!o.required);

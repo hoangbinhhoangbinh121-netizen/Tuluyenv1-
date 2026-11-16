@@ -19,20 +19,20 @@ const { fmtNum, int } = require('../util');
 
 const { EmbedBuilder, btn, rowOf, optEmoji, listFit } = PV;
 const SHOP_PAGE = 5; const OWN_PAGE = 8;
-const GROUP_TABS = ['cu', 'nhan', 'linh', 'tien', 'doc'];
+const GROUP_TABS = ['cu', 'nhan', 'linh', 'tien', 'doc', 'de'];
 const GROUP_META = {
   cu: { label: 'Công Pháp Cổ Điển (cũ)', short: 'Cổ Điển', icon: '📜', key: 'cpg_cu' },
   nhan: { ...D16.GROUPS.nhan, key: 'cpg_nhan' }, linh: { ...D16.GROUPS.linh, key: 'cpg_linh' },
-  tien: { ...D16.GROUPS.tien, key: 'cpg_tien' }, doc: { ...D16.GROUPS.doc, key: 'cpg_doc' },
+  tien: { ...D16.GROUPS.tien, key: 'cpg_tien' }, doc: { ...D16.GROUPS.doc, key: 'cpg_doc' }, de: { ...D16.GROUPS.de, key: 'cpg_de' },
 };
 const ic = (key, fb) => E[key] || fb;
 const gIcon = (g) => ic(GROUP_META[g].key, GROUP_META[g].icon);
 const cIcon = (cat) => (D16.CATS[cat] ? ic(`cpc_${cat}`, D16.CATS[cat].icon) : '📜');
 const bIcon = (b) => ic(`cpb_${b.tier}`, cIcon(b.cat));
-const PHAM_ICON = ['🟫', '🟦', '🟩', '🟨', '🟪', '🟥', '⬜'];
+const PHAM_ICON = ['🟫', '🟦', '🟩', '🟨', '🟪', '🟥', '⬜', '🔶', '🔷', '👑', '🌅', '☯️', '♾️'];
 const pIcon = (n) => ic(`cpp_${n + 1}`, PHAM_ICON[n] || '▫️');
 const oe = (s) => (s ? optEmoji(s) : undefined);
-const COLORS = { cu: 0x95a5a6, nhan: 0x2ecc71, linh: 0x3498db, tien: 0xf1c40f, doc: 0xe74c3c };
+const COLORS = { cu: 0x95a5a6, nhan: 0x2ecc71, linh: 0x3498db, tien: 0xf1c40f, doc: 0xe74c3c, de: 0x9b59b6 };
 
 // ---------------------------------------------------------------- trạng thái ⇄ customId
 const DEF = { m: 'ov', g: 'all', c: 'all', p: 0, t: 0, r: 'ov' };
@@ -159,7 +159,7 @@ function renderShop(uid, st, row) {
   const g = GROUP_TABS.includes(st.g) ? st.g : 'nhan'; st = { ...st, g };
   const list = shopTiers(row, g, st.c); const pg = pageSlice(list, st.p, SHOP_PAGE); st = { ...st, p: pg.page };
   const e = new EmbedBuilder().setTitle(`${ic('shop', '🛒')} Tàng Kinh Các — Cửa Hàng · ${GROUP_META[g].label}`).setColor(COLORS[g])
-    .setDescription(`${balText(row)}\n${g === 'doc' ? '🌟 Nhóm **độc quyền**: KHÔNG bán — xem nguồn thu thập.' : 'Chọn quyển để xem chi tiết rồi **Mua**. Mỗi quyển chỉ mua 1 lần.'}`);
+    .setDescription(`${balText(row)}\n${g === 'doc' ? '🌟 Nhóm **độc quyền**: KHÔNG bán — xem nguồn thu thập.' : g === 'de' ? '👑 Nhóm **Đế Cảnh (V19)**: 5 quyển đầu mua bằng Linh Tinh; các quyển còn lại rơi từ **Bí Cảnh Tiên Giới** (xem nguồn). Qua mốc cấp 10/30/50/70/90 cần vật liệu giai đoạn.' : 'Chọn quyển để xem chi tiết rồi **Mua**. Mỗi quyển chỉ mua 1 lần.'}`);
   for (const t of pg.items) {
     const x = info(row, t);
     const price = x.shop ? `${fmtNum(x.price)} ${x.currency === 'linh_tinh' ? `${E.linhtinh} Linh Tinh` : `${E.linhthach} Linh Thạch`}` : '🔒 Độc quyền';

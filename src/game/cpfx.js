@@ -28,7 +28,7 @@ const levelOf = (row, tier) => Math.min(D.MAX_LEVEL, parseLevels(row)[tier] || 0
 
 /** Giá trị fx của 1 quyển ở cấp `level` (chưa nhân tương hợp, chưa chặn trần tổng). */
 function fxAt(book, level) {
-  const g = 1 + D.LEVEL_FX_GROWTH * Math.max(0, Math.min(D.MAX_LEVEL, level));
+  const g = book.group === 'de' ? D.deStage(Math.min(D.MAX_LEVEL, level)).mult : 1 + D.LEVEL_FX_GROWTH * Math.max(0, Math.min(D.MAX_LEVEL, level));   // v19: nhóm 'de' theo giai đoạn (100/110/120/135/150/170%)
   const out = {};
   for (const [k, v] of Object.entries(book.fx)) out[k] = v * g;
   return out;
@@ -51,7 +51,8 @@ function aggregate(row) {
   const hit = cache.get(row); if (hit) return hit;
   const tiers = parseSlots(row).filter((t) => D.BY_TIER.has(t));
   let res = EMPTY;
-  if (tiers.length) {
+  const bm = row.user_id ? require('./benmenh19').get(row.user_id) : null;   // v19: Công Pháp Bản Mệnh (cộng hưởng + thức tỉnh)
+  if (tiers.length || bm) {
     const lv = parseLevels(row);
     const sum = {}; let buff = 0; let debuff = 0; const books = [];
     for (const t of tiers) {
@@ -64,10 +65,18 @@ function aggregate(row) {
       buff += pvpBuffAt(b, level); debuff += pvpDebuffAt(b, level);
       books.push({ book: b, level, aff });
     }
+    if (bm) {   // Bản Mệnh: cộng thêm một phần hiệu ứng gốc (đang trang bị +15%, không trang bị +40%, +12% mỗi lần thức tỉnh) — vẫn chịu FX_CAP bên dưới
+      const BM = require('./benmenh19'); const lvB = Math.min(D.MAX_LEVEL, lv[bm.tier] || 0);
+      const f = (tiers.includes(bm.tier) ? BM.FACTOR_SLOT : BM.FACTOR_OFF) + BM.FACTOR_AWAKEN * bm.awaken;
+      for (const [k, v] of Object.entries(fxAt(bm.book, lvB))) {
+        const scaled = (D.STAT_KEYS.includes(k) || k === 'tu' || k === 'boss' || k === 'luc') ? v * affinityOf(row, bm.book) : v; sum[k] = (sum[k] || 0) + scaled * f;
+      }
+      if (bm.awaken >= 2) sum.tu = (sum.tu || 0) + 0.06;
+    }
     const cap = (k) => Math.min(D.FX_CAP[k], Math.max(0, sum[k] || 0));
     const stat = { atk: cap('atk'), def: cap('def'), hp: cap('hp'), spd: cap('spd') };
     const route = {}; for (const k of D.ROUTE_KEYS) if (sum[k]) route[k] = cap(k);
-    res = { n: tiers.length, books, stat, tu: cap('tu'), boss: cap('boss'), luc: cap('luc'), route, buff, debuff };
+    res = { n: tiers.length, books, benmenh: bm ? bm.tier : 0, stat, tu: cap('tu'), boss: cap('boss'), luc: cap('luc'), route, buff, debuff };
   }
   cache.set(row, res);
   return res;
@@ -76,9 +85,13 @@ const EMPTY = Object.freeze({ n: 0, books: [], stat: Object.freeze({ atk: 0, def
 
 const statBonus = (row, stat) => (stat ? aggregate(row).stat[stat] || 0 : 0);
 const tuBonus = (row) => aggregate(row).tu;
-const bossBonus = (row) => aggregate(row).boss;
+const bossBonus = (row) => aggregate(row).boss + require('./fx19').bossBonus(row);   // v19: + Đế Đạo (Hủy Diệt)
 const lucBonus = (row) => aggregate(row).luc;
-const routeFx = (row) => aggregate(row).route;
+const routeFx = (row) => {
+  const a = aggregate(row).route; const f = require('./fx19').routeFx(row);   // v19: Đế Đạo + Đế Binh dùng chung kênh route (chung trần CAPS của talent.bundle)
+  if (!Object.keys(f).length) return a;
+  const out = { ...a }; for (const [k, v] of Object.entries(f)) out[k] = (out[k] || 0) + v; return out;
+};
 
 // ---------------------------------------------------------------- chiêu thức
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

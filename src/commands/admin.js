@@ -179,13 +179,13 @@ defineCommand({
 });
 
 defineCommand({
-  name: 'phatcongphap', description: '[Admin] Sự Kiện Đặc Biệt: cấp 1 Công Pháp V16 (mã 1001–1040, mặc định 1039 Càn Khôn Trấn Giới Kinh) cho 1 thành viên', admin: true,
-  options: [{ name: 'thanh_vien', type: 'user', required: true, description: 'Thành viên nhận' }, { name: 'ma', type: 'int', description: 'Mã công pháp 1001–1040 (bỏ trống = 1039)' }],
+  name: 'phatcongphap', description: '[Admin] Sự Kiện Đặc Biệt: cấp 1 Công Pháp V16 (mã 1001–1055, mặc định 1039 Càn Khôn Trấn Giới Kinh) cho 1 thành viên', admin: true,
+  options: [{ name: 'thanh_vien', type: 'user', required: true, description: 'Thành viên nhận' }, { name: 'ma', type: 'int', description: 'Mã công pháp 1001–1055 (bỏ trống = 1039)' }],
   async run(ctx) {
     const u = ctx.args.thanh_vien; const tier = ctx.args.ma || 1039;
     if (!u || !Cu.getCultivator(u.id)) return ctx.send(`❌ <@${u?.id}> chưa bắt đầu tu tiên.`);
     const CP16 = require('../game/congphapV16');
-    if (!CP16.isNew(tier)) return ctx.send('❌ Mã công pháp phải nằm trong 1001–1040.');
+    if (!CP16.isNew(tier)) return ctx.send('❌ Mã công pháp phải nằm trong 1001–1055.');
     return ctx.send(`${CP16.grantEvent(u.id, tier)} (người nhận: <@${u.id}>)`);
   },
 });

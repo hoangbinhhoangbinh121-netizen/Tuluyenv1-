@@ -169,7 +169,7 @@ function buildLeaderboardEmbed() {
   const rows = D.all('SELECT user_id, world_tier, realm_index, stage_index, tu_vi FROM cultivators ORDER BY world_tier DESC, realm_index DESC, stage_index DESC, tu_vi DESC LIMIT 10');
   const e = new EmbedBuilder().setTitle(`${E.cup} Thiên Kiêu Bảng`).setColor(0xf1c40f);
   if (!rows.length) return e.setDescription('Chưa có ai bắt đầu tu tiên.');
-  return e.setDescription(rows.map((r, i) => `**#${i + 1}** <@${r.user_id}> — ${r.world_tier ? `[${R.worldTierName(r.world_tier)}] ` : ''}${R.realmDisplay(r.realm_index, r.stage_index)} (${r.tu_vi} tu vi)`).join('\n'));
+  return e.setDescription(rows.map((r, i) => `**#${i + 1}** <@${r.user_id}>${(() => { const h = require('../game/fx19').hieuOf(r.user_id); return h ? ` 「${h}」` : ''; })()} — ${r.world_tier ? `[${R.worldTierName(r.world_tier)}] ` : ''}${R.realmDisplay(r.realm_index, r.stage_index)} (${r.tu_vi} tu vi)`).join('\n'));
 }
 
 module.exports = { tradeConfirmView, offerAnnouncement, tradeTargetView, buildDongphuEmbed, dongphuView, donghanhGroupView, buildLeaderboardEmbed };

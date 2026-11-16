@@ -13,7 +13,7 @@ const openBicanh = async (ctx) => {
   return ctx.send(p);
 };
 defineCommand({ name: 'bicanh', description: 'Khám phá bí cảnh (gồm cả Bí Cảnh thường & Bí Cảnh Linh Giới)', needsCultivator: true, run: openBicanh });
-defineCommand({ name: 'bicanhlinhgioi', description: 'Khám phá Bí Cảnh (đã gộp chung với /bicanh)', needsCultivator: true, run: openBicanh });
+defineCommand({ name: 'bicanhlinhgioi', description: 'Khám phá Bí Cảnh (đã gộp chung với /bicanh)', needsCultivator: true, prefixOnly: true, run: openBicanh });
 // ---------------- Boss Thế Giới v7 ----------------
 const BV = require('../ui/bossViews');
 const BossG = require('../game/boss');
@@ -44,7 +44,7 @@ defineCommand({
 defineCommand({
   name: 'trieuhoiboss', description: '[Admin] Triệu hồi Boss Thế Giới (cấp 1-9, HP, số phút tồn tại)', anyAdmin: true,
   options: [
-    { name: 'capdo', type: 'int', description: 'Cấp độ boss 1-9 (mặc định 1)' },
+    { name: 'capdo', type: 'int', description: 'Cấp độ boss 1-11 (10 = Đế Cảnh Xuất Thế, 11 = Siêu Thoát Chi Môn; mặc định 1)' },
     { name: 'hp', type: 'int', description: 'Sinh mệnh boss (bỏ trống = tự tính theo sức mạnh server)' },
     { name: 'phut', type: 'int', description: 'Số phút tồn tại (mặc định 30)' },
   ],

@@ -34,6 +34,9 @@ function startBackground(client) {
   // Boss Thế Giới v7: hết hạn → trốn thoát + làm mới bảng đếm lùi.
   const BV = require('./ui/bossViews');
   setInterval(() => { if (MT.isOn()) return; BV.tick(client).catch((e) => console.error('⚠️ boss_tick lỗi:', e.message)); }, 15000).unref();
+  // v19.0: sự kiện thế giới (Dị Biến / Truyền Thừa / Đế Cảnh / Siêu Thoát) + dọn Bí Cảnh Tiên Giới treo — mỗi 60 giây.
+  const EVV = require('./ui/event19Views');
+  setInterval(() => { if (MT.isOn()) return; EVV.tick(client).catch((e) => console.error('⚠️ ev19_tick lỗi:', e.message)); }, 60000).unref();
   // Xoay vòng tên/mô tả Công Pháp + Đan Dược mỗi 5 phút (Gemini, có fallback local).
   const CP = require('./game/congphap'); const Dan = require('./game/dan'); const CDn = require('./game/cooldowns');
   const loop = (name, fn, sec) => {

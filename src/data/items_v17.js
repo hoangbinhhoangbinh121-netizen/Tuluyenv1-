@@ -204,6 +204,9 @@ def({ id: 'vp_ve_bicanh_db', name: 'Vé Bí Cảnh Đặc Biệt', cat: 'VAT_PHA
 // ===================================================================== TRANG BỊ (mẫu — thể hiện ở bảng gear, không phải stack)
 const GEAR_TEMPLATE_IDS = ['gx_thanh_phong', 'gx_huyen_thiet_giap', 'gx_tu_linh_boi', 'gx_ho_tam_kinh', 'gx_tat_phong_ngoa', 'gx_tru_vat_gioi', 'gx_tran_hon_linh', 'gx_pha_thien_thuong'];
 
+// ===================================================================== V19.0 — vật phẩm Bí Cảnh Tiên Giới / Chứng Đạo / nâng cấp Công Pháp
+require('./items_v19').install(def);
+
 // ===================================================================== TIỆN ÍCH
 const get = (id) => BY_ID[id] || null;
 const byCat = (cat) => ITEMS.filter((i) => i.cat === cat);
