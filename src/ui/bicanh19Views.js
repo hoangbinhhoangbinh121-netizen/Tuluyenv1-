@@ -1,4 +1,5 @@
 'use strict';
+const E9 = require('./emo19');   // v19.1: emoji pixel riêng của V19
 /**
  * Giao diện Bí Cảnh Tiên Giới V19. Nút TĨNH `b19|…` — sống sót qua restart vì mọi trạng thái nằm trong bảng bc19_runs.
  *   b19|m|<uid>|<act>|<arg>   menu chọn bí cảnh (act: pick | solo | party | boss | prog)
@@ -27,23 +28,23 @@ function menuView(uid, picked = null) {
   const idx = picked === null ? Math.max(0, Math.min(18, row ? Math.max(0, row.realm_index - B.REALM0) : 0)) : picked;
   const bc = B.BCS[idx]; const p = prog[idx] || { clears: 0, best: 0, ach: [] };
   const why = BC.whyCannotEnter(row, idx); const left = Math.max(0, BC.CFG.ENTRIES_PER_DAY - BC.entriesToday(uid, idx));
-  const emb = new EmbedBuilder().setColor(0x8e44ad).setTitle(`🌌 BÍ CẢNH TIÊN GIỚI — ${bc.name}`)
-    .setDescription(`${bc.desc}\n\n**Yêu cầu:** ${K.REALMS[bc.realm].name} trở lên · **Độ khó:** HP ×${bc.diff.hp.toFixed(2)} · ATK ×${bc.diff.atk.toFixed(2)} _(đã hiệu chỉnh)_\n**Boss cuối:** 👑 ${bc.final} · **Tầng:** 5 · **Lượt vào hôm nay:** ${left}/${BC.CFG.ENTRIES_PER_DAY}`)
+  const emb = new EmbedBuilder().setColor(0x8e44ad).setTitle(`${E9.bc(idx)} BÍ CẢNH TIÊN GIỚI — ${bc.name}`)
+    .setDescription(`${bc.desc}\n\n**Yêu cầu:** ${K.REALMS[bc.realm].name} trở lên · **Độ khó:** HP ×${bc.diff.hp.toFixed(2)} · ATK ×${bc.diff.atk.toFixed(2)} _(đã hiệu chỉnh)_\n**Boss cuối:** ${E9.mob('final')} ${bc.final} · **Tầng:** 5 · **Lượt vào hôm nay:** ${left}/${BC.CFG.ENTRIES_PER_DAY}`)
     .addFields(
       { name: '🗺️ 5 tầng', value: B.FLOORS.map((f) => `**${f.n}. ${f.name}** — ${f.desc}`).join('\n').slice(0, 1020) },
       { name: '📈 Tiến độ', value: `Chinh phục: **${p.clears}** lần · Tầng cao nhất: **${p.best}/5**\n${p.ach.length ? p.ach.map((k) => BC.ACH[k]).filter(Boolean).join(' · ') : '_Chưa có thành tựu_'}`, inline: false },
       { name: '🎁 Phần thưởng', value: `Tu Vi · Linh Thạch mỗi tầng · nguyên liệu độc quyền · mảnh công pháp · rương · truyền thừa 1% · lần đầu chinh phục ×2`, inline: false },
       { name: '📌 Trạng thái', value: run ? `🔥 Bạn đang trong một lần thám hiểm (#${run}) — bấm **Tiếp tục**.` : (why ? `🔒 ${why}` : '✅ Có thể tiến vào.'), inline: false })
     .setFooter({ text: 'Chiến đấu theo lượt · nút bấm không mất khi bot khởi động lại · Tổ đội 2–5 người' });
-  const opts = B.BCS.map((x, i) => ({ label: `${i + 1}. ${x.name}`.slice(0, 100), description: `${K.REALMS[x.realm].name} · Boss: ${x.final}`.slice(0, 100), value: String(i), default: i === idx }));
+  const opts = B.BCS.map((x, i) => ({ label: `${i + 1}. ${x.name}`.slice(0, 100), description: `${K.REALMS[x.realm].name} · Boss: ${x.final}`.slice(0, 100), value: String(i), default: i === idx, emoji: E9.bcComp(i) }));
   const sel = new StringSelectMenuBuilder().setCustomId(`b19|m|${uid}|pick`).setPlaceholder('Chọn bí cảnh…').addOptions(opts.slice(Math.max(0, Math.min(idx - 10, 19 - 25)), 25 + Math.max(0, Math.min(idx - 10, 19 - 25))));
   const rows = [rowOf(sel)];
   if (run) rows.push(rowOf(btn(`b19|m|${uid}|cont`, 'Tiếp tục', '▶️', SUCCESS), btn(`b19|r|${run}|retreat`, 'Thoát bí cảnh', '🏃', DANGER)));
-  else rows.push(rowOf(btn(`b19|m|${uid}|solo|${idx}`, 'Tiến vào (Solo)', '⚔️', SUCCESS, !!why), btn(`b19|m|${uid}|party|${idx}`, 'Lập Tổ Đội', '👥', PRIMARY, !!why), btn(`b19|m|${uid}|boss|${idx}`, 'Xem Boss', '👁️', GRAY), btn(`b19|m|${uid}|rf|${idx}`, 'Làm mới', '🔄', GRAY)));
+  else rows.push(rowOf(btn(`b19|m|${uid}|solo|${idx}`, 'Tiến vào (Solo)', '⚔️', SUCCESS, !!why), btn(`b19|m|${uid}|party|${idx}`, 'Lập Tổ Đội', E9.comp('doi19', '👥'), PRIMARY, !!why), btn(`b19|m|${uid}|boss|${idx}`, 'Xem Boss', '👁️', GRAY), btn(`b19|m|${uid}|rf|${idx}`, 'Làm mới', '🔄', GRAY)));
   return { content: '', embeds: [emb], components: rows };
 }
 function bossView(idx) {
-  const bc = B.BCS[idx]; const e = new EmbedBuilder().setColor(0xc0392b).setTitle(`👑 ${bc.final}`).setDescription(`Boss cuối của **${bc.name}** (${bc.theme}).`)
+  const bc = B.BCS[idx]; const e = new EmbedBuilder().setColor(0xc0392b).setTitle(`${E9.mob('final')} ${bc.final}`).setDescription(`Boss cuối của **${bc.name}** (${bc.theme}).`)
     .addFields({ name: '⚔️ Kỹ năng', value: bc.skills.map((s, i) => `**${i + 1}. ${typeof s === 'string' ? s : s.name}**${typeof s === 'object' && s.desc ? ` — ${s.desc}` : ''}`).join('\n').slice(0, 1020) },
       { name: '🌀 3 giai đoạn', value: '100–70% HP: thường · 70–35%: ATK +15%, dựng khiên · 35–0%: ATK +30%, mở Tuyệt Kỹ. Mỗi giai đoạn hồi 5% HP một lần.' },
       { name: '⚠️ Cảnh báo', value: 'Đòn nặng luôn có **dấu hiệu tụ lực** một lượt trước — hãy bấm 🛡️ **Phòng Thủ**.' },
@@ -52,11 +53,11 @@ function bossView(idx) {
 }
 
 // ================================================================ PANEL TRẬN
-const kindIcon = { normal: '👾', elite: '👹', mini: '😈', guard: '🛡️', final: '👑' };
+const kindIcon = new Proxy({}, { get: (_, kd) => E9.mob(String(kd)) });   // v19.1: emoji pixel theo loại kẻ địch
 function lobbyView(runId) {
   const L = BC.load(runId); const members = require('../db').all('SELECT user_id FROM bc19_members WHERE run_id = ? ORDER BY rowid', runId).map((x) => x.user_id);
   const bc = B.BCS[L.run.bc_idx]; const names = (L.st.names || {});
-  const emb = new EmbedBuilder().setColor(0x3498db).setTitle(`👥 Phòng chờ — ${bc.name}`)
+  const emb = new EmbedBuilder().setColor(0x3498db).setTitle(`${E9.k('doi19', '👥')} Phòng chờ — ${bc.name}`)
     .setDescription(`Yêu cầu: **${K.REALMS[bc.realm].name}** trở lên · Đội trưởng: <@${L.run.leader}>\nBoss có HP ×${(1 + BC.CFG.PARTY_HP * Math.max(0, members.length - 1)).toFixed(2)} theo số người; sát thương Boss tăng chậm hơn HP.\n\n**Thành viên (${members.length}/5):**\n${members.map((u, i) => `${i === 0 ? '👑' : '•'} ${names[u] || u} <@${u}>`).join('\n')}`)
     .setFooter({ text: 'Bấm Tham Gia để vào đội · đội trưởng bấm Bắt Đầu khi đủ người (2–5)' });
   return { embeds: [emb], components: [rowOf(btn(`b19|j|${runId}`, 'Tham Gia', '🤝', SUCCESS), btn(`b19|l|${runId}`, 'Rời Đội', '🚪', GRAY), btn(`b19|s|${runId}`, 'Bắt Đầu', '▶️', PRIMARY, members.length < 2), btn(`b19|l|${runId}`, 'Hủy Phòng', '✖️', DANGER, true))] };
@@ -67,14 +68,14 @@ function runView(runId, note = '') {
   const { run, st } = L; if (run.status === 'lobby') return lobbyView(runId);
   const bc = B.BCS[st.bc]; const F = B.FLOORS[Math.min(4, Math.max(0, st.floor - 1))]; const e = st.enemy;
   const color = st.over === 'won' ? 0x2ecc71 : st.over ? 0xe74c3c : (e && e.tele ? 0xe67e22 : 0x8e44ad);
-  const emb = new EmbedBuilder().setColor(color).setTitle(`🌌 ${bc.name} — Tầng ${st.floor}/5 · ${F.name}`);
+  const emb = new EmbedBuilder().setColor(color).setTitle(`${E9.bc(st.bc)} ${bc.name} — Tầng ${st.floor}/5 · ${F.name}`);
   const done = !!st.over;
   if (e && !done) {
     const wave = `${st.wave + 1}/${F.waves.length}`;
     const phase = e.kind === 'final' ? ` · Giai đoạn ${e.phase}/3` : '';
     emb.addFields({ name: `${kindIcon[e.kind] || '👾'} ${e.name}  _(lượt ${wave}${phase})_`, value: `${bar(e.hp, e.maxHp)} **${fmt(e.hp)}/${fmt(e.maxHp)}**${e.shield > 0 ? ` 🛡️ ${fmt(e.shield)}` : ''}${e.weak ? ` ⬇️ yếu ${Math.round(e.weak.pct * 100)}%` : ''}${e.lose ? ' ⏳' : ''}${e.tele ? `\n⚠️ **ĐANG TỤ LỰC: ${e.tele.name}**${e.tele.aoe ? ' (diện rộng)' : ''} — bấm 🛡️ **Phòng Thủ**!` : ''}` });
   }
-  emb.addFields({ name: `🧑‍🤝‍🧑 Đội hình (${st.members.length})`, value: st.members.map((m, i) => `${i === st.turn && !done ? '▶️' : '　'}${m.alive ? '🟢' : '💀'} **${m.name}** ${bar(m.hp, m.maxHp, 8)} ${fmt(m.hp)}/${fmt(m.maxHp)}${m.shield ? ` 🛡️${fmt(m.shield)}` : ''} · ✨${Math.floor(m.ll)}% ${cdLabel(m)}`).join('\n').slice(0, 1020) });
+  emb.addFields({ name: `${E9.k('doi19', '🧑‍🤝‍🧑')} Đội hình (${st.members.length})`, value: st.members.map((m, i) => `${i === st.turn && !done ? '▶️' : '　'}${m.alive ? '🟢' : '💀'} **${m.name}** ${bar(m.hp, m.maxHp, 8)} ${fmt(m.hp)}/${fmt(m.maxHp)}${m.shield ? ` 🛡️${fmt(m.shield)}` : ''} · ✨${Math.floor(m.ll)}% ${cdLabel(m)}`).join('\n').slice(0, 1020) });
   const logs = st.log.slice(-8).join('\n'); if (logs) emb.addFields({ name: '📜 Diễn biến', value: logs.slice(0, 1020) });
   if (st.pendingReward && st.lastReward) emb.addFields({ name: '🎁 Thưởng', value: st.lastReward.slice(0, 1020) });
   if (st.over === 'won') emb.setDescription('🎉 **CHINH PHỤC BÍ CẢNH!** Phần thưởng đã được trao vào kho.');

@@ -1,6 +1,16 @@
-# BÁO CÁO V19.0 — Bí Cảnh Tiên Giới · Chứng Đạo Thành Đế · Đế Đạo / Đế Binh / Đế Hiệu · Bản Mệnh · Sự kiện thế giới
+# BÁO CÁO V19.0 / V19.1 / V19.2 — Bí Cảnh Tiên Giới · Chứng Đạo Thành Đế · Đế Đạo / Đế Binh / Đế Hiệu · Bản Mệnh · Sự kiện thế giới
 
 > Nền: V18.2 (29 đại cảnh giới). Mọi cơ chế cũ giữ nguyên; V19 **mở rộng** các hệ thống sẵn có (công pháp V16, vật phẩm V17, Boss Thế Giới v7) thay vì dựng hệ thống thứ ba → không cộng dồn chỉ số hai lần, vẫn chịu các trần cũ.
+
+## 0. V19.1 / V19.2 — Emoji pixel mới (51 cái)
+> **V19.2:** người dùng chọn bộ tranh TỰ VẼ thay cho bản tôi vẽ ("Dùng cái này đi"). 51 emoji bên dưới nay là tranh của bạn — cắt từ `assets/source/v19_1_sheet.png` bằng `scripts/build_emoji_from_sheet_v19_1.py` (tách icon theo thành phần liên thông vì tranh không nằm đều ô, nền trong suốt, 128×128). Vài ô bạn vẽ khác ý nghĩa vị trí nên gán lại theo ngữ nghĩa: hồ lô → `linhngo19` (Lĩnh Ngộ), kiếm lửa xanh → `debinh` (Đế Binh), mặt trời trên mây → `sukien19` (Sự kiện). `make_pixel_emoji_v19.py` (bản vẽ bằng code) giờ chỉ tạo khóa còn thiếu, không bao giờ ghi đè.
+
+`scripts/make_pixel_emoji_v19.py` vẽ (lưới 64×64 phóng ×2 → PNG 128×128, cùng phong cách bộ cũ) và chỉ **thêm file mới** vào `assets/emoji/` + thêm emoji Unicode dự phòng vào `src/data/emoji_fallback.json`. Khóa đã có (kể cả `linhngo` cũ — nên cái mới đặt tên `linhngo19`) KHÔNG bị ghi đè; `test_emoji19` băm toàn bộ emoji cũ trước/sau để chứng minh.
+- **Chức năng (12):** `bicanh19` `chungdao` `dekiep` `dean` `dehieu` `benmenh` `dedao` `debinh` `sukien19` `linhngo19` `thucngo19` `doi19` · **Kẻ địch (5):** `mob_thuong` `mob_tinhanh` `mob_mini` `mob_canh` `boss19`
+- **Đế Đạo (6):** `dd_satphat` `dd_sinhmenh` `dd_thoikhong` `dd_luanhoi` `dd_hondon` `dd_huydiet` · **Đế Binh (5):** `db_kiem` `db_chung` `db_ban` `db_an` `db_thap` · **Sự kiện (4):** `ev_dibien` `ev_dicanh` `ev_truyenthua` `ev_sieuthoat`
+- **19 Bí Cảnh:** `bc19_00` … `bc19_18` — mỗi bí cảnh một cảnh vật riêng (cổ động tinh thể, cột vàng đổ nát, quả cầu hỗn nguyên, thiên cung trên mây, cổ mộ, điện ngai vàng, cửu u, thần điện, bậc thang đế đạo, đế cung, đảo nổi, lăng kim tự tháp, trận phong ấn, cầu vồng vạn đạo, cổng thiên nhãn, hạt bản nguyên, thiên hà tàn tích, ngai đen xích đỏ, biển ánh sáng).
+- Hiển thị qua `src/ui/emo19.js` (tên bí cảnh trong menu/mục chọn, loại kẻ địch trong trận, Đế Đạo/Đế Binh, tab Đế, sự kiện, nút Tổ Đội/Lĩnh Ngộ/Thức Tỉnh…). Tổng emoji ứng dụng: 511 (giới hạn Discord 2000).
+- Emoji pixel là tranh tôi vẽ bằng code; nếu bạn có bộ tranh tự vẽ, gửi sheet lên là có thể thay (cùng tên khóa) như các bản trước.
 
 ## 1. Lệnh mới
 | Lệnh | Việc |

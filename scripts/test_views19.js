@@ -3,6 +3,8 @@
 process.env.TULUYEN_DB_PATH = require('node:path').join(require('node:os').tmpdir(), `tg_ui19_${Date.now()}.db`);
 const assert = require('node:assert');
 const D = require('../src/db'); D.initDb();
+// V19_EMOJI=1: giả lập emoji pixel đã tải lên Discord (thẻ <:tg7_xxx:id>) → kiểm giới hạn độ dài với emoji tùy chỉnh
+if (process.env.V19_EMOJI === '1') { const { E } = require('../src/game/emoji'); let id = 100000000000000000n; for (const f of require('node:fs').readdirSync(require('node:path').join(__dirname, '..', 'assets', 'emoji'))) if (f.endsWith('.png')) { const key = f.slice(0, -4); E[key] = `<:tg7_${key}:${id++}>`; } }
 const Cu = require('../src/game/cultivator'); const Inv = require('../src/game/invsvc'); const CD = require('../src/game/chungdao19'); const FX = require('../src/game/fx19');
 const BC = require('../src/game/bicanh19'); const B = require('../src/data/bicanh19'); const EV = require('../src/game/event19');
 const kit = require('../src/ui/kit'); const CDV = require('../src/ui/chungdaoViews'); const BV = require('../src/ui/bicanh19Views'); const EVV = require('../src/ui/event19Views');
@@ -88,5 +90,5 @@ const click = async (uid, customId, values) => { const i = fake(uid, customId, v
   D.run('UPDATE ev19 SET ends_at = 1 WHERE status = ?', 'active');
   const client = { guilds: { cache: new Map() }, channels: { fetch: async () => ({ send: async () => ({ id: 'm' }), messages: { fetch: async () => ({ edit: async () => {} }) } }) } };
   await EVV.tick(client); ok(D.all("SELECT * FROM ev19 WHERE status = 'active'").length === 0, 'tick kết thúc sự kiện hết hạn'); ok(!EV.dibienActive(), 'dị biến hết');
-  console.log(`✓ test_views19: ${n} kiểm tra`);
+  console.log(`✓ test_views19${process.env.V19_EMOJI === '1' ? ' (emoji pixel giả lập)' : ''}: ${n} kiểm tra`);
 })().catch((e) => { console.error('✗', e); process.exit(1); });

@@ -1,4 +1,5 @@
 'use strict';
+const E9 = require('./emo19');   // v19.1: emoji pixel riêng của V19
 /**
  * Giao diện + vòng nền Sự Kiện Thế Giới V19 (spec §8).
  *  • Nút tĩnh `ev19|join|<id>` — tranh đoạt Vạn Cổ Truyền Thừa.
@@ -19,17 +20,17 @@ const ts = (t) => `<t:${Math.floor(t)}:R>`;
 
 function dibienEmbed(ev, ended = false) {
   const k = EV.KINDS.dibien;
-  return new EmbedBuilder().setColor(ended ? 0x7f8c8d : 0x1abc9c).setTitle(`${k.icon} ${k.name.toUpperCase()}${ended ? ' — ĐÃ KẾT THÚC' : ''}`)
+  return new EmbedBuilder().setColor(ended ? 0x7f8c8d : 0x1abc9c).setTitle(`${E9.ev('dibien')} ${k.name.toUpperCase()}${ended ? ' — ĐÃ KẾT THÚC' : ''}`)
     .setDescription(`${k.desc}\n\n✨ Phần thưởng **Tu Vi / Linh Thạch** Bí Cảnh Tiên Giới **×${EV.DIBIEN.reward}**\n🎁 Tỉ lệ rơi nguyên liệu **×${EV.DIBIEN.drop}**\n⏳ ${ended ? 'Đã kết thúc.' : `Kết thúc ${ts(ev.ends_at)}`}\n\nDùng \`/bicanhtiengioi\` để tận dụng!`);
 }
 function contestEmbed(ev, n = 0, result = null) {
   const k = EV.KINDS.truyenthua; const lg = EV.legacyOf(EV.dataOf(ev).legacy);
-  const e = new EmbedBuilder().setColor(result ? 0x7f8c8d : 0xf1c40f).setTitle(`${k.icon} VẠN CỔ TRUYỀN THỪA — ${lg.name}`);
+  const e = new EmbedBuilder().setColor(result ? 0x7f8c8d : 0xf1c40f).setTitle(`${E9.ev('truyenthua')} VẠN CỔ TRUYỀN THỪA — ${lg.name}`);
   if (!result) e.setDescription(`${k.desc}\n\n👥 Đã có **${n}/${k.cap}** người tranh đoạt\n📋 Điều kiện: từ **${K.REALMS[k.minRealm].name}**, đã phi thăng Tiên Giới\n🎲 Người có **sức mạnh × may mắn** cao nhất nhận phần chính (mỗi người chỉ thắng 1 lần/ngày); những người còn lại nhận phần an ủi.\n⏳ Chốt ${ts(ev.ends_at)}`);
   else e.setDescription(result.n ? `**${result.n}** người tranh đoạt.\n${result.lines.join('\n').slice(0, 3500)}` : 'Không có ai tranh đoạt — truyền thừa tan vào hư không.');
   return e;
 }
-const joinRow = (ev, disabled = false) => new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`ev19|join|${ev.id}`).setLabel('Tranh Đoạt').setEmoji('📜').setStyle(ButtonStyle.Success).setDisabled(disabled));
+const joinRow = (ev, disabled = false) => new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`ev19|join|${ev.id}`).setLabel('Tranh Đoạt').setEmoji(E9.comp('ev_truyenthua', '📜')).setStyle(ButtonStyle.Success).setDisabled(disabled));
 
 async function channelFor(client, guildId, preferred) {
   const id = WC.get(guildId) || preferred; if (!id || !client) return null;
@@ -97,13 +98,13 @@ async function tick(client) {
   finally { busy = false; }
 }
 function listEmbed(guildId) {
-  const e = new EmbedBuilder().setColor(0x9b59b6).setTitle('🌠 SỰ KIỆN THẾ GIỚI TIÊN GIỚI');
+  const e = new EmbedBuilder().setColor(0x9b59b6).setTitle(`${E9.k('sukien19', '🌠')} SỰ KIỆN THẾ GIỚI TIÊN GIỚI`);
   const lines = [];
-  const db = EV.dibienActive(); if (db) lines.push(`${EV.KINDS.dibien.icon} **Thiên Địa Dị Biến** — Bí Cảnh Tiên Giới ×${EV.DIBIEN.reward}, rơi ×${EV.DIBIEN.drop} · kết thúc ${ts(db.ends_at)}`);
-  const tt = guildId && EV.activeOf('truyenthua', guildId); if (tt) lines.push(`${EV.KINDS.truyenthua.icon} **Vạn Cổ Truyền Thừa** (${EV.legacyOf(EV.dataOf(tt).legacy).name}) — chốt ${ts(tt.ends_at)}`);
-  const b = guildId && BossG.getAliveBoss(guildId); if (b && b.tier >= 10) lines.push(`${b.tier === 10 ? EV.KINDS.dicanh.icon : EV.KINDS.sieuthoat.icon} **${b.name}** — dùng \`/trangthaiboss\``);
+  const db = EV.dibienActive(); if (db) lines.push(`${E9.ev('dibien')} **Thiên Địa Dị Biến** — Bí Cảnh Tiên Giới ×${EV.DIBIEN.reward}, rơi ×${EV.DIBIEN.drop} · kết thúc ${ts(db.ends_at)}`);
+  const tt = guildId && EV.activeOf('truyenthua', guildId); if (tt) lines.push(`${E9.ev('truyenthua')} **Vạn Cổ Truyền Thừa** (${EV.legacyOf(EV.dataOf(tt).legacy).name}) — chốt ${ts(tt.ends_at)}`);
+  const b = guildId && BossG.getAliveBoss(guildId); if (b && b.tier >= 10) lines.push(`${E9.ev(b.tier === 10 ? 'dicanh' : 'sieuthoat')} **${b.name}** — dùng \`/trangthaiboss\``);
   e.setDescription(lines.length ? lines.join('\n') : 'Hiện chưa có sự kiện nào. Sự kiện xuất hiện ngẫu nhiên khi server đã đặt kênh thế giới (`/datkenhthegioi`).');
-  e.addFields({ name: '📖 Các sự kiện', value: EV.KIND_ORDER.map((k) => `${EV.KINDS[k].icon} **${EV.KINDS[k].name}** — ${EV.KINDS[k].desc}`).join('\n').slice(0, 1020) });
+  e.addFields({ name: '📖 Các sự kiện', value: EV.KIND_ORDER.map((k) => `${E9.ev(k)} **${EV.KINDS[k].name}** — ${EV.KINDS[k].desc}`).join('\n').slice(0, 1020) });
   const hall = EV.hallTop(10);
   if (hall.length) e.addFields({ name: '🌌 Bảng thành tích Siêu Thoát Chi Môn', value: hall.map((h, i) => `**${i + 1}.** <@${h.user_id}> — ${h.wins} lần hạ · kỷ lục ${fmt(h.best_damage)} sát thương`).join('\n').slice(0, 1020) });
   return e;

@@ -1,4 +1,8 @@
-# Tiên Giới Bot v19.0 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v19.2 — Node.js + discord.js + SQLite
+
+> **v19.2** — 51 emoji V19 nay dùng **TRANH DO BẠN TỰ VẼ** (bảng `assets/source/v19_1_sheet.png`, cắt bằng `scripts/build_emoji_from_sheet_v19_1.py`), thay bản tôi vẽ bằng code ở v19.1. Script vẽ bằng code không còn ghi đè.
+
+> **v19.1** — **51 emoji pixel mới** cho các chức năng V19 (Bí Cảnh Tiên Giới + riêng từng bí cảnh 1–19, Chứng Đạo/Đế Kiếp, Đế Ấn, Đế Hiệu, Bản Mệnh, 6 Đế Đạo, 5 Đế Binh, 4 sự kiện thế giới, Tổ Đội, loại kẻ địch + Boss). Giữ NGUYÊN toàn bộ emoji cũ; tự tải lên như bộ cũ, chưa tải được thì dùng emoji Unicode dự phòng. Vẽ bằng `scripts/make_pixel_emoji_v19.py`.
 
 > **v19.0** — **Bí Cảnh Tiên Giới** (`/bicanhtiengioi`: 19 bí cảnh × 5 tầng, solo/tổ đội 2–5 người, boss 3 giai đoạn) · **Chứng Đạo Thành Đế** (`/chungdao`: 12 đạo Đế Kiếp tại Chuẩn Tiên Đế Viên Mãn) · **Đế Đạo / Đế Binh / Đế Hiệu** · **Công Pháp Bản Mệnh** (`/benmenh`) · 15 công pháp mới (tier 1041–1055, cấp 1–100) · 25 vật phẩm mới · **sự kiện thế giới** (Dị Biến, Truyền Thừa, Đế Cảnh Xuất Thế, Siêu Thoát Chi Môn; `/sukienthegioi`). Đúng 100 lệnh slash (giới hạn Discord). Chi tiết & giả định thiết kế: `BAO_CAO_V19.md`.
 

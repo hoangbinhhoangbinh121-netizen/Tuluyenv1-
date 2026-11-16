@@ -64,8 +64,11 @@ ok(BC.join(lob.runId, p2, 'P2').ok && BC.join(lob.runId, p3, 'P3').ok, 'vào đ�
 ok(!BC.join(lob.runId, p2).ok, 'không vào đội 2 lần'); ok(!BC.join(lob.runId, out).ok, 'thiếu cảnh giới không vào được');
 ok(!BC.startRun(lob.runId, p2).ok, 'chỉ đội trưởng bắt đầu'); const sr = BC.startRun(lob.runId, p1); ok(sr.ok, 'bắt đầu đội');
 const S = BC.load(lob.runId).st; ok(S.members.length === 3, '3 thành viên');
-const solo1 = BC.spawnEnemy({ ...S, members: [S.members[0]], bc: 1, floor: 5, wave: 0 }); const par = BC.spawnEnemy({ ...S, bc: 1, floor: 5, wave: 0 });
-ok(par.maxHp / solo1.maxHp > 1.9 && par.maxHp / solo1.maxHp < 2.6, `HP boss tổ đội ≈ ×(1+0,65×2)=2,3: ${par.maxHp / solo1.maxHp}`);
+// HP boss có độ ngẫu nhiên (khoảng KD.hp) và thành viên có chỉ số khác nhau → so sánh TRUNG BÌNH nhiều lần với đội gồm 3 bản sao cùng chỉ số, kiểm đúng công thức HP tổ đội
+const clones = S.members.map((m) => ({ ...S.members[0], uid: m.uid })); let sumSolo = 0; let sumPar = 0; const R = 200;
+for (let i = 0; i < R; i += 1) { sumSolo += BC.spawnEnemy({ ...S, members: [clones[0]], bc: 1, floor: 5, wave: 0 }).maxHp; sumPar += BC.spawnEnemy({ ...S, members: clones, bc: 1, floor: 5, wave: 0 }).maxHp; }
+ok(Math.abs(sumPar / sumSolo - (1 + BC.CFG.PARTY_HP * 2)) < 0.12, `HP boss tổ đội ≈ ×(1+0,65×2)=2,3: ${sumPar / sumSolo}`);
+const solo1 = BC.spawnEnemy({ ...S, members: [clones[0]], bc: 1, floor: 5, wave: 0 }); const par = BC.spawnEnemy({ ...S, members: clones, bc: 1, floor: 5, wave: 0 });
 const turnUid = S.members[S.turn].uid; const other = S.members.find((m) => m.uid !== turnUid).uid;
 ok(!BC.act(lob.runId, other, 'atk').ok, 'chưa tới lượt không đánh được'); ok(BC.act(lob.runId, turnUid, 'atk').ok, 'đúng lượt đánh được');
 // người tới lượt im lặng → người khác được thay
