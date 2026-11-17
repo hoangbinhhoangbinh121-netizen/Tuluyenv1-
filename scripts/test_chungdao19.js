@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const D = require('../src/db'); D.initDb();
 const Cu = require('../src/game/cultivator'); const CD = require('../src/game/chungdao19'); const FX = require('../src/game/fx19'); const Inv = require('../src/game/invsvc'); const DP = require('../src/game/dotpha'); const R = require('../src/game/realm');
 let n = 0; const ok = (c, m) => { assert.ok(c, m); n += 1; };
-const mk = (id, realm = 18, stage = 3, extra = '') => { Cu.createCultivator(id); D.run(`UPDATE cultivators SET realm_index = ?, stage_index = ?, world_tier = 2, tu_vi = ? ${extra} WHERE user_id = ?`, realm, stage, 9e15, String(id)); return String(id); };
+const mk = (id, realm = 18, stage = 3, extra = '') => { Cu.createCultivator(id); D.run(`UPDATE cultivators SET realm_index = ?, stage_index = ?, world_tier = 2, thiennhanngusuy_passed = 1, tu_vi = ? ${extra} WHERE user_id = ?`, realm, stage, 9e15, String(id)); return String(id); };
 const give = (u) => { for (const [id, q] of Object.entries(CD.REQ)) Inv.add(u, id, q, { why: 'test' }); };
 // ---- dữ liệu spec
 ok(CD.LOI.length === 12 && CD.LOI.map((l) => Math.round(l.pct * 100)).join() === '8,9,10,11,12,13,14,15,16,18,20,25', '12 đạo lôi đúng % P_HP');

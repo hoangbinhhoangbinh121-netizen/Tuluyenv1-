@@ -34,6 +34,9 @@ function tuluyenMultFor(userId, row) {
   return { mult: talentMult(row) * fx * cpBonus * wt * st * sectBuff * buff * ST.speedMult(), sectBuff, buff };
 }
 
+/** v19.5: ở cảnh giới Tiên (từ Chân Tiên) tốc độ Tu Luyện / Bế Quan / Treo nhân thêm K.TIEN_SPEED_MULT (mặc định ×3). Chỉ nhân tu vi, không nhân Linh Thạch. */
+const tienSpeed = (row) => (row && row.realm_index >= K.TIEN_START_IDX ? K.TIEN_SPEED_MULT : 1);
+
 /**
  * v14.2: tu vi KỲ VỌNG mỗi lần bấm Tu Luyện (đúng công thức tuluyenR: sàn công thức cũ, ×TULUYEN_SPEED_MULT, cơ hội ×2 của thiên phú).
  * Bế Quan Treo lấy giá trị này × TREO_EFFICIENCY → treo luôn đúng bằng 5% tốc độ bấm tay ở MỌI cảnh giới
@@ -48,7 +51,7 @@ function tuluyenExpectedPerClick(userId, row, opts = {}) {
   for (let k = 8; k <= 15; k += 1) for (let q = 0; q < 21; q += 1) { sum += Math.max(k * COMPENSATION * rs, tb * (0.85 + 0.3 * (q + 0.5) / 21)); n += 1; }
   const base = sum / n;
   // v15: opts.noProc = bỏ cơ hội nhận gấp đôi (Bế Quan Treo không được x2, chỉ tích lũy đều như bấm tay thường)
-  return Math.max(1, base * mult * BAL.B.TULUYEN_SPEED_MULT) * (opts.noProc ? 1 : (1 + T.bundle(row).proc));
+  return Math.max(1, base * mult * tienSpeed(row) * BAL.B.TULUYEN_SPEED_MULT) * (opts.noProc ? 1 : (1 + T.bundle(row).proc));
 }
 
 // v16: "tu luyện quá nhanh" → giảm nhẹ. Bộ đếm theo bộ nhớ (khởi động lại bot = đếm lại, chỉ có lợi cho người chơi).
@@ -76,7 +79,7 @@ function tuluyenR(userId) {
   const base = Math.max(oldBase, BAL.tuluyenBase(need, row.realm_index, row.stage_index, CD.COOLDOWN_TULUYEN) * randUniform(0.85, 1.15));
   const fatigue0 = tuluyenFatigue(userId, t);
   const fatigue = 1 - (1 - fatigue0) * (1 - require('./fx17').stat(row, 'fatigueCut'));   // v17: Thanh Tâm Đan giảm mệt tu luyện dồn dập
-  let gained = Math.max(1, int(base * mult * BAL.B.TULUYEN_SPEED_MULT * fatigue));
+  let gained = Math.max(1, int(base * mult * tienSpeed(row) * BAL.B.TULUYEN_SPEED_MULT * fatigue));
   const proc = random() < T.bundle(row).proc;      // v13.6: Hỗn Độn Diễn Sinh / Thời Quang...: cơ hội nhận gấp đôi
   if (proc) gained *= 2;
   Cu.updateCultivator(userId, { tu_vi: row.tu_vi + gained, last_tuluyen: t, ...TO.progFields(row, { lc: 1 }) });
@@ -104,7 +107,7 @@ function dongquanR(userId) {
   const need = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier); // mốc GỐC: tốc độ không đổi khi tăng exp đột phá
   const oldGained = int(randInt(80, 150) * R.realmSpeedMult(row.realm_index) * mult);
   // v12.3: 1 lần Bế Quan = 12% tu vi cần cho tầng kế (tư chất chuẩn) × tư chất; Linh Thạch GIỮ NGUYÊN công thức cũ để không lạm phát.
-  const gained = Math.max(oldGained, int(BAL.dongquanBase(need) * mult * BAL.B.TULUYEN_SPEED_MULT * ST.speedMult() * randUniform(0.9, 1.1)));   // v13.7: sự kiện tăng tốc chỉ nhân tu vi, KHÔNG nhân Linh Thạch
+  const gained = Math.max(oldGained, int(BAL.dongquanBase(need) * mult * tienSpeed(row) * BAL.B.TULUYEN_SPEED_MULT * ST.speedMult() * randUniform(0.9, 1.1)));   // v13.7: sự kiện tăng tốc chỉ nhân tu vi, KHÔNG nhân Linh Thạch
   const linhThachGain = oldGained * 500;
   Cu.updateCultivator(userId, { tu_vi: row.tu_vi + gained, linh_thach: row.linh_thach + linhThachGain, last_dongquan: t, ...TO.progFields(row, { lc: 3 }) });
   return { ok: true, kind: 'dongquan', gained, linhThachGain, mult, sectBuff: sectBuff > 1, before: row.tu_vi, after: row.tu_vi + gained, row: Cu.getCultivator(userId), cooldown: CD.COOLDOWN_DONGQUAN };

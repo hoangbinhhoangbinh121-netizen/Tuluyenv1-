@@ -47,9 +47,18 @@ const isMajorGate = (realmIdx, stageIdx) => stageIdx >= K.totalStageCount(realmI
 /** v17.1: đột phá TRÊN Độ Kiếp Viên Mãn (cửa ải Độ Kiếp Viên Mãn → Chân Tiên và mọi tiểu cảnh giới của Chân Tiên … Siêu Thoát) cần tu vi x K.TIEN_EXP_MULT (7). v18.2: từ Chuẩn Tiên Vương (idx ≥ 14) nhân thêm K.HIGH_TIEN_EXP_MULT (5) → tổng x35. */
 const tienExpMult = (realmIdx, stageIdx) => {
   if (!(realmIdx > K.DOKIEP_REALM_IDX || (realmIdx === K.DOKIEP_REALM_IDX && stageIdx >= K.DOKIEP_VIENMAN_STAGE))) return 1;
-  return K.TIEN_EXP_MULT * (realmIdx >= K.HIGH_TIEN_START_IDX ? K.HIGH_TIEN_EXP_MULT : 1);   // v18.2: Tiên cao (từ Chuẩn Tiên Vương) thêm x5 nhân chồng
+  const extra = realmIdx >= K.HIGH_TIEN_START_IDX ? K.TIEN_HIGH_EXTRA_MULT : (realmIdx >= K.TIEN_START_IDX ? K.TIEN_MID_EXTRA_MULT : 1);   // v19.5: Chân Tiên→Đại La ×3, Tiên cao ×4 (nhân chồng)
+  return K.TIEN_EXP_MULT * (realmIdx >= K.HIGH_TIEN_START_IDX ? K.HIGH_TIEN_EXP_MULT : 1) * extra;   // v18.2: Tiên cao (từ Chuẩn Tiên Vương) thêm x5 nhân chồng
 };
-const tuViRequired = (realmIdx, stageIdx, worldTier = 0) => Math.min(K.TU_VI_REQUIRED_CAP, int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT * (isMajorGate(realmIdx, stageIdx) ? K.EXP_GATE_MAJOR_MULT : K.EXP_GATE_MINOR_MULT) * tienExpMult(realmIdx, stageIdx)));
+/** v19.5: trần mềm. Mốc ≤ SOFT_START giữ nguyên; trên đó tăng dần nhưng TIỆM CẬN K.TU_VI_REQUIRED_CAP (9e15, sát giới hạn số nguyên an toàn của JS) → các cảnh giới đỉnh vẫn LUÔN tăng dần, không bị phẳng bằng nhau dù đã nhân ×4. */
+const SOFT_START = 6e15;
+function softCap(x) {
+  const cap = K.TU_VI_REQUIRED_CAP;
+  if (!(x > SOFT_START)) return x;
+  const room = cap - SOFT_START;
+  return Math.min(cap, SOFT_START + int(room * (1 - Math.exp(-(x - SOFT_START) / room))));
+}
+const tuViRequired = (realmIdx, stageIdx, worldTier = 0) => softCap(int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT * (isMajorGate(realmIdx, stageIdx) ? K.EXP_GATE_MAJOR_MULT : K.EXP_GATE_MINOR_MULT) * tienExpMult(realmIdx, stageIdx)));
 
 /** [realmIdx, stageIdx] kế tiếp, hoặc null nếu đã ở Siêu Thoát Viên Mãn (đỉnh cao nhất hiện tại). */
 function nextStage(realmIdx, stageIdx) {
@@ -75,6 +84,6 @@ const linhgioilenhLabel = (row) => (row.world_tier > 0 ? 'Tiên Lệnh' : 'Linh 
 const linhphuLabel = (row) => (row.world_tier > 0 ? 'Tiên Phù' : 'Linh Phù');
 
 module.exports = {
-  realmSpeedMult, realmDisplay, tuViRequired, tienExpMult, tuViRequiredBase, tuViRequiredLegacy, isMajorGate, nextStage, rollWeighted, getMult,
+  realmSpeedMult, realmDisplay, tuViRequired, softCap, tienExpMult, tuViRequiredBase, tuViRequiredLegacy, isMajorGate, nextStage, rollWeighted, getMult,
   worldTierName, worldMult, worldTierFlavor, lenhCol, phuCol, linhgioilenhLabel, linhphuLabel,
 };

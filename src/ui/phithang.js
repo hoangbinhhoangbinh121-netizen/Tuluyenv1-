@@ -15,7 +15,7 @@ function buildTiengioiEmbed(row) {
   const e = new EmbedBuilder().setTitle(`${E.phithang} Điều Kiện Phi Thăng Tiên Giới`).setColor(0xf1c40f);
   for (const [, ok, label] of A.tiengioiChecklist(row)) e.addFields({ name: `${ok ? '✅ ' : '❌ '}${label}`.slice(0, 256), value: '\u200b', inline: true });
   e.addFields({ name: `${E.linhluc} Linh Lực`, value: `${tick(row.linh_luc >= 100)} ${row.linh_luc}%/100%`, inline: true });
-  return e.setFooter({ text: 'Đủ mọi điều kiện thì bấm Phi Thăng hoặc dùng /phithang.' });
+  return e.setFooter({ text: 'Đủ mọi điều kiện thì bấm Phi Thăng hoặc dùng /phithang. Muốn Phi Thăng âm thầm: nút 🤫 hoặc ?phithangamtham.' });
 }
 function buildAscensionStatusEmbed(row) {
   if (row.world_tier >= 1) return buildTiengioiEmbed(row);
@@ -30,7 +30,7 @@ function buildAscensionStatusEmbed(row) {
     { name: `${E.linhgioilenh} ${R.linhgioilenhLabel(row)}`, value: `${row[lcol] >= 1 ? '✅ ' : '❌ '}${row[lcol]} (chỉ nhận qua đánh \`/danhphithangsugia\`)`, inline: true },
     { name: '🧩 Mảnh Ghép Phi Thăng Lệnh', value: `${row.manh_ghep_phithang}/${K.MANHGHEP_PHITHANG_CAN} (chưa dùng được ở Phàm Giới — để dành chế Tiên Lệnh sau khi Phi Thăng Linh Giới)`, inline: true },
     { name: `${E.linhphu} Con Đường Phi Thăng`, value: `${row[pcol] >= K.PHITHANG_LINH_PHU_CAN ? '✅ ' : '❌ '}${row[pcol]}/${K.PHITHANG_LINH_PHU_CAN} ${R.linhphuLabel(row)} (rơi ra ở Bí Cảnh)`, inline: true },
-  ).setFooter({ text: 'Đủ mọi điều kiện thì bấm Phi Thăng hoặc dùng /phithang.' });
+  ).setFooter({ text: 'Đủ mọi điều kiện thì bấm Phi Thăng hoặc dùng /phithang. Muốn Phi Thăng âm thầm: nút 🤫 hoặc ?phithangamtham.' });
 }
 
 function chooserView(userId, kind) {
@@ -64,11 +64,12 @@ function phiThangGroupView(userId) {
   v.button({ key: 'dk', label: 'Điều Kiện', emoji: E.dieukien, style: 'grey' }, (i) => i.reply({ embeds: [buildAscensionStatusEmbed(Cu.getCultivator(userId))], flags: EPHEMERAL }));
   v.button({ key: 'pt', label: 'Phi Thăng', emoji: E.phithang, style: 'blurple' }, async (i) => {
     const res = A.doPhithangEx(userId, i.guildId || 0);
-    if (require('./ascendFx').isTienGioi(res)) return require('./ascendFx').playForButton(i, res);   // v17.2: hiệu ứng phi thăng Tiên Giới
+    if (require('./ascendFx').isTienGioi(res)) return require('./ascendFx').playForButton(i, res, { quiet: A.isQuiet(userId) });   // v17.2: hiệu ứng phi thăng Tiên Giới
     return eph(i, res.text);
   });
   v.button({ key: 'tk', label: 'Vượt Thiên Kiếp', emoji: E.thienkiep, style: 'red' }, (i) => i.reply({ content: `${E.thienkiep} Chọn Thiên Kiếp muốn vượt:`, components: chooserView(userId, 'thienkiep').components(), flags: EPHEMERAL }));
   v.button({ key: 'sg', label: 'Sứ Giả', emoji: E.linhgioilenh, style: 'secondary' }, (i) => i.reply({ content: '👺 Chọn Sứ Giả muốn khiêu chiến:', components: chooserView(userId, 'sugia').components(), flags: EPHEMERAL }));
+  v.button({ key: 'qt', label: A.isQuiet(userId) ? 'Âm thầm: Bật' : 'Âm thầm: Tắt', emoji: '🤫', style: 'grey', row: 1 }, (i) => eph(i, A.quietText(A.toggleQuiet(userId))));
   v.button({ key: 'ns', label: 'Thiên Nhân Ngũ Suy', emoji: E.thiennhanngusuy, style: 'grey' }, (i) => eph(i, A.doVuotThiennhanngusuy(userId)));
   return v;
 }

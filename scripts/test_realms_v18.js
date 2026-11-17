@@ -47,16 +47,16 @@ ok(Math.abs(R.realmSpeedMult(19) - K.REALM_SPEED_MULT[9] * 1.35 ** 5) < 1e-6, 't
 ok(Math.abs(R.tuViRequiredBase(19, 0, 2) / R.tuViRequiredBase(13, 0, 2) - K.HIGH_REALM_GROWTH ** 6) < 0.01, 'mốc tăng ×HIGH_REALM_GROWTH mỗi bậc sau Đại La');
 ok(R.realmSpeedMult(28) < 200, `speed Siêu Thoát hợp lý: ${R.realmSpeedMult(28)}`);
 // Cơ chế v17.1 vẫn còn: x7 từ Độ Kiếp Viên Mãn trở lên; v18.2: Tiên cao (từ Chuẩn Tiên Vương) thêm x5 → x35
-ok(R.tienExpMult(9, 22) === 7 && R.tienExpMult(9, 21) === 1 && R.tienExpMult(10, 0) === 7 && R.tienExpMult(13, 3) === 7, 'x7 EXP Tiên (Chân Tiên … Đại La Kim Tiên)');
-ok(K.HIGH_TIEN_EXP_MULT === 5 && R.tienExpMult(14, 0) === 35 && R.tienExpMult(19, 2) === 35 && R.tienExpMult(28, 3) === 35, 'x35 EXP Tiên cao');
+ok(R.tienExpMult(9, 22) === 7 && R.tienExpMult(9, 21) === 1 && R.tienExpMult(10, 0) === 21 && R.tienExpMult(13, 3) === 21, 'x7 EXP Tiên, từ v19.5 thêm x3 từ Chân Tiên (… Đại La Kim Tiên) = x21');
+ok(K.HIGH_TIEN_EXP_MULT === 5 && R.tienExpMult(14, 0) === 140 && R.tienExpMult(19, 2) === 140 && R.tienExpMult(28, 3) === 140, 'EXP Tiên cao: x35 (v18.2) × x4 (v19.5) = x140');
 // Siêu Thoát Viên Mãn ở Tiên Giới (thế giới bậc 2) vẫn DƯỚI trần (không bị phẳng hoá ở các cảnh giới cuối)
 ok(R.tuViRequired(28, 3, 2) < K.TU_VI_REQUIRED_CAP && R.tuViRequired(27, 3, 2) < R.tuViRequired(28, 3, 2), 'Tiên Giới: không chạm trần');
-ok(R.tuViRequired(14, 0, 2) === Math.trunc(R.tuViRequiredBase(14, 0, 2) * K.EXP_REQUIRED_MULT * K.EXP_GATE_MINOR_MULT * 35), 'công thức Tiên cao');
+ok(R.tuViRequired(14, 0, 2) === Math.trunc(R.tuViRequiredBase(14, 0, 2) * K.EXP_REQUIRED_MULT * K.EXP_GATE_MINOR_MULT * 140), 'công thức Tiên cao');
 // --- đột phá thật qua dotpha: đi liên tiếp từ Luyện Khí Tầng 1 tới Siêu Thoát Viên Mãn (ép may mắn), rồi bị chặn
 Cu.createCultivator(901);
 const origRand = Math.random; Math.random = () => 0.0001;
 try {
-  D.run('UPDATE cultivators SET realm_index = 1, stage_index = 0, world_tier = 4, ngo_tinh = 0 WHERE user_id = 901');
+  D.run('UPDATE cultivators SET realm_index = 1, stage_index = 0, world_tier = 4, ngo_tinh = 0, thiennhanngusuy_passed = 1 WHERE user_id = 901');
   let exp = [1, 0]; let guard = 0; const visited = [];
   while (guard++ < 400) {
     const row = Cu.getCultivator(901); const nx = R.nextStage(row.realm_index, row.stage_index);

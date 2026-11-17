@@ -164,6 +164,7 @@ const ADD_COLUMNS = {
     "last_thiennhanngusuy": "REAL DEFAULT 0",
     "ngusuy_stage": "INTEGER DEFAULT 0",
     "ngusuy_started": "INTEGER DEFAULT 0",
+    "phithang_quiet": "INTEGER DEFAULT 0",
     "cong_phap_slots": "TEXT DEFAULT ''",
     "redeemed_codes": "TEXT DEFAULT ''",
     "code_locked": "INTEGER DEFAULT 0",

@@ -94,7 +94,8 @@ function realm(admin, userText, realmText, stageText) {
   if (ri < 0 || ri >= K.REALMS.length || (/^\d+$/.test(f) && ri < 0)) return `❌ Cảnh giới không hợp lệ (0–${K.REALMS.length - 1} hoặc tên). Có: ${K.REALMS.map((r, i) => `${i}=${r.name}`).join(', ')}.`;
   const cnt = K.totalStageCount(ri); let si = int(stageText) - 1; if (!(si >= 0)) si = 0; si = Math.min(si, cnt - 1);
   const want = ri > K.DOKIEP_REALM_IDX ? 2 : ri > K.HOATHAN_REALM_IDX ? 1 : 0; const wt = Math.max(u.row.world_tier, want);
-  Cu.updateCultivator(u.id, { realm_index: ri, stage_index: si, world_tier: wt });
+  const fix = wt >= 2 && !u.row.thiennhanngusuy_passed ? { thiennhanngusuy_passed: 1, ngusuy_stage: 5, ngusuy_started: 1 } : {};   // v19.7: Tiên Giới bắt buộc qua Ngũ Suy → admin đặt Tiên thì coi như đã qua (không cộng thưởng)
+  Cu.updateCultivator(u.id, { realm_index: ri, stage_index: si, world_tier: wt, ...fix });
   log(admin, 'dat_canh_gioi', u.id, `${K.REALMS[ri].name} tầng ${si + 1} (thế giới ${wt})`);
   return `🏔️ <@${u.id}> nay ở **${K.REALMS[ri].name}${K.REALMS[ri].stages ? ` · ${K.REALMS[ri].stages[si]}` : ''}**${wt !== u.row.world_tier ? ` — tự nâng thế giới lên bậc ${wt} cho khớp cảnh giới` : ''}. Tu vi hiện có giữ nguyên.`;
 }
@@ -112,6 +113,14 @@ function currency(admin, userText, col, text) {
   Cu.updateCultivator(u.id, { [col]: nv }); log(admin, `dat_${col}`, u.id, `${u.row[col] || 0} → ${nv}`);
   return `💰 ${CUR[col]} của <@${u.id}>: ${fmtNum(u.row[col] || 0)} → **${fmtNum(nv)}**.`;
 }
+/** v19.6: miễn Thiên Nhân Ngũ Suy — cho người chơi vượt cả 5 giai đoạn ngay (đúng như thắng thật: cộng % thuộc tính vĩnh viễn + danh hiệu). Đã vượt rồi thì không cộng lần 2. */
+function ngusuy(admin, userText) {
+  const u = resolveUser(userText); if (u.err) return u.err;
+  if (u.row.thiennhanngusuy_passed) return `ℹ️ <@${u.id}> đã vượt Thiên Nhân Ngũ Suy rồi — không có gì thay đổi (không cộng thuộc tính lần hai).`;
+  const g = require('./ascension').grantNgusuyPass(u.id);
+  log(admin, 'mien_ngusuy', u.id, `giai đoạn ${Math.min(5, u.row.ngusuy_stage || 0)}/5 → 5/5 (+${fmtNum(g.bh)} HP, +${fmtNum(g.ba)} Công, +${fmtNum(g.bd)} Thủ, +${fmtNum(g.bs)} Thân Pháp)`);
+  return `👑 Đã miễn **Thiên Nhân Ngũ Suy** cho <@${u.id}> (5/5 giai đoạn, nhận danh hiệu và +% thuộc tính như thắng thật). Điều kiện này của Phi Thăng Tiên Giới đã xong.`;
+}
 function heal(admin, userText) {
   const u = resolveUser(userText); if (u.err) return u.err;
   Cu.updateCultivator(u.id, { cur_hp: Cu.effectiveMaxHp(u.row), last_hp_regen: now(), last_dotpha_fail: 0 });
@@ -120,19 +129,22 @@ function heal(admin, userText) {
 }
 
 // ------------------------------------------------------------------ kinh tế (chỉnh lúc chạy)
-const ORIG = { exp: K.EXP_REQUIRED_MULT, minor: K.EXP_GATE_MINOR_MULT, major: K.EXP_GATE_MAJOR_MULT, tien: K.TIEN_EXP_MULT, tiencao: K.HIGH_TIEN_EXP_MULT, drop: 1, sell: 1, buy: 1 };
+const ORIG = { exp: K.EXP_REQUIRED_MULT, minor: K.EXP_GATE_MINOR_MULT, major: K.EXP_GATE_MAJOR_MULT, tien: K.TIEN_EXP_MULT, tiencao: K.HIGH_TIEN_EXP_MULT, tienmid: K.TIEN_MID_EXTRA_MULT, tienhigh: K.TIEN_HIGH_EXTRA_MULT, tienspeed: K.TIEN_SPEED_MULT, drop: 1, sell: 1, buy: 1 };
 const ECO = {
   exp: { label: 'EXP cần đột phá (gốc)', prop: 'EXP_REQUIRED_MULT', min: 1, max: 100000 },
   minor: { label: 'Hệ số tiểu cảnh giới', prop: 'EXP_GATE_MINOR_MULT', min: 0.01, max: 10 },
   major: { label: 'Hệ số đại cảnh giới', prop: 'EXP_GATE_MAJOR_MULT', min: 0.01, max: 10 },
   tien: { label: 'Hệ số cảnh giới Tiên', prop: 'TIEN_EXP_MULT', min: 1, max: 1000 },
   tiencao: { label: 'Hệ số Tiên cao (từ Chuẩn Tiên Vương)', prop: 'HIGH_TIEN_EXP_MULT', min: 1, max: 1000 },
+  tienmid: { label: 'x EXP thêm Chân Tiên → Đại La Kim Tiên', prop: 'TIEN_MID_EXTRA_MULT', min: 1, max: 1000 },
+  tienhigh: { label: 'x EXP thêm Tiên cao (từ Chuẩn Tiên Vương)', prop: 'TIEN_HIGH_EXTRA_MULT', min: 1, max: 1000 },
+  tienspeed: { label: 'x Tốc độ tu luyện ở cảnh giới Tiên', prop: 'TIEN_SPEED_MULT', min: 1, max: 100 },
   drop: { label: 'Tỉ lệ rơi nguyên liệu', min: 0, max: 5 },
   sell: { label: 'Giá NPC thu mua', min: 0.1, max: 3 },
   buy: { label: 'Giá NPC bán', min: 0.1, max: 5 },
 };
 function ecoGet(key) { const v = ST.get(`eco_${key}`, ''); const n = Number(v); return v !== '' && Number.isFinite(n) ? n : ORIG[key]; }
-function applyEco() { for (const k of ['exp', 'minor', 'major', 'tien', 'tiencao']) K[ECO[k].prop] = ecoGet(k); }
+function applyEco() { for (const k of ['exp', 'minor', 'major', 'tien', 'tiencao', 'tienmid', 'tienhigh', 'tienspeed']) K[ECO[k].prop] = ecoGet(k); }
 /** Đặt 1 hệ số. value rỗng/'mac_dinh' = về mặc định. Trả { ok, msg }. */
 function ecoSet(admin, key, value) {
   const d = ECO[key]; if (!d) return { ok: false, msg: '❌ Hệ số lạ.' };
@@ -172,4 +184,4 @@ function overview() {
     gates: { tuvi0: R.tuViRequired(0, 0, 0), hoathan: R.tuViRequired(K.HOATHAN_REALM_IDX, K.HOATHAN_VIENMAN_STAGE, 0), dokiep: R.tuViRequired(K.DOKIEP_REALM_IDX, K.DOKIEP_VIENMAN_STAGE, 2), chantien: R.tuViRequired(K.DOKIEP_REALM_IDX + 1, 0, 2) } };
 }
 
-module.exports = { setSpeedEvent, overview, log, recent, logText, parseUser, resolveUser, items, gear, profLevel, finishJobs, realm, tuvi, currency, heal, ECO, ORIG, ecoGet, ecoSet, ecoReset, applyEco, sellMult, buyMult, evDrop, dropMult, setEvDrop, CUR };
+module.exports = { setSpeedEvent, overview, log, recent, logText, parseUser, resolveUser, items, gear, profLevel, finishJobs, realm, tuvi, currency, heal, ngusuy, ECO, ORIG, ecoGet, ecoSet, ecoReset, applyEco, sellMult, buyMult, evDrop, dropMult, setEvDrop, CUR };

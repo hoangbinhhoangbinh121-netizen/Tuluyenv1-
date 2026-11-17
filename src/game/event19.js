@@ -58,7 +58,7 @@ function joinContest(evId, userId) {
     const ev = byId(evId); if (!ev || ev.kind !== 'truyenthua' || ev.status !== 'active' || ev.ends_at <= now()) return { ok: false, error: 'Truyền thừa đã biến mất.' };
     const row = Cu.getCultivator(userId); const k = KINDS.truyenthua;
     if (!row) return { ok: false, error: 'Bạn chưa bắt đầu tu tiên.' };
-    if (row.world_tier < 2 || row.realm_index < k.minRealm) return { ok: false, error: `Chỉ người từ **${K.REALMS[k.minRealm].name}** trở lên (đã phi thăng Tiên Giới) mới tranh đoạt được.` };
+    if (!require('./ascension').tienUnlocked(row) || row.realm_index < k.minRealm) return { ok: false, error: `Chỉ người từ **${K.REALMS[k.minRealm].name}** trở lên (đã phi thăng Tiên Giới) mới tranh đoạt được.` };
     if (D.get('SELECT 1 AS x FROM ev19_part WHERE ev_id = ? AND user_id = ?', evId, String(userId))) return { ok: false, error: 'Bạn đã tham gia tranh đoạt rồi.' };
     const n = D.get('SELECT COUNT(*) AS n FROM ev19_part WHERE ev_id = ?', evId).n; if (n >= k.cap) return { ok: false, error: `Đã đủ **${k.cap}** người tranh đoạt.` };
     const luc = Math.max(1, Cu.calcLucChien(row)); const score = Math.sqrt(luc) * randUniform(0.6, 1.4);   // sức mạnh (căn bậc hai — không áp đảo) × may mắn

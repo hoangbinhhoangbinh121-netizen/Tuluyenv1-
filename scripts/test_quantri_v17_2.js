@@ -35,6 +35,13 @@ A.tuvi(ADMIN, P, '5000'); ok(row(P).tu_vi === 5000, 'tu vi đặt'); A.tuvi(ADMI
 A.tuvi(ADMIN, P, 'full'); ok(row(P).tu_vi >= R.tuViRequired(row(P).realm_index, row(P).stage_index, row(P).world_tier), 'tu vi full'); ok(/Nhập số/.test(A.tuvi(ADMIN, P, 'abc')), 'tu vi sai');
 A.currency(ADMIN, P, 'linh_thach', '1000000'); ok(row(P).linh_thach === 1000000, 'LT đặt'); A.currency(ADMIN, P, 'linh_thach', '-400000'); ok(row(P).linh_thach === 600000, 'LT trừ'); A.currency(ADMIN, P, 'linh_thach', '-9999999999'); ok(row(P).linh_thach === 0, 'LT không âm'); A.currency(ADMIN, P, 'linh_tinh', '+77'); ok(row(P).linh_tinh === 77, 'LT tinh');
 D.run('UPDATE cultivators SET cur_hp = 1, last_dotpha_fail = ? WHERE user_id = ?', 9e9, P); A.heal(ADMIN, P); ok(row(P).cur_hp === Cu.effectiveMaxHp(row(P)) && row(P).last_dotpha_fail === 0, 'hồi phục');
+// v19.6: miễn Thiên Nhân Ngũ Suy
+{ D.run('UPDATE cultivators SET thiennhanngusuy_passed = 0, ngusuy_stage = 2, ngusuy_started = 1, title = NULL WHERE user_id = ?', P); const b4 = row(P);
+  const m1 = A.ngusuy(ADMIN, P); const a1 = row(P);
+  ok(/Đã miễn/.test(m1) && a1.thiennhanngusuy_passed === 1 && a1.ngusuy_stage === 5 && a1.atk > b4.atk && a1.hp > b4.hp && /Thiên Nhân/.test(a1.title || ''), 'miễn Ngũ Suy: qua 5/5, +thuộc tính, có danh hiệu');
+  ok(/đã vượt/.test(A.ngusuy(ADMIN, P)) && row(P).atk === a1.atk, 'miễn lần hai không cộng thêm');
+  ok(require('../src/game/ascension').tiengioiChecklist(row(P)).find((x) => x[0] === 'ngusuy')[1] === true, 'checklist Phi Thăng ghi nhận Ngũ Suy đã xong');
+  ok(/chưa bắt đầu tu tiên/.test(A.ngusuy(ADMIN, '999999999999999999')), 'ID lạ báo lỗi'); ok(A.recent(5).some((r) => r.action === 'mien_ngusuy'), 'ghi nhật ký admin'); }
 
 // --- kinh tế: EXP đột phá đổi thật, có biên, về mặc định được
 const base = R.tuViRequired(0, 0, 0); ok(A.ecoSet(ADMIN, 'exp', '999999999').ok === false, 'EXP vượt biên bị từ chối'); ok(A.ecoSet(ADMIN, 'exp', String(A.ORIG.exp * 2)).ok && R.tuViRequired(0, 0, 0) === base * 2, 'EXP x2 áp dụng ngay');
@@ -78,6 +85,7 @@ for (let k = 0; k < 40; k += 1) A.log(ADMIN, 'thu_nghiem', P, 'chi tiết dài '
     await kit.routeModal(mi); ok(out.length === 1 && String(out[0].content).length > 0, `nộp modal ${act}`); return out[0].content; };
   ok(/Đã cho/.test(await submit('give', { u: P, t: `${basic.name} x2` })), 'modal give'); ok(/Đã thu/.test(await submit('take', { u: P, t: `${basic.name} x1` })), 'modal take');
   ok(/Đã cho/.test(await submit('gear', { u: P, t: gname, q: '4' })), 'modal gear'); ok(/cấp/.test(await submit('prof', { u: P, p: 'Luyện Khí Sư', l: '4', e: '' })), 'modal prof'); ok(/lò/.test(await submit('jobs', { u: P })), 'modal jobs');
+  D.run('UPDATE cultivators SET thiennhanngusuy_passed = 0, ngusuy_stage = 0 WHERE user_id = ?', P); ok(/Đã miễn/.test(await submit('ngusuy', { u: P })) && row(P).thiennhanngusuy_passed === 1, 'modal miễn Ngũ Suy');
   ok(/Độ Kiếp/.test(await submit('realm', { u: P, r: 'Độ Kiếp', s: '1' })), 'modal realm'); ok(/Tu vi/.test(await submit('tuvi', { u: P, n: 'full' })), 'modal tuvi'); ok(/Linh Thạch/.test(await submit('lt', { u: P, n: '+100' })), 'modal lt'); ok(/Linh Tinh/.test(await submit('lti', { u: P, n: '+1' })), 'modal lti'); ok(/hồi/i.test(await submit('heal', { u: P })), 'modal heal');
   ok(/EXP/.test(await submit('expc', { a: String(A.ORIG.exp * 2), b: '', c: '' })) && K.EXP_REQUIRED_MULT === A.ORIG.exp * 2, 'modal expc'); ok(/Tiên/.test(await submit('tien', { a: '10' })) && K.TIEN_EXP_MULT === 10, 'modal tien'); ok(/Tiên cao/.test(await submit('tien', { a: '', b: '9' })) && K.HIGH_TIEN_EXP_MULT === 9, 'modal tiên cao'); A.ecoSet(ADMIN, 'tiencao', 'mac dinh'); ok(K.HIGH_TIEN_EXP_MULT === 5, 'tiên cao về mặc định'); ok(/rơi/.test(await submit('drop', { a: '1.5' })) && A.dropMult() === 1.5, 'modal drop'); ok(/NPC/.test(await submit('npc', { a: '1.2', b: '' })), 'modal npc');
   ok(/Chưa xác nhận/.test(await submit('reset', { a: 'sai' })) && A.dropMult() === 1.5, 'reset cần xác nhận'); ok(/mặc định/.test(await submit('reset', { a: 'dongy' })) && A.dropMult() === 1 && K.EXP_REQUIRED_MULT === A.ORIG.exp, 'reset');

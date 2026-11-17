@@ -6,7 +6,7 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
-const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder, MessageFlags } = require('discord.js');
 
 const DIR = path.join(__dirname, '..', '..', 'assets', 'phithang');
 const fileOf = (k) => path.join(DIR, `${k}.gif`);
@@ -55,17 +55,17 @@ async function play(io, { name = 'Đạo hữu', text = '', wait = sleep } = {})
 }
 
 /** Chọn cách chiếu theo loại ngữ cảnh. kind: 'ctx' (lệnh slash/tiền tố) | 'button' (interaction đã reply chưa?). */
-async function playForCtx(ctx, res) {
+async function playForCtx(ctx, res, { quiet = false, wait = sleep } = {}) {
   const name = (ctx.user && (ctx.user.displayName || ctx.user.username)) || 'Đạo hữu';
   if (ctx.interaction) {
     const i = ctx.interaction;
-    return play({ first: (p) => (i.deferred || i.replied ? i.editReply(p) : i.reply(p)), edit: (p) => i.editReply(p) }, { name, text: res.text });
+    return play({ first: (p) => (i.deferred || i.replied ? i.editReply(p) : i.reply(quiet ? { ...p, flags: MessageFlags.Ephemeral } : p)), edit: (p) => i.editReply(p) }, { name, text: res.text, wait });
   }
   let msg = null;
-  return play({ first: async (p) => { msg = await ctx.send(p); }, edit: (p) => (msg ? msg.edit(p) : ctx.send(p)) }, { name, text: res.text });
+  return play({ first: async (p) => { msg = await ctx.send(p); }, edit: (p) => (msg ? msg.edit(p) : ctx.send(p)) }, { name, text: res.text, wait });
 }
-async function playForButton(i, res) {
+async function playForButton(i, res, { quiet = false, wait = sleep } = {}) {
   const name = (i.user && (i.user.displayName || i.user.username)) || 'Đạo hữu';
-  return play({ first: (p) => (i.deferred || i.replied ? i.editReply(p) : i.reply(p)), edit: (p) => i.editReply(p) }, { name, text: res.text });
+  return play({ first: (p) => (i.deferred || i.replied ? i.editReply(p) : i.reply(quiet ? { ...p, flags: MessageFlags.Ephemeral } : p)), edit: (p) => i.editReply(p) }, { name, text: res.text, wait });
 }
 module.exports = { play, playForCtx, playForButton, SCENES, FINAL, DIR, isTienGioi: (res) => !!(res && res.ok && res.tier === 2) };

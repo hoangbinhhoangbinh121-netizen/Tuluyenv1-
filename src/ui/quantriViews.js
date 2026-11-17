@@ -17,7 +17,7 @@ const cid = (uid, act, arg = '') => `qt|${uid}|${act}|${arg}`.replace(/\|+$/, ''
 const NAV = [
   ['home', 'Tổng Quan', '🛠️', 'Trạng thái bot, kinh tế, sự kiện'],
   ['vp', 'Vật Phẩm & Nghề', '🎒', 'Cho/thu vật phẩm, trang bị, cấp nghề, lò chế'],
-  ['nv', 'Nhân Vật', '🧙', 'Cảnh giới, tu vi, Linh Thạch, hồi phục'],
+  ['nv', 'Nhân Vật', '🧙', 'Cảnh giới, tu vi, Linh Thạch, hồi phục, miễn Ngũ Suy'],
   ['kt', 'Kinh Tế', '💰', 'Hệ số EXP, rơi đồ, giá NPC (chỉnh trực tiếp)'],
   ['sk', 'Sự Kiện & Thông Báo', '📣', 'Tăng tốc tu luyện, tăng rơi đồ, thông báo server'],
   ['nk', 'Nhật Ký Admin', '📜', 'Các thao tác admin gần nhất'],
@@ -40,12 +40,17 @@ const MODALS = {
   lt: { view: 'nv', title: 'Đặt Linh Thạch', fields: [U, { id: 'n', label: 'Số: 1000000, +5000 hoặc -5000', maxLength: 20 }], run: (a, g) => A.currency(a, g('u'), 'linh_thach', g('n')) },
   lti: { view: 'nv', title: 'Đặt Linh Tinh', fields: [U, { id: 'n', label: 'Số: 100, +10 hoặc -10', maxLength: 20 }], run: (a, g) => A.currency(a, g('u'), 'linh_tinh', g('n')) },
   heal: { view: 'nv', title: 'Hồi phục nhân vật', fields: [U], run: (a, g) => A.heal(a, g('u')) },
+  ngusuy: { view: 'nv', title: 'Miễn Thiên Nhân Ngũ Suy', fields: [U], run: (a, g) => A.ngusuy(a, g('u')) },
   expc: { view: 'kt', title: 'Hệ số EXP đột phá', fields: [
     { id: 'a', label: `EXP gốc (mặc định ${A.ORIG.exp})`, required: false, maxLength: 12, placeholder: 'bỏ trống = giữ nguyên · "mac dinh" = về gốc' },
     { id: 'b', label: `Tiểu cảnh giới (mặc định ${A.ORIG.minor})`, required: false, maxLength: 12 },
     { id: 'c', label: `Đại cảnh giới (mặc định ${A.ORIG.major})`, required: false, maxLength: 12 }],
   run: (a, g) => ['exp:a', 'minor:b', 'major:c'].map((x) => { const [k, f] = x.split(':'); return A.ecoSet(a, k, g(f)); }).filter((r) => !r.skip).map((r) => r.msg).join('\n') || 'ℹ️ Không có gì thay đổi.' },
-  tien: { view: 'kt', title: 'Hệ số cảnh giới Tiên', fields: [{ id: 'a', label: `x EXP khi đột phá trên Độ Kiếp (mặc định ${A.ORIG.tien})`, maxLength: 12, placeholder: '7' }, { id: 'b', label: `x thêm cho Tiên cao (mặc định ${A.ORIG.tiencao})`, maxLength: 12, placeholder: '5', required: false }], run: (a, g) => [A.ecoSet(a, 'tien', g('a')).msg, A.ecoSet(a, 'tiencao', g('b')).msg].filter(Boolean).join('\n') || 'Không đổi gì.' },
+  tien: { view: 'kt', title: 'Hệ số cảnh giới Tiên', fields: [{ id: 'a', label: `x EXP khi đột phá trên Độ Kiếp (mặc định ${A.ORIG.tien})`, maxLength: 12, placeholder: '7' }, { id: 'b', label: `x thêm cho Tiên cao (mặc định ${A.ORIG.tiencao})`, maxLength: 12, placeholder: '5', required: false },
+    { id: 'c', label: `x EXP thêm Chân Tiên→Đại La (mặc định ${A.ORIG.tienmid})`, maxLength: 12, placeholder: '3', required: false },
+    { id: 'd', label: `x EXP thêm Tiên cao (mặc định ${A.ORIG.tienhigh})`, maxLength: 12, placeholder: '4', required: false },
+    { id: 'e', label: `x Tốc độ tu luyện ở Tiên (mặc định ${A.ORIG.tienspeed})`, maxLength: 12, placeholder: '3', required: false }],
+  run: (a, g) => [A.ecoSet(a, 'tien', g('a')), A.ecoSet(a, 'tiencao', g('b')), A.ecoSet(a, 'tienmid', g('c')), A.ecoSet(a, 'tienhigh', g('d')), A.ecoSet(a, 'tienspeed', g('e'))].filter((r) => !r.skip).map((r) => r.msg).filter(Boolean).join('\n') || 'Không đổi gì.' },
   drop: { view: 'kt', title: 'Hệ số rơi nguyên liệu', fields: [{ id: 'a', label: 'Nhân xác suất rơi (0–5, mặc định 1)', maxLength: 8, placeholder: '1.5' }], run: (a, g) => `${A.ecoSet(a, 'drop', g('a')).msg}\nℹ️ Trần rơi theo ngày/tuần/phẩm cấp vẫn áp dụng — không thể rơi vô hạn.` },
   npc: { view: 'kt', title: 'Giá NPC', fields: [
     { id: 'a', label: 'Giá NPC thu mua ×(0.1–3, mặc định 1)', required: false, maxLength: 8 },
@@ -94,7 +99,7 @@ function viewHome(uid) {
     F('🚧 Bảo trì', o.maint ? '🔴 ĐANG BẬT (`/baotri` để tắt)' : '🟢 Tắt', true),
     F('⚡ Tăng tốc tu luyện', o.speed.active ? `×${o.speed.mult} — ${mins(o.speed.until)}` : 'Không có sự kiện', true),
     F('🎁 Tăng tỉ lệ rơi', o.evDrop.active ? `×${o.evDrop.mult} — ${mins(o.evDrop.until)}` : 'Không có sự kiện', true),
-    F('📈 Hệ số hiện hành', `EXP gốc **${A.ecoGet('exp')}** · Tiên **×${A.ecoGet('tien')}** · Tiên cao **×${A.ecoGet('tiencao')}** · Rơi **×${A.ecoGet('drop')}** · NPC thu **×${A.ecoGet('sell')}** / bán **×${A.ecoGet('buy')}**`),
+    F('📈 Hệ số hiện hành', `EXP gốc **${A.ecoGet('exp')}** · Tiên **×${A.ecoGet('tien')}** · Tiên cao **×${A.ecoGet('tiencao')}** · Thêm Chân Tiên **×${A.ecoGet('tienmid')}** / Tiên cao **×${A.ecoGet('tienhigh')}** · Tốc độ Tiên **×${A.ecoGet('tienspeed')}** · Rơi **×${A.ecoGet('drop')}** · NPC thu **×${A.ecoGet('sell')}** / bán **×${A.ecoGet('buy')}**`),
   );
   return { embeds: [e], components: [navRow(uid, 'home')] };
 }
@@ -108,13 +113,13 @@ function viewNv(uid) {
   const e = new EmbedBuilder().setTitle('🧙 Nhân Vật').setColor(0x8e44ad);
   e.setDescription(fit('Chỉnh dữ liệu một người chơi. Đặt cảnh giới cao sẽ **tự nâng bậc thế giới** cho khớp (Linh Giới >Hóa Thần, Tiên Giới >Độ Kiếp) và giữ nguyên tu vi hiện có.\n• Tu vi / Linh Thạch / Linh Tinh: nhập số để đặt, `+số` hoặc `-số` để cộng trừ; tu vi còn nhận `full`.\n• Hồi phục: đầy Sinh Mệnh + xoá thời gian dưỡng thương sau đột phá hụt.', 900));
   e.addFields(F('🏔️ Cảnh giới', K.REALMS.map((r, i) => `${i}·${r.name}`).join('  ')));
-  return { embeds: [e], components: [navRow(uid, 'nv'), rowOf(btn(cid(uid, 'm', 'realm'), 'Đặt cảnh giới', '🏔️', ButtonStyle.Primary), btn(cid(uid, 'm', 'tuvi'), 'Đặt tu vi', '✨'), btn(cid(uid, 'm', 'lt'), 'Linh Thạch', '💰'), btn(cid(uid, 'm', 'lti'), 'Linh Tinh', '💎'), btn(cid(uid, 'm', 'heal'), 'Hồi phục', '💖', ButtonStyle.Success))] };
+  return { embeds: [e], components: [navRow(uid, 'nv'), rowOf(btn(cid(uid, 'm', 'realm'), 'Đặt cảnh giới', '🏔️', ButtonStyle.Primary), btn(cid(uid, 'm', 'tuvi'), 'Đặt tu vi', '✨'), btn(cid(uid, 'm', 'lt'), 'Linh Thạch', '💰'), btn(cid(uid, 'm', 'lti'), 'Linh Tinh', '💎'), btn(cid(uid, 'm', 'heal'), 'Hồi phục', '💖', ButtonStyle.Success)), rowOf(btn(cid(uid, 'm', 'ngusuy'), 'Miễn Ngũ Suy', '👑'))] };
 }
 function viewKt(uid) {
   const R = require('../game/realm'); const o = A.overview(); const e = new EmbedBuilder().setTitle('💰 Kinh Tế').setColor(0xf39c12);
   e.setDescription(fit('Chỉnh **ngay trong game**, lưu vào cơ sở dữ liệu (còn sau khi khởi động lại), có biên an toàn. Khoảng trống bỏ qua = giữ nguyên; gõ `mac dinh` để về giá trị gốc.', 500));
   const row = (k) => { const v = A.ecoGet(k); const d = A.ORIG[k]; return `${A.ECO[k].label}: **${v}**${v === d ? '' : ` _(gốc ${d})_`}`; };
-  e.addFields(F('📊 Hệ số', ['exp', 'minor', 'major', 'tien', 'tiencao', 'drop', 'sell', 'buy'].map(row).join('\n')),
+  e.addFields(F('📊 Hệ số', ['exp', 'minor', 'major', 'tien', 'tiencao', 'tienmid', 'tienhigh', 'tienspeed', 'drop', 'sell', 'buy'].map(row).join('\n')),
     F('🎯 Mốc tu vi để đột phá (xem trước)', `Luyện Khí tầng 1: **${fmtNum(o.gates.tuvi0)}**\nHóa Thần Viên Mãn: **${fmtNum(o.gates.hoathan)}**\nĐộ Kiếp Viên Mãn → Chân Tiên: **${fmtNum(o.gates.dokiep)}**\nChân Tiên tầng 1: **${fmtNum(o.gates.chantien)}**`));
   return { embeds: [e], components: [navRow(uid, 'kt'), rowOf(btn(cid(uid, 'm', 'expc'), 'EXP đột phá', '📈', ButtonStyle.Primary), btn(cid(uid, 'm', 'tien'), 'Hệ số Tiên', '👑'), btn(cid(uid, 'm', 'drop'), 'Rơi đồ', '🎁'), btn(cid(uid, 'm', 'npc'), 'Giá NPC', '🏪'), btn(cid(uid, 'm', 'reset'), 'Mặc định', '↩️', ButtonStyle.Danger))] };
 }

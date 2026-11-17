@@ -1,4 +1,16 @@
-# Tiên Giới Bot v19.2 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v19.8 — Node.js + discord.js + SQLite
+
+> **v19.8** — Hồi chiêu **Thiên Nhân Ngũ Suy chỉnh lên 12 giờ mỗi giai đoạn** (v19.4 để 2 giờ; bản gốc 24 giờ) → vượt đủ 5 giai đoạn mất ít nhất ~2,5 ngày. Chỉnh ở `COOLDOWN_THIENNHANNGUSUY` trong `src/game/cooldowns.js`.
+
+> **v19.7** — (1) **Tiên Giới bị khóa sau Ngũ Suy + Phi Thăng**: muốn đột phá từ Chân Tiên trở lên (kể cả bước Độ Kiếp Viên Mãn → Chân Tiên), vào Bí Cảnh Tiên Giới, Chứng Đạo và sự kiện Tiên Giới đều BẮT BUỘC đã vượt **Thiên Nhân Ngũ Suy** và **Phi Thăng Tiên Giới**; thiếu thì bot báo rõ từng điều kiện và không tốn tu vi. Admin đặt cảnh giới Tiên trong `/quantri` được coi như đã qua Ngũ Suy (không cộng thưởng). (2) **Phi Thăng âm thầm**: người chơi bật bằng nút 🤫 trong menu Phi Thăng hoặc lệnh tiền tố `?phithangamtham` (không tốn ô slash) — khi Phi Thăng Linh Giới / Tiên Giới, kết quả và hiệu ứng chỉ mình họ thấy (slash: ephemeral; tiền tố: nhắn riêng). Test: `scripts/test_tiengate_v19_7.js`.
+
+> **v19.6** — `/quantri` → **Nhân Vật** → nút **👑 Miễn Ngũ Suy**: admin nhập ID/@ người chơi để cho họ vượt cả 5 giai đoạn Thiên Nhân Ngũ Suy ngay (đúng như thắng thật: +% thuộc tính vĩnh viễn và danh hiệu Thiên Nhân; người đã vượt rồi thì không cộng lần hai). Có ghi Nhật Ký Admin (`mien_ngusuy`).
+
+> **v19.5** — **Cảnh giới Tiên khó hơn nhưng tu nhanh hơn**: EXP đột phá từ **Chân Tiên trở lên** nhân chồng thêm — Chân Tiên → Đại La Kim Tiên **×3** (tổng ×21), từ Chuẩn Tiên Vương trở lên **×4** (tổng ×140, các cảnh giới rất cao tiệm cận **trần mềm** 9e15 nên tăng ít hơn ×4 nhưng vẫn tăng dần); đồng thời **tốc độ Tu Luyện / Bế Quan / Treo ở cảnh giới Tiên ×3** (chỉ nhân tu vi). Cửa Độ Kiếp Viên Mãn → Chân Tiên giữ ×7. Chỉnh trong `/quantri` → Kinh tế → Hệ số Tiên (5 ô) hoặc env `TIEN_MID_EXTRA_MULT` / `TIEN_HIGH_EXTRA_MULT` / `TIEN_SPEED_MULT`. Test: `scripts/test_tien_v19_5.js`.
+
+> **v19.4** — (1) **Thiên Nhân Ngũ Suy** hồi chiêu giữa 2 giai đoạn giảm từ **24 giờ xuống 2 giờ** (`COOLDOWN_THIENNHANNGUSUY` trong `src/game/cooldowns.js`; người đang chờ được áp ngay). (2) **Bí Cảnh Tiên Giới**: thông báo "chưa vào được" nay nói rõ — cần ĐÃ Phi Thăng Tiên Giới (thế giới 2) chứ không chỉ cảnh giới — và liệt kê từng điều kiện Phi Thăng còn thiếu (Lực Chiến, Linh Thạch, Lĩnh Ngộ 100%, Bí Cảnh Thượng Cổ ≥10, Thủ Hộ, Ngũ Suy…); thiếu cảnh giới thì chỉ đường `/dotpha`. Test: `scripts/test_gate_v19_3.js`.
+
+> **v19.3** — **Hiệu ứng Chứng Đạo Thành Đế** (30 file bạn gửi, dùng đủ): mỗi đạo lôi trong `/chungdao` có ảnh nền riêng + GIF lôi đánh xuống giữa các đạo; chứng đạo thành công chiếu chuỗi 6 cảnh (lôi cuối → Thần Quang → Đại Đạo Luân Bàn → Vạn Đạo Cộng Minh → Kim Long/Chu Tước → Đế Quân Giáng Thế) rồi cảnh Đế Tọa + Đế Ấn; thất bại có cảnh riêng; tab Đế (Tổng Quan/Đế Đạo/Đế Binh/Đế Hiệu) và thông báo toàn server đều có ảnh. Ảnh dựng bằng `scripts/build_chungdao_fx_v19_3.py` → `assets/chungdao/` (~3,7 MB). Thiếu file hoặc gửi ảnh lỗi → tự về giao diện chữ cũ, không ảnh hưởng dữ liệu. Test: `scripts/test_chungdao_fx19.js`.
 
 > **v19.2** — 51 emoji V19 nay dùng **TRANH DO BẠN TỰ VẼ** (bảng `assets/source/v19_1_sheet.png`, cắt bằng `scripts/build_emoji_from_sheet_v19_1.py`), thay bản tôi vẽ bằng code ở v19.1. Script vẽ bằng code không còn ghi đè.
 

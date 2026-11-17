@@ -72,6 +72,7 @@ function whyCannot(row) {
   if (s.passed_at || s.grand) return 'Bạn đã **Chứng Đạo Thành Đế** rồi.';
   if (kiepOf(s)) return null;                                    // đang giữa kiếp → tiếp tục
   if (row.world_tier < 2) return 'Chứng Đạo chỉ dành cho người đã **Phi Thăng Tiên Giới**.';
+  if (!row.thiennhanngusuy_passed) return require('./ascension').tienGateMsg(row, 'Chứng Đạo');
   if (row.realm_index < GATE_REALM) return `Con Đường Chứng Đạo mở ở **Tiên Vương Viên Mãn**, nhưng bạn phải đi hết **Chuẩn Tiên Tôn → Tiên Tôn → Chuẩn Tiên Đế**. Hiện tại: **${K.REALMS[row.realm_index].name}**.`;
   if (row.realm_index > GATE_REALM) return 'Bạn đã vượt qua cửa ải này.';
   if (row.stage_index < GATE_STAGE) return `Phải đạt **${K.REALMS[GATE_REALM].name} · Viên Mãn** mới được vượt Đại Kiếp (hiện ${R.realmDisplay(row.realm_index, row.stage_index)}).`;

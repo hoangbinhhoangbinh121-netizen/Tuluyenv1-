@@ -9,12 +9,12 @@ const get = (guildId) => {
 const set = (guildId, channelId) => D.run("INSERT INTO v7_settings (guild_id, key, value) VALUES (?, 'world_channel', ?) ON CONFLICT(guild_id, key) DO UPDATE SET value = excluded.value", String(guildId), String(channelId));
 
 /** Gửi Embed thông báo thế giới. skipIfSame: bỏ qua nếu kênh thế giới trùng kênh đã đăng bảng. */
-async function announceWorld(client, guildId, embed, { channelId = null, skipIfSame = false } = {}) {
+async function announceWorld(client, guildId, embed, { channelId = null, skipIfSame = false, files = null } = {}) {
   const target = get(guildId) || channelId;
   if (!target || !client) return false;
   if (skipIfSame && String(target) === String(channelId) && get(guildId) === null) return false;
   if (skipIfSame && String(target) === String(channelId)) return false;
-  try { const ch = await client.channels.fetch(String(target)); await ch.send({ embeds: [embed] }); return true; }
+  try { const ch = await client.channels.fetch(String(target)); await ch.send(files && files.length ? { embeds: [embed], files } : { embeds: [embed] }); return true; }
   catch (e) { console.warn('⚠️ Không gửi được thông báo thế giới:', e.message); return false; }
 }
 module.exports = { get, set, announceWorld };

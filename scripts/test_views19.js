@@ -7,9 +7,10 @@ const D = require('../src/db'); D.initDb();
 if (process.env.V19_EMOJI === '1') { const { E } = require('../src/game/emoji'); let id = 100000000000000000n; for (const f of require('node:fs').readdirSync(require('node:path').join(__dirname, '..', 'assets', 'emoji'))) if (f.endsWith('.png')) { const key = f.slice(0, -4); E[key] = `<:tg7_${key}:${id++}>`; } }
 const Cu = require('../src/game/cultivator'); const Inv = require('../src/game/invsvc'); const CD = require('../src/game/chungdao19'); const FX = require('../src/game/fx19');
 const BC = require('../src/game/bicanh19'); const B = require('../src/data/bicanh19'); const EV = require('../src/game/event19');
+require('../src/ui/chungdaoFx').setWait(async () => {});   // v19.3: không chờ thật giữa các cảnh hiệu ứng
 const kit = require('../src/ui/kit'); const CDV = require('../src/ui/chungdaoViews'); const BV = require('../src/ui/bicanh19Views'); const EVV = require('../src/ui/event19Views');
 let n = 0; const ok = (c, m) => { assert.ok(c, m); n += 1; };
-const mk = (id, realm, stage = 0, extra = '') => { Cu.createCultivator(id); D.run(`UPDATE cultivators SET realm_index = ?, stage_index = ?, world_tier = 2, tu_vi = 9e15 ${extra} WHERE user_id = ?`, realm, stage, String(id)); return String(id); };
+const mk = (id, realm, stage = 0, extra = '') => { Cu.createCultivator(id); D.run(`UPDATE cultivators SET realm_index = ?, stage_index = ?, world_tier = 2, thiennhanngusuy_passed = 1, tu_vi = 9e15 ${extra} WHERE user_id = ?`, realm, stage, String(id)); return String(id); };
 /** Kiểm giới hạn payload Discord. */
 function check(p, tag) {
   ok(p && typeof p === 'object', `${tag}: payload`);
@@ -17,10 +18,17 @@ function check(p, tag) {
   for (const r of comps) { ok(r.components.length >= 1 && r.components.length <= 5, `${tag}: hàng 1–5 thành phần`); for (const c of r.components) ok(!c.custom_id || c.custom_id.length <= 100, `${tag}: customId ≤100`); }
   for (const e of p.embeds || []) { const j = e.toJSON ? e.toJSON() : e; let total = (j.title || '').length + (j.description || '').length + (j.footer ? j.footer.text.length : 0); ok((j.title || '').length <= 256 && (j.description || '').length <= 4096, `${tag}: title/desc`); ok((j.fields || []).length <= 25, `${tag}: ≤25 field`); for (const f of j.fields || []) { ok(f.name.length > 0 && f.name.length <= 256 && f.value.length > 0 && f.value.length <= 1024, `${tag}: field "${f.name.slice(0, 30)}" ${f.value.length}`); total += f.name.length + f.value.length; } ok(total <= 6000, `${tag}: tổng embed ≤6000 (${total})`); }
 }
+/** v19.3: mọi attachment://x trong embed phải có file cùng tên đính kèm (và file phải tồn tại, ≤10 file). */
+function checkFiles(p, tag) {
+  const refs = []; for (const e of p.embeds || []) { const j = e.toJSON ? e.toJSON() : e; for (const u of [j.image && j.image.url, j.thumbnail && j.thumbnail.url]) if (u && /^attachment:\/\//.test(u)) refs.push(u.slice(13)); }
+  const names = (p.files || []).map((f) => f.name); ok(names.length <= 10, `${tag}: ≤10 file`);
+  for (const r of refs) ok(names.includes(r), `${tag}: ảnh ${r} có file đính kèm`);
+  for (const f of p.files || []) ok(require('node:fs').existsSync(f.attachment || f.path), `${tag}: file ${f.name} tồn tại`);
+}
 /** Giả tương tác nút/select. */
 const fake = (uid, customId, values) => { const log = []; const i = { customId, user: { id: String(uid), username: 'u' + uid }, member: { displayName: 'U' + uid }, values, guildId: 'g1', client: { channels: { fetch: async () => ({ send: async () => ({ id: 'm' }) }) } }, message: { edit: async () => {} }, replied: false, deferred: false, log,
-  update: async (p) => { i.replied = true; log.push(['update', p]); }, reply: async (p) => { i.replied = true; log.push(['reply', p]); }, followUp: async (p) => { log.push(['followUp', p]); }, deferUpdate: async () => { log.push(['defer']); }, showModal: async (m) => { log.push(['modal', m]); }, isButton: () => !values, isStringSelectMenu: () => !!values }; return i; };
-const click = async (uid, customId, values) => { const i = fake(uid, customId, values); await kit.routeComponent(i); for (const [, p] of i.log) { ok(!/mã lỗi/.test(JSON.stringify(p || '')), `click ${customId}: lỗi nội bộ ${JSON.stringify(p).slice(0, 120)}`); } for (const [, p] of i.log) if (p && typeof p === 'object' && (p.embeds || p.components)) check(p, `click ${customId}`); return i; };
+  update: async (p) => { i.replied = true; log.push(['update', p]); }, editReply: async (p) => { log.push(['edit', p]); }, reply: async (p) => { i.replied = true; log.push(['reply', p]); }, followUp: async (p) => { log.push(['followUp', p]); }, deferUpdate: async () => { log.push(['defer']); }, showModal: async (m) => { log.push(['modal', m]); }, isButton: () => !values, isStringSelectMenu: () => !!values }; return i; };
+const click = async (uid, customId, values) => { const i = fake(uid, customId, values); await kit.routeComponent(i); for (const [, p] of i.log) { ok(!/mã lỗi/.test(JSON.stringify(p || '')), `click ${customId}: lỗi nội bộ ${JSON.stringify(p).slice(0, 120)}`); } for (const [, p] of i.log) if (p && typeof p === 'object' && (p.embeds || p.components)) { check(p, `click ${customId}`); checkFiles(p, `click ${customId}`); } return i; };
 
 (async () => {
   // ---- Bí Cảnh Tiên Giới

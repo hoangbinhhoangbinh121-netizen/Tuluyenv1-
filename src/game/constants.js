@@ -66,6 +66,12 @@ const TIEN_EXP_MULT = _gm('TIEN_EXP_MULT', 7);
 // Cùng nguyên tắc: chỉ đổi mốc tu vi (R.tuViRequired); tốc độ/phần thưởng không đổi. Env HIGH_TIEN_EXP_MULT; /quantri → Kinh tế → "Hệ số Tiên" chỉnh được.
 const HIGH_TIEN_EXP_MULT = _gm('HIGH_TIEN_EXP_MULT', 5);
 const HIGH_TIEN_START_IDX = 14;   // = DAILA_REALM_IDX + 1 (Chuẩn Tiên Vương)
+// v19.5: từ CHÂN TIÊN trở lên (idx ≥ 10) EXP đột phá nhân CHỒNG thêm: Chân Tiên → Đại La Kim Tiên ×3, từ Chuẩn Tiên Vương trở lên ×4 (thay vì ×3; không cộng dồn hai mức).
+// Đồng thời TỐC ĐỘ tu luyện (Tu Luyện / Bế Quan / Treo) khi ở cảnh giới Tiên (idx ≥ 10) nhân ×3. Env: TIEN_MID_EXTRA_MULT / TIEN_HIGH_EXTRA_MULT / TIEN_SPEED_MULT; /quantri → Hệ số Tiên chỉnh được.
+const TIEN_START_IDX = 10;
+const TIEN_MID_EXTRA_MULT = _gm('TIEN_MID_EXTRA_MULT', 3);
+const TIEN_HIGH_EXTRA_MULT = _gm('TIEN_HIGH_EXTRA_MULT', 4);
+const TIEN_SPEED_MULT = _gm('TIEN_SPEED_MULT', 3);
 
 const HOATHAN_REALM_IDX = 5;
 const HOATHAN_VIENMAN_STAGE = totalStageCount(HOATHAN_REALM_IDX) - 1;
@@ -91,6 +97,6 @@ module.exports = {
   ...C,
   ADMIN_CODE_APPROVER_IDS, ADMIN_DISCORD_IDS, addAdmin, REALMS, TANG_20, TANG_23, totalStageCount,
   MAX_REALM_IDX, DAILA_REALM_IDX, HIGH_REALM_GROWTH, HIGH_REALM_SPEED_STEP, TU_VI_REQUIRED_CAP, OLD_TIENDE_REALM_IDX, TIEN_DE_REALM_IDX,
-  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE, EXP_REQUIRED_MULT, EXP_GATE_MINOR_MULT, EXP_GATE_MAJOR_MULT, TIEN_EXP_MULT, HIGH_TIEN_EXP_MULT, HIGH_TIEN_START_IDX,
+  HOATHAN_REALM_IDX, HOATHAN_VIENMAN_STAGE, DOKIEP_REALM_IDX, DOKIEP_VIENMAN_STAGE, EXP_REQUIRED_MULT, EXP_GATE_MINOR_MULT, EXP_GATE_MAJOR_MULT, TIEN_EXP_MULT, HIGH_TIEN_EXP_MULT, HIGH_TIEN_START_IDX, TIEN_START_IDX, TIEN_MID_EXTRA_MULT, TIEN_HIGH_EXTRA_MULT, TIEN_SPEED_MULT,
   _REALM_SPEED_MAX_KNOWN: Math.max(...Object.keys(C.REALM_SPEED_MULT).map(Number)),
 };

@@ -10,6 +10,7 @@ const R = require('../game/realm');
 const Cu = require('../game/cultivator');
 const CD = require('../game/chungdao19');
 const FX = require('../game/fx19');
+const CFX = require('./chungdaoFx');   // v19.3: hiệu ứng ảnh/GIF (thuần trình diễn, có dự phòng chữ)
 const BM = require('../game/benmenh19');
 const D16 = require('../data/congphap_v16');
 const { registerStatic, showModal, safeReply } = require('./kit');
@@ -37,7 +38,7 @@ function preView(uid) {
       { name: '⚠️ Rủi ro', value: 'Thất bại: giữ cảnh giới, mất **10–20% tu vi**, nhận **Thiên Kiếp Trọng Thương**, khóa **24 giờ**, hoàn 50% tài nguyên (trừ Chứng Nhận). Mỗi đạo lôi bạn chọn cách ứng phó — đan dược, pháp bảo, công pháp, kỹ năng hoặc dốc toàn lực; không thể spam một nút.' },
       { name: '🌟 Khi thành công', value: 'Tiên Đế Sơ Kỳ · **Đế Ấn** · mở **Đế Đạo**, **Đế Binh**, **Đế Hiệu** · ghi lịch sử · thông báo toàn server.' },
     ).setFooter({ text: why ? why.replace(/\*\*/g, '').slice(0, 200) : 'Đủ điều kiện — bắt đầu sẽ trừ tài nguyên ngay' });
-  return { embeds: [emb], components: [rowOf(btn(cid(uid, 'begin'), 'Bắt Đầu Đại Kiếp', E9.comp('dekiep', '⚡'), DG, !!why), btn(cid(uid, 'hist'), 'Lịch Sử Chứng Đạo', '📖', GR), btn(cid(uid, 'rf'), 'Làm mới', '🔄', GR))] };
+  return CFX.dressPre({ embeds: [emb], components: [rowOf(btn(cid(uid, 'begin'), 'Bắt Đầu Đại Kiếp', E9.comp('dekiep', '⚡'), DG, !!why), btn(cid(uid, 'hist'), 'Lịch Sử Chứng Đạo', '📖', GR), btn(cid(uid, 'rf'), 'Làm mới', '🔄', GR))] });
 }
 function kiepView(uid, k, note = '') {
   const n = Math.min(12, k.step); const L = CD.LOI[n - 1]; const pv = CD.loiPreview(k, n); const row = Cu.getCultivator(uid);
@@ -51,7 +52,7 @@ function kiepView(uid, k, note = '') {
     .setFooter({ text: `Hết hạn ứng kiếp sau ${fmtTime(Math.max(0, k.expireAt - now()))} không thao tác (coi như thất bại)${note ? ` · ${note}` : ''}` });
   if (k.log.length) emb.addFields({ name: '📜 Diễn biến', value: k.log.slice(-7).join('\n').slice(0, 1020) });
   const b = (a, st = GR) => { const bad = CD.canResp({ ...k, uid }, a, row); return btn(cid(uid, 'r', a), CD.RESP[a].name, CD.RESP[a].icon, st, !!bad); };
-  return { content: '', embeds: [emb], components: [rowOf(b('none', P), b('dan', SU), b('bao')), rowOf(b('cp'), b('sk'), b('dok', DG)), rowOf(btn(cid(uid, 'info'), 'Giải thích lựa chọn', '❓', GR), btn(cid(uid, 'rf'), 'Làm mới', '🔄', GR), btn(cid(uid, 'giveup'), 'Bỏ cuộc', '🏳️', DG))] };
+  return CFX.dressKiep({ content: '', embeds: [emb], components: [rowOf(b('none', P), b('dan', SU), b('bao')), rowOf(b('cp'), b('sk'), b('dok', DG)), rowOf(btn(cid(uid, 'info'), 'Giải thích lựa chọn', '❓', GR), btn(cid(uid, 'rf'), 'Làm mới', '🔄', GR), btn(cid(uid, 'giveup'), 'Bỏ cuộc', '🏳️', DG))] }, n);
 }
 // ================================================================ Đế (sau khi chứng đạo)
 const tabRow = (uid, cur) => rowOf(...[['ov', 'Tổng Quan', E9.comp('dean', '👑')], ['dao', 'Đế Đạo', E9.comp('dedao', '☯️')], ['binh', 'Đế Binh', E9.comp('debinh', '🗡️')], ['hieu', 'Đế Hiệu', E9.comp('dehieu', '🏷️')]].map(([k, l, e]) => btn(cid(uid, 'tab', k), l, e, k === cur ? P : GR)));
@@ -80,12 +81,12 @@ function deView(uid, tab = 'ov', note = '') {
     rows.push(rowOf(btn(cid(uid, 'sethieu'), h ? 'Đổi Đế Hiệu' : 'Đặt Đế Hiệu', E9.comp('dehieu', '🏷️'), P)));
   }
   if (note) emb.setFooter({ text: note.replace(/\*\*/g, '').slice(0, 200) });
-  return { content: '', embeds: [emb], components: rows };
+  return CFX.dressTab({ content: '', embeds: [emb], components: rows }, tab);
 }
 /** Mở /chungdao: trả payload phù hợp tình trạng. */
 function open(uid) {
   const sw = CD.sweepIdle(uid); const s = CD.ensureState(uid); const k = CD.kiepOf(s);
-  if (sw && sw.result) return { embeds: [resultEmbed(sw.result)], components: [] };
+  if (sw && sw.result) return CFX.dress({ embeds: [resultEmbed(sw.result)], components: [] }, { image: sw.result.win ? 'win_d.jpg' : 'fail.jpg' });
   if (CD.passed(uid)) return deView(uid, 'ov');
   if (k) return kiepView(uid, k);
   return preView(uid);
@@ -96,8 +97,23 @@ async function announceWin(i, r) {
     const gid = i.guildId; if (!gid || !require('./worldChannel').get(gid)) return;
     const hieu = FX.hieuOf(i.user.id);
     const emb = new EmbedBuilder().setColor(0xf1c40f).setTitle(`${E9.k('chungdao', '👑')} ĐẠI ĐẠO CHẤN ĐỘNG — CHỨNG ĐẠO THÀNH ĐẾ!`).setDescription(`<@${i.user.id}> vượt qua **12 đạo Đế Kiếp**, bước lên **${R.realmDisplay(r.after.realm_index, r.after.stage_index, true)}**!\nThiên địa cộng hưởng, vạn đạo triều bái${hieu ? ` — Đế Hiệu **${hieu}**` : ''}.`).setTimestamp();
-    await require('./worldChannel').announceWorld(i.client, gid, emb);
+    const dressed = CFX.dress({ embeds: [emb] }, { image: 'win_d.jpg', thumb: 'de_an.png' });   // ảnh Đế Tọa + Đế Ấn (thiếu file → chỉ chữ)
+    await require('./worldChannel').announceWorld(i.client, gid, emb, { files: dressed.files || null });
   } catch (e) { console.error('⚠️ thông báo Chứng Đạo:', e.message); }
+}
+
+const ioOf = (i) => ({ first: (p) => i.update(p), edit: (p) => i.editReply(p) });
+const nameOf = (i) => (i.user && (i.user.displayName || i.user.username)) || 'Đạo hữu';
+/** Cảnh kết quả (có ảnh; o.plain = dự phòng chỉ chữ). */
+function winFinal(res, lines, o = {}) {
+  const logE = lines && lines.length ? new EmbedBuilder().setColor(0x95a5a6).setDescription(lines.join('\n').slice(0, 3500)) : null;
+  const p = { content: '', embeds: [resultEmbed(res)].concat(logE ? [logE] : []), components: [] };
+  return o.plain ? Object.assign(p, { attachments: [] }) : CFX.dress(p, { image: 'win_d.jpg', thumb: 'de_an.png' });
+}
+function failFinal(res, lines, o = {}) {
+  const logE = lines && lines.length ? new EmbedBuilder().setColor(0x95a5a6).setDescription(lines.join('\n').slice(0, 3500)) : null;
+  const p = { content: '', embeds: [resultEmbed(res)].concat(logE ? [logE] : []), components: [] };
+  return o.plain ? Object.assign(p, { attachments: [] }) : CFX.dress(p, { image: 'fail.jpg' });
 }
 
 registerStatic('cd19', async (i, parts) => {
@@ -110,11 +126,14 @@ registerStatic('cd19', async (i, parts) => {
     case 'hist': { const h = CD.historyOf(uid, 8); return safeReply(i, { flags: EPH, content: h.length ? h.map((x) => `<t:${Math.floor(x.ts)}:f> — **${({ begin: 'Bắt đầu Đại Kiếp', win: '👑 Chứng đạo thành công', fail: '💥 Thất bại', dao_pick: 'Lĩnh ngộ Đế Đạo', dao_up: 'Nâng Đế Đạo', dao_awake: 'Thức tỉnh Đế Đạo', dao_switch: 'Đổi Đế Đạo', binh_craft: 'Chế Đế Binh', binh_up: 'Cường hóa Đế Binh', hieu: 'Đặt Đế Hiệu' })[x.kind] || x.kind}**`).join('\n') : 'Chưa có lịch sử Chứng Đạo.' }); }
     case 'begin': { const r = CD.begin(uid); if (!r.ok) return bad(r.error); return upd(kiepView(uid, r.k, 'Tài nguyên đã được trừ')); }
     case 'info': return safeReply(i, { flags: EPH, content: Object.values(CD.RESP).map((x) => `${x.icon} **${x.name}** — ${x.desc}`).join('\n') });
-    case 'giveup': { const r = CD.giveUp(uid); if (!r.ok) return bad(r.error); return upd({ content: '', embeds: [resultEmbed(r.result)], components: [] }); }
+    case 'giveup': { const r = CD.giveUp(uid); if (!r.ok) return bad(r.error); return CFX.playFail(ioOf(i), nameOf(i), (o = {}) => failFinal(r.result, null, o)); }
     case 'r': {
       const r = CD.respond(uid, arg); if (!r.ok) return bad(r.error);
-      if (r.ended) { await upd({ content: '', embeds: [resultEmbed(r.result), new EmbedBuilder().setColor(0x95a5a6).setDescription(r.lines.join('\n').slice(0, 3500))], components: [] }); if (r.ended === 'win') await announceWin(i, r.result); return null; }
-      return upd(kiepView(uid, r.k));
+      if (r.ended === 'win') { await CFX.playWin(ioOf(i), nameOf(i), (o = {}) => winFinal(r.result, r.lines, o)); await announceWin(i, r.result); return null; }
+      if (r.ended) { await CFX.playFail(ioOf(i), nameOf(i), (o = {}) => failFinal(r.result, r.lines, o)); return null; }
+      const hn = Math.max(1, Math.min(12, r.k.step - 1));
+      await CFX.playHit(ioOf(i), hn, CD.LOI[hn - 1].name, r.lines, () => kiepView(uid, r.k));
+      return null;
     }
     case 'tab': return upd(deView(uid, arg));
     case 'pickdao': { const r = CD.chooseDao(uid, (i.values || [])[0]); if (!r.ok) return bad(r.error); return upd(deView(uid, 'dao', 'Đã lĩnh ngộ Đế Đạo')); }

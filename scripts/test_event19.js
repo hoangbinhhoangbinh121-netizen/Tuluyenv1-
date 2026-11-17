@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const D = require('../src/db'); D.initDb();
 const Cu = require('../src/game/cultivator'); const BM = require('../src/game/benmenh19'); const EV = require('../src/game/event19'); const B = require('../src/game/boss'); const Inv = require('../src/game/invsvc'); const CPX = require('../src/game/cpfx'); const D16 = require('../src/data/congphap_v16'); const BC = require('../src/game/bicanh19');
 let n = 0; const ok = (c, m) => { assert.ok(c, m); n += 1; };
-const mk = (id, realm = 15, extra = '') => { Cu.createCultivator(id); D.run(`UPDATE cultivators SET realm_index = ?, stage_index = 1, world_tier = 2, linh_thach = 5000000000 ${extra} WHERE user_id = ?`, realm, String(id)); return String(id); };
+const mk = (id, realm = 15, extra = '') => { Cu.createCultivator(id); D.run(`UPDATE cultivators SET realm_index = ?, stage_index = 1, world_tier = 2, thiennhanngusuy_passed = 1, linh_thach = 5000000000 ${extra} WHERE user_id = ?`, realm, String(id)); return String(id); };
 const own = (u, tiers, lv = {}) => { D.run('UPDATE cultivators SET cong_phap_owned = ?, cong_phap_levels = ?, cong_phap_slots = ? WHERE user_id = ?', tiers.join(','), Object.entries(lv).map(([t, l]) => `${t}:${l}`).join(','), tiers[0] ? String(tiers[0]) : '', u); };
 
 // ---- giai đoạn công pháp (spec §4.4)

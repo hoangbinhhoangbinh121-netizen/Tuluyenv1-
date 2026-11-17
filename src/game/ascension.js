@@ -126,6 +126,30 @@ function tiengioiChecklist(row) {
   ];
 }
 
+/** v19.7: MỌI thứ của Tiên Giới (đột phá từ Chân Tiên trở lên, Bí Cảnh Tiên Giới, Chứng Đạo, sự kiện Tiên Giới…) BẮT BUỘC đã vượt Thiên Nhân Ngũ Suy VÀ Phi Thăng Tiên Giới. */
+const tienUnlocked = (row) => !!(row && row.world_tier >= 2 && row.thiennhanngusuy_passed);
+function tienGateMsg(row, what = 'Chức năng Tiên Giới') {
+  const ns = row.thiennhanngusuy_passed ? '✅' : `❌ (hiện ${Math.min(row.ngusuy_stage || 0, 5)}/5 giai đoạn)`;
+  const pt = row.world_tier >= 2 ? '✅' : (row.world_tier >= 1 ? '❌ chưa Phi Thăng Tiên Giới' : '❌ chưa Phi Thăng Linh Giới → Tiên Giới');
+  return `🔒 **${what}** yêu cầu hoàn thành **Thiên Nhân Ngũ Suy** VÀ **Phi Thăng Tiên Giới**.\n• Thiên Nhân Ngũ Suy: ${ns}\n• Phi Thăng Tiên Giới: ${pt}\nXem còn thiếu gì bằng \`/dieukienphithang\`.`;
+}
+/** v19.7: chế độ Phi Thăng âm thầm — bật thì kết quả Phi Thăng (Linh Giới/Tiên Giới) chỉ người chơi thấy, không đăng công khai trong kênh. */
+const isQuiet = (userOrRow) => { const r = userOrRow && typeof userOrRow === 'object' ? userOrRow : Cu.getCultivator(userOrRow); return !!(r && r.phithang_quiet); };
+function toggleQuiet(userId, want = null) {
+  const r = Cu.getCultivator(userId); if (!r) return null;
+  const on = want === null ? !r.phithang_quiet : !!want;
+  Cu.updateCultivator(userId, { phithang_quiet: on ? 1 : 0 });
+  return on;
+}
+const quietText = (on) => (on ? '🤫 **Phi Thăng âm thầm: BẬT** — khi bạn Phi Thăng (Linh Giới / Tiên Giới), kết quả và hiệu ứng chỉ mình bạn thấy, không đăng công khai trong kênh.' : '📢 **Phi Thăng âm thầm: TẮT** — Phi Thăng sẽ hiện công khai trong kênh như thường.');
+/** v19.6: ghi nhận TOÀN THẮNG Thiên Nhân Ngũ Suy (dùng chung cho thắng thật và lệnh admin): cộng % thuộc tính vĩnh viễn + danh hiệu. */
+function grantNgusuyPass(userId) {
+  const r2 = Cu.getCultivator(userId); const p = K.NGUSUY_PASS_BONUS_STAT_PCT;
+  const bh = Math.max(1, int(r2.hp * p)); const ba = Math.max(1, int(r2.atk * p)); const bd = Math.max(1, int(r2.def_ * p)); const bs = Math.max(1, int(r2.spd * p));
+  const title = `${E.thiennhan} Thiên Nhân ${E.thiennhan}`;
+  Cu.updateCultivator(userId, { ngusuy_stage: K.NGUSUY_STAGES.length, ngusuy_started: 1, thiennhanngusuy_passed: 1, hp: r2.hp + bh, atk: r2.atk + ba, def_: r2.def_ + bd, spd: r2.spd + bs, title });
+  return { bh, ba, bd, bs, title };
+}
 function doVuotThiennhanngusuy(userId) {
   const row = Cu.getCultivator(userId);
   if (row.world_tier < 1) return '🔒 Chỉ mở sau khi **Phi Thăng Linh Giới**.';
@@ -147,11 +171,8 @@ function doVuotThiennhanngusuy(userId) {
   if (random() < rate) {
     const n = idx + 1;
     if (n >= K.NGUSUY_STAGES.length) {
-      const r2 = Cu.getCultivator(userId);
       const p = K.NGUSUY_PASS_BONUS_STAT_PCT;
-      const bh = Math.max(1, int(r2.hp * p)); const ba = Math.max(1, int(r2.atk * p)); const bd = Math.max(1, int(r2.def_ * p)); const bs = Math.max(1, int(r2.spd * p));
-      const title = `${E.thiennhan} Thiên Nhân ${E.thiennhan}`;
-      Cu.updateCultivator(userId, { ngusuy_stage: n, thiennhanngusuy_passed: 1, hp: r2.hp + bh, atk: r2.atk + ba, def_: r2.def_ + bd, spd: r2.spd + bs, title });
+      const { bh, ba, bd, bs, title } = grantNgusuyPass(userId);
       return `${header}${E.thiennhanngusuy}👑 VƯỢT QUA GIAI ĐOẠN CUỐI — **TOÀN THẮNG THIÊN NHÂN NGŨ SUY!**\nSinh — Lão — Bệnh — Tử — Suy, tất cả đều không thể quật ngã ý chí của bạn.\n✨ VĨNH VIỄN +${int(p * 100)}% toàn bộ thuộc tính (+${fmtNum(bh)} HP / +${fmtNum(ba)} Công / +${fmtNum(bd)} Thủ / +${fmtNum(bs)} Thân Pháp)!\n🏅 Nhận danh hiệu **「${title}」**!\n🌌 Đủ điều kiện cuối cùng cho **Phi Thăng Tiên Giới**, hãy dùng \`/phithang\`.`;
     }
     Cu.updateCultivator(userId, { ngusuy_stage: n });
@@ -245,4 +266,4 @@ function doPhithangEx(userId, guildId = 0) {
 /** Giữ nguyên chữ ký cũ (trả chuỗi) cho mọi nơi gọi cũ. */
 const doPhithang = (userId, guildId = 0) => doPhithangEx(userId, guildId).text;
 
-module.exports = { doPhithangEx, isAtAscensionGate, doVuotthienkiep, doDanhPhithangSugia, doDanhThuongcoThuho, tiengioiChecklist, doVuotThiennhanngusuy, doPhithang, gateFor };
+module.exports = { doPhithangEx, isAtAscensionGate, doVuotthienkiep, doDanhPhithangSugia, doDanhThuongcoThuho, tiengioiChecklist, doVuotThiennhanngusuy, grantNgusuyPass, tienUnlocked, tienGateMsg, isQuiet, toggleQuiet, quietText, doPhithang, gateFor };

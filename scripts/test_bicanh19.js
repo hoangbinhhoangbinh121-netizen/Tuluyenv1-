@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const D = require('../src/db'); D.initDb();
 const Cu = require('../src/game/cultivator'); const BC = require('../src/game/bicanh19'); const B = require('../src/data/bicanh19'); const K = require('../src/game/constants');
 let n = 0; const ok = (c, m) => { assert.ok(c, m); n += 1; };
-const mk = (id, realm, stage = 1, tier = 2) => { Cu.createCultivator(id); D.run('UPDATE cultivators SET realm_index = ?, stage_index = ?, world_tier = ? WHERE user_id = ?', realm, stage, tier, String(id)); return String(id); };
+const mk = (id, realm, stage = 1, tier = 2) => { Cu.createCultivator(id); D.run('UPDATE cultivators SET realm_index = ?, stage_index = ?, world_tier = ?, thiennhanngusuy_passed = 1 WHERE user_id = ?', realm, stage, tier, String(id)); return String(id); };
 
 // ---- dữ liệu
 ok(B.BCS.length === 19, '19 bí cảnh');

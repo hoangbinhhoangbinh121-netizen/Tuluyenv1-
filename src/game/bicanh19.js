@@ -435,11 +435,23 @@ function sweepStale(maxIdle = 6 * 3600) {
   for (const r of rows) D.run("UPDATE bc19_runs SET status = 'abandoned' WHERE run_id = ?", r.run_id);
   return rows.length;
 }
+/** v19.3: giải thích RÕ vì sao chưa vào được dù cảnh giới có thể đã đủ — Bí Cảnh Tiên Giới cần ĐÃ Phi Thăng Tiên Giới (thế giới 2), không chỉ cảnh giới. */
+function notAscendedMsg(row, bc) {
+  const base = 'Bí Cảnh Tiên Giới chỉ mở sau khi **Phi Thăng Tiên Giới**';
+  const realmOk = row.realm_index >= bc.realm;
+  const head = `${base}${realmOk ? ` — cảnh giới của bạn (${K.REALMS[row.realm_index].name}) đã đủ nhưng bạn vẫn đang ở **${K.WORLD_TIERS[row.world_tier] || '?'}**.` : '.'}`;
+  if (row.world_tier < 1) return `${head}\nHãy Phi Thăng Linh Giới trước (\`/dieukienphithang\`), rồi Phi Thăng Tiên Giới.`;
+  let missing = [];
+  try { const A = require('./ascension'); missing = A.tiengioiChecklist(row).filter(([, ok]) => !ok).map(([, , l]) => l); } catch (_) { /* chỉ mất phần liệt kê */ }
+  const list = missing.length ? `\nCòn thiếu ${missing.length} điều kiện Phi Thăng Tiên Giới:\n${missing.map((m) => `❌ ${m}`).join('\n')}` : '\nĐủ điều kiện rồi — dùng `/phithang` để Phi Thăng Tiên Giới.';
+  return `${head}${list}\n_(xem tiến độ: \`/dieukienphithang\`)_`.slice(0, 1000);
+}
 function whyCannotEnter(row, idx) {
   const bc = bcOf(idx); if (!bc) return 'Bí cảnh không tồn tại.';
   if (!row) return 'Bạn chưa bắt đầu tu tiên.';
-  if (row.world_tier < 2) return 'Bí Cảnh Tiên Giới chỉ mở sau khi **Phi Thăng Tiên Giới**.';
-  if (row.realm_index < bc.realm) return `**${bc.name}** yêu cầu cảnh giới **${K.REALMS[bc.realm].name}** trở lên.`;
+  if (row.world_tier < 2) return notAscendedMsg(row, bc);
+  if (!row.thiennhanngusuy_passed) return require('./ascension').tienGateMsg(row, bc.name);
+  if (row.realm_index < bc.realm) return `**${bc.name}** yêu cầu cảnh giới **${K.REALMS[bc.realm].name}** trở lên (hiện: ${K.REALMS[row.realm_index].name}). Dùng \`/dotpha\` để tiến lên.`;
   if (D.get('SELECT 1 AS x FROM bc19_runs r JOIN bc19_members m ON m.run_id = r.run_id WHERE m.user_id = ? AND r.status IN (\'lobby\',\'active\')', String(row.user_id))) return 'Bạn đang ở trong một lần thám hiểm bí cảnh khác — hãy hoàn thành hoặc rút lui trước.';
   if (entriesToday(row.user_id, idx) >= CFG.ENTRIES_PER_DAY) return `Hôm nay bạn đã vào **${bc.name}** đủ ${CFG.ENTRIES_PER_DAY} lần.`;
   return null;
