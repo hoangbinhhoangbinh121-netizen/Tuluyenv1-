@@ -1,6 +1,17 @@
-# BÁO CÁO V19.0 / V19.1 / V19.2 / V19.3 / V19.4 / V19.5 / V19.6 / V19.7 / V19.8 — Bí Cảnh Tiên Giới · Chứng Đạo Thành Đế · Đế Đạo / Đế Binh / Đế Hiệu · Bản Mệnh · Sự kiện thế giới
+# BÁO CÁO V19.0 / V19.1 / V19.2 / V19.3 / V19.4 / V19.5 / V19.6 / V19.7 / V19.8 / V19.9 / V19.10 — Bí Cảnh Tiên Giới · Chứng Đạo Thành Đế · Đế Đạo / Đế Binh / Đế Hiệu · Bản Mệnh · Sự kiện thế giới
 
 > Nền: V18.2 (29 đại cảnh giới). Mọi cơ chế cũ giữ nguyên; V19 **mở rộng** các hệ thống sẵn có (công pháp V16, vật phẩm V17, Boss Thế Giới v7) thay vì dựng hệ thống thứ ba → không cộng dồn chỉ số hai lần, vẫn chịu các trần cũ.
+
+## 000000000. V19.10 — Emoji a19_* thay bằng tranh người dùng
+- Bảng người dùng 8×5 (nền mờ gradient) → tách nền bằng độ nét cục bộ (icon pixel sắc, nền mờ), chọn ô theo nghĩa: atk=kiếm, item=hồ lô, tuyet=phượng vàng, gift=rương, sk=sách tím, than=cầu tím, warn=chuông, trong=kiếm tối, ll=lửa xanh, dead=bia đá, win=cờ 仙, crown=vương miện, next=cổng thiên môn, log=cuộn giấy, rest=thiền định, map=họa đồ, retreat=bồ câu. 16 khóa còn lại giữ bản code. Không đụng emoji cũ.
+
+## 00000000. V19.9 — Boss ×10–20 + emoji pixel Bí Cảnh Tiên Giới
+- **Công thức mới (game/bicanh19.js `bossPower`)**: HP kẻ địch = (công trung bình đội) × (hệ số loại × độ khó cũ) × `POW_HP`; `POW_HP` đi tuyến tính 10 → 20 từ bí cảnh 0 → 18, nhân tỉ lệ loại (`KIND_HP`: Boss cuối 1, canh cửa 0,8, mini 0,6, tinh anh 0,35, thường 0,2). Sát thương: `POW_ATK` 1 → 1,6 × `KIND_ATK` (1 / 0,9 / 0,8 / 0,6 / 0,4). Cả hai nhân thêm `BC19_HP_MULT` / `BC19_ATK_MULT` (mặc định 1, chỉnh trong `/quantri`).
+- **Vì sao Đại La từng "mạnh hơn" Chuẩn Tiên Vương**: Boss bí cảnh tính theo chỉ số của CHÍNH người chơi nên chênh lệch giữa hai bí cảnh liền kề chỉ 5–8% — nhỏ hơn dao động ngẫu nhiên của hệ số HP (35–45) → cảm giác thứ tự bị đảo. Nay mỗi bí cảnh liền kề cách nhau ~5,5% HP *chắc chắn* cộng với dải ngẫu nhiên nhỏ hơn đường cong, và test kiểm tra tăng nghiêm ngặt (`test_boss_v19_9.js`). Nếu muốn chênh lệch rõ hơn nữa: tăng `POW_HP[1]` (trần ×20) trong `CFG`.
+- **Boss Thế Giới** (`game/boss.js`): `suggestedHp` × `WB_HP_MULT` (15) × (1 + 0,5 × (cấp − 7) từ cấp 8); phản đòn × `WB_ATK_MULT` (2,5), vẫn không bao giờ giết hẳn người đánh.
+- **Cân bằng (mô phỏng, KHÔNG phải người chơi thật)**: `KIT=1 node scripts/sim_bicanh19.js 0,4,9,14,18 1 10` — người chơi "có đồ vừa phải" solo thắng 100% bí cảnh 0–9, ~80% bí cảnh 14, ~10% bí cảnh 18; tổ đội 3 người thắng 100% cả bí cảnh 18. Một lần vào bí cảnh dài hơn rất nhiều (Boss cuối ≈ 100–250 đòn solo) → nút **Tự Chiến** nay chạy tối đa 20 lượt/lần. Nếu thấy quá khó/dễ, chỉnh ngay trong `/quantri` → Kinh Tế → **Sức mạnh Boss**.
+- Trần sát thương/HP trong trận `DMG_CAP` 9e15 → 9e17 (để Boss ×20 không bị chặn phẳng ở cảnh giới cao).
+- **Emoji**: 33 emoji pixel mới `a19_*` (kiếm, nổ, cầu thần thông, sao băng, đầu lâu, sách, khiên, hoa sen, bình đan, bánh răng, mắt, 2 mũi tên làm mới, rút lui, cổng sang tầng, người+cộng, cửa, nút play, X, cờ caro, cảnh báo, mũi tên yếu, bia mộ, giọt sinh mệnh, cuộn giấy, hộp quà, cúp, bản đồ, biểu đồ, ngọn lửa linh lực, vương miện, khóa, dấu tick, dấu X) — gắn vào mọi nút và nhật ký trận của Bí Cảnh Tiên Giới. Nhật ký đã lưu trong DB vẫn là Unicode, được đổi sang pixel **lúc hiển thị** (`emo19.px`). Emoji cũ không đổi (tổng 511 + 33 = 544).
 
 ## 0000000. V19.8 — Ngũ Suy hồi chiêu 12 giờ
 - `COOLDOWN_THIENNHANNGUSUY` = 12 giờ/giai đoạn (đổi từ 2 giờ của v19.4). Tính theo mốc thời gian đã lưu: ai vừa thử từ lâu hơn 12 giờ thì thử tiếp được ngay, ai vừa thử gần đây phải chờ tới đủ 12 giờ kể từ lần thử.

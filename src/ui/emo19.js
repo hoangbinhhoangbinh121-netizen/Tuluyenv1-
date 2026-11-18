@@ -18,4 +18,22 @@ const ev = (kind, uni = '🌠') => k(EV_KEY[kind] || 'sukien19', uni);
 const MOB_KEY = { normal: 'mob_thuong', elite: 'mob_tinhanh', mini: 'mob_mini', guard: 'mob_canh', final: 'boss19' };
 const mob = (kind, uni = '👾') => k(MOB_KEY[kind] || 'mob_thuong', uni);
 
-module.exports = { k, comp, bc, bcComp, dao, daoComp, binh, binhComp, ev, mob, DAO_KEY, EV_KEY, MOB_KEY };
+// v19.9: emoji pixel cho nút / nhật ký chiến đấu (a19_*) — thay emoji hệ thống xấu. Chưa tải lên được thì rơi về Unicode dự phòng.
+const a = (key, uni = '') => k(`a19_${key}`, uni);
+const aComp = (key, uni = '') => comp(`a19_${key}`, uni);
+// Nhật ký chiến đấu lưu sẵn trong DB với emoji Unicode → đổi sang pixel LÚC HIỂN THỊ (log cũ cũng đẹp, không phải sửa dữ liệu).
+const LOG_MAP = [['⚔️', 'atk'], ['💢', 'trong'], ['🌠', 'tuyet'], ['☠️', 'bi'], ['📖', 'sk'], ['🛡️', 'guard'], ['🧘', 'rest'], ['💊', 'item'], ['⚠️', 'warn'], ['⬇️', 'weak'], ['💀', 'dead'], ['🏆', 'win'], ['🎁', 'gift'], ['📜', 'log']];
+const px = (text) => {
+  let t = String(text == null ? '' : text);
+  t = t.replace(/^✨ \*\*/gm, `${a('than', '✨')} **`);
+  for (const [u, key] of LOG_MAP) if (t.includes(u)) t = t.split(u).join(a(key, u));
+  return t;
+};
+/** Cắt chuỗi theo DÒNG (không cắt giữa thẻ emoji <:tên:id>) cho giới hạn field Discord. */
+const clip = (text, n = 1020) => {
+  const lines = String(text).split('\n'); let out = '';
+  for (const ln of lines) { const nx = out ? `${out}\n${ln}` : ln; if (nx.length > n) break; out = nx; }
+  return out || String(text).slice(0, n);
+};
+
+module.exports = { a, aComp, px, clip, k, comp, bc, bcComp, dao, daoComp, binh, binhComp, ev, mob, DAO_KEY, EV_KEY, MOB_KEY };

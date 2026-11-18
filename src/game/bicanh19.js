@@ -36,15 +36,25 @@ const CFG = {
   FLOOR_HEAL: 0.35, FLOOR_LL: 40, REVIVE_HP: 0.30,           // giữa 2 tầng
   PARTY_HP: 0.65, PARTY_ACT: 0.5, // số lần kẻ địch ra đòn mỗi vòng = 1 + PARTY_ACT × (N−1) (sát thương Boss tăng chậm hơn HP — spec §2.8)
               // BossHP = Solo × (1 + 0.65 × (N − 1))
-  DEF_CAP: 70, CRIT_BASE: 0.05, CRIT_BASE_MULT: 1.5, DMG_CAP: 9e15, LOG_KEEP: 9,
+  DEF_CAP: 70, CRIT_BASE: 0.05, CRIT_BASE_MULT: 1.5, DMG_CAP: 9e17, LOG_KEEP: 9,   // v19.9: nâng trần 9e15 → 9e17 để Boss ×10–20 HP không bị chặn phẳng ở cảnh giới cao
   BOSS_CRIT: 0.08, AOE_SPLIT: 0.45,
   ITEMS_MAX: 3,               // Huyết Nguyên Đan tối đa mỗi lần vào
-  AUTO_MAX: 6,                // "Tự Chiến" tối đa bấy nhiêu lượt / lần bấm
+  AUTO_MAX: 30,               // "Tự Chiến" tối đa bấy nhiêu lượt / lần bấm (v19.9: 6 → 30 vì Boss trâu hơn)
+  // v19.9: ĐƯỜNG CONG SỨC MẠNH BOSS theo bí cảnh (0..18): HP ×10 → ×20, sát thương ×1 → ×1,6 (tuyến tính, nên bí cảnh sau LUÔN mạnh hơn bí cảnh trước).
+  POW_HP: [10, 20], POW_ATK: [1, 1.6],
+  KIND_HP: { normal: 0.20, elite: 0.35, mini: 0.60, guard: 0.80, final: 1 },      // tỉ lệ so với Boss cuối (quái thường ×2–4, Boss cuối ×10–20)
+  KIND_ATK: { normal: 0.40, elite: 0.60, mini: 0.80, guard: 0.90, final: 1 },
 };
 const FLOOR_TU = [0.012, 0.014, 0.018, 0.024, 0.040];   // % tu vi cần để qua Trung Kỳ của cảnh giới bí cảnh (tính theo bí cảnh, không theo người chơi → vào bí cảnh thấp không lợi hơn)
 const FLOOR_LT = [1, 1.2, 1.5, 2, 4];
 const LT_BASE = (i) => int(500000 * 1.3 ** i);
 const BOSS_K_OF = (kind) => (B.BOSS_KINDS.has(kind) ? CFG.BOSS_K : CFG.MOB_K);
+/** v19.9: hệ số sức mạnh theo bí cảnh + loại kẻ địch. { hp, atk } — nhân vào HP (so với Công Kích người chơi) và sát thương (so với Sinh Mệnh người chơi). */
+function bossPower(bcIdx, kind) {
+  const t = clamp((Number(bcIdx) || 0) / 18, 0, 1);
+  const lerp = (a, b) => a + (b - a) * t;
+  return { hp: lerp(CFG.POW_HP[0], CFG.POW_HP[1]) * (CFG.KIND_HP[kind] || 1) * (K.BC19_HP_MULT || 1), atk: lerp(CFG.POW_ATK[0], CFG.POW_ATK[1]) * (CFG.KIND_ATK[kind] || 1) * (K.BC19_ATK_MULT || 1) };
+}
 
 // ---------------------------------------------------------------- hành động người chơi (spec §2.5)
 const ACT = {
@@ -121,10 +131,11 @@ function spawnEnemy(st) {
   }
   const hpE = 1 + (bc.diff.hp - 1) * CFG.HP_EASE; const atkE = 1 + (bc.diff.atk - 1) * CFG.ATK_EASE;
   const party = 1 + CFG.PARTY_HP * (N - 1);
-  const hp = Math.max(1, Math.min(CFG.DMG_CAP, Math.ceil(meanAtk(st) * hpMult * hpE * party)));
+  const pw = bossPower(st.bc, kind);   // v19.9
+  const hp = Math.max(1, Math.min(CFG.DMG_CAP, Math.ceil(meanAtk(st) * hpMult * hpE * party * pw.hp)));
   const resBase = { normal: 0, elite: 0.03, mini: 0.05, guard: 0.07, final: 0.10 }[kind];
   const e = {
-    kind, name, hp, maxHp: hp, atkPct: atkPct * atkE, defPct, counter: randUniform(KD.counter[0], KD.counter[1]) * atkE, res: resBase, skill, mobKey,
+    kind, name, hp, maxHp: hp, atkPct: atkPct * atkE * pw.atk, defPct, counter: randUniform(KD.counter[0], KD.counter[1]) * atkE * pw.atk, res: resBase, skill, mobKey,
     phase: 1, phaseAtk: 1, rage: 1, rageT: 0, shield: 0, tele: null, et: 0, weak: null, lose: false, healed: {}, shieldUsed: {}, bc: st.bc,
   };
   if (kind === 'final') { e.skills = bc.skills; }
@@ -671,6 +682,7 @@ function progOf(uid) {
 }
 
 module.exports = {
+  bossPower,
   CFG, ACT, SIG, ACH, FLOOR_TU, FLOOR_LT, LT_BASE, bcOf, REALM_NAME, sigOf, snapMember, newState, step, nextFloor, autoPick, canAct, spawnEnemy, alive, kindName,
   whyCannotEnter, createLobby, join, leave, startRun, load, act, next, retreat, auto, activeRunId, sweepStale, entriesToday, progOf, recordBest, payFloor, rollMember, save, rowOf,
 };

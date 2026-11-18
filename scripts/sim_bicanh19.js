@@ -14,6 +14,11 @@ const runOnce = (idx, N, opts = {}) => {
   const rows = []; for (let i = 0; i < N; i += 1) { const u = mk(B.BCS[idx].realm, opts.stage ?? 1); rows.push(Cu.getCultivator(u)); }
   const bc = B.BCS[idx]; const mem = rows.map((r) => BC.snapMember(r, r.user_id, `P${r.user_id}`, bc));
   if (opts.fakeBook) for (const m of mem) m.eq = [1041];
+  // v19.9: PMUL_ATK / PMUL_HP = "người chơi thật mạnh gấp bao nhiêu lần nhân vật trần" (trang bị, công pháp, đế binh, thiên phú…). VD  PMUL_ATK=8 PMUL_HP=8 node scripts/sim_bicanh19.js 4 1 20
+  // KIT=1: mô phỏng người chơi "có đồ" vừa phải (bạo kích 30%, +100% sát thương lên Boss, giảm sát thương 20%, hút máu 6%, né 15%, 2 công pháp).
+  if (process.env.KIT) for (const m of mem) { m.crit = 0.30; m.critMult = 0.8; m.boss = Number(process.env.KIT_BOSS || 1.0); m.dr = 0.20; m.ls = 0.06; m.dodge = 0.15; m.eq = [1041, 1043]; }
+  const pa = Number(process.env.PMUL_ATK || 1); const ph = Number(process.env.PMUL_HP || 1);
+  for (const m of mem) { m.atk = Math.floor(m.atk * pa); m.maxHp = Math.floor(m.maxHp * ph); m.hp = m.maxHp; m.minHp = m.maxHp; }
   const st = BC.newState(idx, mem); const stat = { floors: [], boss: 0, turns: 0 };
   let guard = 0; let floorHp = []; let attacksOnFinal = 0;
   while (!st.over && guard++ < 4000) {

@@ -1,4 +1,8 @@
-# Tiên Giới Bot v19.8 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v19.10 — Node.js + discord.js + SQLite
+
+> **v19.10** — Thay **17 trong 33 emoji pixel a19_*** bằng tranh AI do người dùng tự vẽ (kiếm, bình hồ lô, phượng vàng, rương, sách, cầu thần thông, chuông, kiếm trọng, ngọn lửa xanh, bia mộ, cờ 仙, vương miện, cổng thiên môn, cuộn giấy, thiền định, bản đồ, bồ câu). 16 emoji còn lại (khiên, đầu lâu, bánh răng, mắt, ✔/✖, v.v.) giữ bản vẽ bằng code vì bảng không có hình hợp nghĩa. Emoji cũ không đổi. Script: `scripts/build_emoji_from_sheet_v19_9.py <bảng.png>` (bảng ~2 MB không đóng gói để zip < 30 MiB).
+
+> **v19.9** — (1) **Boss mạnh hơn 10–20 lần.** Bí Cảnh Tiên Giới: HP Boss cuối nhân đường cong **×10 → ×20** từ bí cảnh đầu đến cuối (mini Boss ×6–12, Boss canh cửa ×8–16, tinh anh ×3,5–7, quái thường ×2–4), sát thương Boss ×1 → ×1,6; đường cong **tăng nghiêm ngặt** nên bí cảnh sau luôn mạnh hơn bí cảnh trước (hết cảnh Đại La mạnh hơn Chuẩn Tiên Vương). Boss Thế Giới HP ×15 (+50% mỗi cấp Tiên từ cấp 8), phản đòn ×2,5. Trần sát thương 9e15 → 9e17, **Tự Chiến** tối đa 20 lượt/lần bấm. Chỉnh sống: `/quantri` → Kinh Tế → **Sức mạnh Boss** (4 hệ số). (2) **33 emoji pixel mới** `a19_*` cho nút & nhật ký Bí Cảnh Tiên Giới (thay emoji hệ thống xấu), KHÔNG đụng emoji cũ. Script: `scripts/make_pixel_emoji_v19_9.py`; test: `scripts/test_boss_v19_9.js`.
 
 > **v19.8** — Hồi chiêu **Thiên Nhân Ngũ Suy chỉnh lên 12 giờ mỗi giai đoạn** (v19.4 để 2 giờ; bản gốc 24 giờ) → vượt đủ 5 giai đoạn mất ít nhất ~2,5 ngày. Chỉnh ở `COOLDOWN_THIENNHANNGUSUY` trong `src/game/cooldowns.js`.
 

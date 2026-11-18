@@ -51,6 +51,12 @@ const MODALS = {
     { id: 'd', label: `x EXP thêm Tiên cao (mặc định ${A.ORIG.tienhigh})`, maxLength: 12, placeholder: '4', required: false },
     { id: 'e', label: `x Tốc độ tu luyện ở Tiên (mặc định ${A.ORIG.tienspeed})`, maxLength: 12, placeholder: '3', required: false }],
   run: (a, g) => [A.ecoSet(a, 'tien', g('a')), A.ecoSet(a, 'tiencao', g('b')), A.ecoSet(a, 'tienmid', g('c')), A.ecoSet(a, 'tienhigh', g('d')), A.ecoSet(a, 'tienspeed', g('e'))].filter((r) => !r.skip).map((r) => r.msg).filter(Boolean).join('\n') || 'Không đổi gì.' },
+  boss: { view: 'kt', title: 'Hệ số sức mạnh Boss', fields: [
+    { id: 'a', label: `x HP Boss Bí Cảnh (gốc ${A.ORIG.bchp})`, required: false, maxLength: 10, placeholder: 'bỏ trống = giữ nguyên · "mac dinh" = về gốc' },
+    { id: 'b', label: `x Sát thương Boss Bí Cảnh (gốc ${A.ORIG.bcatk})`, required: false, maxLength: 10 },
+    { id: 'c', label: `x HP Boss Thế Giới (gốc ${A.ORIG.wbhp})`, required: false, maxLength: 10 },
+    { id: 'd', label: `x Phản đòn Boss Thế Giới (gốc ${A.ORIG.wbatk})`, required: false, maxLength: 10 }],
+  run: (a, g) => [A.ecoSet(a, 'bchp', g('a')), A.ecoSet(a, 'bcatk', g('b')), A.ecoSet(a, 'wbhp', g('c')), A.ecoSet(a, 'wbatk', g('d'))].filter((r) => !r.skip).map((r) => r.msg).filter(Boolean).join('\n') || 'ℹ️ Không có gì thay đổi.' },
   drop: { view: 'kt', title: 'Hệ số rơi nguyên liệu', fields: [{ id: 'a', label: 'Nhân xác suất rơi (0–5, mặc định 1)', maxLength: 8, placeholder: '1.5' }], run: (a, g) => `${A.ecoSet(a, 'drop', g('a')).msg}\nℹ️ Trần rơi theo ngày/tuần/phẩm cấp vẫn áp dụng — không thể rơi vô hạn.` },
   npc: { view: 'kt', title: 'Giá NPC', fields: [
     { id: 'a', label: 'Giá NPC thu mua ×(0.1–3, mặc định 1)', required: false, maxLength: 8 },
@@ -119,9 +125,9 @@ function viewKt(uid) {
   const R = require('../game/realm'); const o = A.overview(); const e = new EmbedBuilder().setTitle('💰 Kinh Tế').setColor(0xf39c12);
   e.setDescription(fit('Chỉnh **ngay trong game**, lưu vào cơ sở dữ liệu (còn sau khi khởi động lại), có biên an toàn. Khoảng trống bỏ qua = giữ nguyên; gõ `mac dinh` để về giá trị gốc.', 500));
   const row = (k) => { const v = A.ecoGet(k); const d = A.ORIG[k]; return `${A.ECO[k].label}: **${v}**${v === d ? '' : ` _(gốc ${d})_`}`; };
-  e.addFields(F('📊 Hệ số', ['exp', 'minor', 'major', 'tien', 'tiencao', 'tienmid', 'tienhigh', 'tienspeed', 'drop', 'sell', 'buy'].map(row).join('\n')),
+  e.addFields(F('📊 Hệ số', ['exp', 'minor', 'major', 'tien', 'tiencao', 'tienmid', 'tienhigh', 'tienspeed', 'bchp', 'bcatk', 'wbhp', 'wbatk', 'drop', 'sell', 'buy'].map(row).join('\n')),
     F('🎯 Mốc tu vi để đột phá (xem trước)', `Luyện Khí tầng 1: **${fmtNum(o.gates.tuvi0)}**\nHóa Thần Viên Mãn: **${fmtNum(o.gates.hoathan)}**\nĐộ Kiếp Viên Mãn → Chân Tiên: **${fmtNum(o.gates.dokiep)}**\nChân Tiên tầng 1: **${fmtNum(o.gates.chantien)}**`));
-  return { embeds: [e], components: [navRow(uid, 'kt'), rowOf(btn(cid(uid, 'm', 'expc'), 'EXP đột phá', '📈', ButtonStyle.Primary), btn(cid(uid, 'm', 'tien'), 'Hệ số Tiên', '👑'), btn(cid(uid, 'm', 'drop'), 'Rơi đồ', '🎁'), btn(cid(uid, 'm', 'npc'), 'Giá NPC', '🏪'), btn(cid(uid, 'm', 'reset'), 'Mặc định', '↩️', ButtonStyle.Danger))] };
+  return { embeds: [e], components: [navRow(uid, 'kt'), rowOf(btn(cid(uid, 'm', 'expc'), 'EXP đột phá', '📈', ButtonStyle.Primary), btn(cid(uid, 'm', 'tien'), 'Hệ số Tiên', '👑'), btn(cid(uid, 'm', 'drop'), 'Rơi đồ', '🎁'), btn(cid(uid, 'm', 'npc'), 'Giá NPC', '🏪'), btn(cid(uid, 'm', 'reset'), 'Mặc định', '↩️', ButtonStyle.Danger)), rowOf(btn(cid(uid, 'm', 'boss'), 'Sức mạnh Boss', '🐉', ButtonStyle.Primary))] };
 }
 function viewSk(uid) {
   const o = A.overview(); const e = new EmbedBuilder().setTitle('📣 Sự Kiện & Thông Báo').setColor(0xe74c3c);

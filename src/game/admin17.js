@@ -129,7 +129,7 @@ function heal(admin, userText) {
 }
 
 // ------------------------------------------------------------------ kinh tế (chỉnh lúc chạy)
-const ORIG = { exp: K.EXP_REQUIRED_MULT, minor: K.EXP_GATE_MINOR_MULT, major: K.EXP_GATE_MAJOR_MULT, tien: K.TIEN_EXP_MULT, tiencao: K.HIGH_TIEN_EXP_MULT, tienmid: K.TIEN_MID_EXTRA_MULT, tienhigh: K.TIEN_HIGH_EXTRA_MULT, tienspeed: K.TIEN_SPEED_MULT, drop: 1, sell: 1, buy: 1 };
+const ORIG = { exp: K.EXP_REQUIRED_MULT, minor: K.EXP_GATE_MINOR_MULT, major: K.EXP_GATE_MAJOR_MULT, tien: K.TIEN_EXP_MULT, tiencao: K.HIGH_TIEN_EXP_MULT, tienmid: K.TIEN_MID_EXTRA_MULT, tienhigh: K.TIEN_HIGH_EXTRA_MULT, tienspeed: K.TIEN_SPEED_MULT, bchp: K.BC19_HP_MULT, bcatk: K.BC19_ATK_MULT, wbhp: K.WB_HP_MULT, wbatk: K.WB_ATK_MULT, drop: 1, sell: 1, buy: 1 };
 const ECO = {
   exp: { label: 'EXP cần đột phá (gốc)', prop: 'EXP_REQUIRED_MULT', min: 1, max: 100000 },
   minor: { label: 'Hệ số tiểu cảnh giới', prop: 'EXP_GATE_MINOR_MULT', min: 0.01, max: 10 },
@@ -139,12 +139,16 @@ const ECO = {
   tienmid: { label: 'x EXP thêm Chân Tiên → Đại La Kim Tiên', prop: 'TIEN_MID_EXTRA_MULT', min: 1, max: 1000 },
   tienhigh: { label: 'x EXP thêm Tiên cao (từ Chuẩn Tiên Vương)', prop: 'TIEN_HIGH_EXTRA_MULT', min: 1, max: 1000 },
   tienspeed: { label: 'x Tốc độ tu luyện ở cảnh giới Tiên', prop: 'TIEN_SPEED_MULT', min: 1, max: 100 },
+  bchp: { label: 'x HP Boss Bí Cảnh Tiên Giới (nhân thêm lên đường cong ×10→×20)', prop: 'BC19_HP_MULT', min: 0.05, max: 1000 },
+  bcatk: { label: 'x Sát thương Boss Bí Cảnh Tiên Giới (nhân thêm lên ×2→×4)', prop: 'BC19_ATK_MULT', min: 0.05, max: 100 },
+  wbhp: { label: 'x HP Boss Thế Giới', prop: 'WB_HP_MULT', min: 0.05, max: 10000 },
+  wbatk: { label: 'x Phản đòn Boss Thế Giới', prop: 'WB_ATK_MULT', min: 0.05, max: 100 },
   drop: { label: 'Tỉ lệ rơi nguyên liệu', min: 0, max: 5 },
   sell: { label: 'Giá NPC thu mua', min: 0.1, max: 3 },
   buy: { label: 'Giá NPC bán', min: 0.1, max: 5 },
 };
 function ecoGet(key) { const v = ST.get(`eco_${key}`, ''); const n = Number(v); return v !== '' && Number.isFinite(n) ? n : ORIG[key]; }
-function applyEco() { for (const k of ['exp', 'minor', 'major', 'tien', 'tiencao', 'tienmid', 'tienhigh', 'tienspeed']) K[ECO[k].prop] = ecoGet(k); }
+function applyEco() { for (const k of ['exp', 'minor', 'major', 'tien', 'tiencao', 'tienmid', 'tienhigh', 'tienspeed', 'bchp', 'bcatk', 'wbhp', 'wbatk']) K[ECO[k].prop] = ecoGet(k); }
 /** Đặt 1 hệ số. value rỗng/'mac_dinh' = về mặc định. Trả { ok, msg }. */
 function ecoSet(admin, key, value) {
   const d = ECO[key]; if (!d) return { ok: false, msg: '❌ Hệ số lạ.' };

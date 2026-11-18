@@ -43,7 +43,8 @@ function suggestedHp(capdo) {
   const rows = D.all('SELECT * FROM cultivators ORDER BY atk DESC LIMIT 10');
   const avg = rows.length ? rows.reduce((s, r) => s + Cu.effectiveAtk(r), 0) / rows.length : 100;
   const exp = Math.min(capdo, 9) - 1; const over = Math.max(0, capdo - 9);   // v19: cấp Đế Cảnh / Siêu Thoát không tăng theo lũy thừa nữa, chỉ +60% mỗi cấp
-  return Math.max(20000, int(avg * 150 * (1.8 ** exp) * (1 + 0.6 * over)));
+  const tierBoost = 1 + 0.5 * Math.max(0, capdo - 7);   // v19.9: Boss cấp Tiên (cấp 8+) tăng thêm +50% mỗi cấp → cấp cao luôn trâu hơn cấp thấp
+  return Math.max(20000, int(avg * 150 * (1.8 ** exp) * (1 + 0.6 * over) * tierBoost * (K.WB_HP_MULT || 1)));   // v19.9: ×WB_HP_MULT (mặc định 15)
 }
 
 function summon({ guildId, channelId, by, capdo = 1, hp = null, minutes = DEFAULT_MINUTES }) {
@@ -117,7 +118,7 @@ function attack(guildId, userId, action = 'atk') {
     // Phản đòn (không có khi vừa kết liễu)
     let counter = 0; let v17cut = 0;
     if (!killed) {
-      counter = int(maxHp * randUniform(0.04, 0.09) * (1 + 0.15 * (boss.tier - 1)));
+      counter = int(maxHp * randUniform(0.04, 0.09) * (1 + 0.15 * (boss.tier - 1)) * (K.WB_ATK_MULT || 1));   // v19.9: ×WB_ATK_MULT (mặc định 2,5); đòn phản vẫn không bao giờ giết hẳn (còn tối thiểu 1 HP)
       // v17: giảm phản đòn — giảm sát thương (dr) + giảm đòn Boss (bossDr: Phong Ấn / Trấn Hồn Linh) + kháng nguyên tố của Boss (Đan Hàn Ngọc/Liệt Dương). Tổng tối đa 60%.
       try {
         const FXb = require('./fx17'); const fx = FXb.get(row0); const el = T.bossElement(boss.tier);
