@@ -95,3 +95,8 @@ Thiên Địa Dị Biến (15–30 phút, thưởng Bí Cảnh ×1,5) · Vạn C
 5. Bản Mệnh, chi phí Đế Đạo/Đế Binh, và cơ chế Truyền Thừa là thiết kế của tôi (spec chỉ nêu khung).
 6. Không có emoji tranh mới: vật phẩm V19 dùng emoji theo loại.
 7. **Chưa thử trên Discord thật.** Đã kiểm bằng discord.js mô phỏng nghiêm ngặt + SQLite thật: `test_bicanh19` (437), `test_chungdao19` (112), `test_event19` (58), `test_views19` (2522 kiểm tra render/giới hạn Discord/luồng nút).
+
+## v19.11 — Hướng dẫn lụm vật phẩm Chứng Đạo
+- `src/game/chungdaoGuide.js` (dữ liệu thuần, sinh từ REQ + nguồn rơi + `expectedDrop`), giao diện `chungdaoViews.guideView` (5 trang, select menu), nút trong `/chungdao`, lệnh chữ `?huongdanchungdao` (prefixOnly — slash đã đủ 100).
+- **Vá**: Bất Hủ Đế Cốt chỉ rơi ở bc9–12 (cần Tiên Đế) nên không thể đủ ×5 để Chứng Đạo. Nay thêm bc8 (Đế Đạo Cổ Lộ): Boss cuối lần đầu chắc chắn 1, sau đó `DE_COT_BOSS8` = 30%; `MAT_BOOST` Đế Cốt [1,2].
+- Test: `scripts/test_chungdao_guide_v19_11.js`.

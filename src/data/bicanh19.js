@@ -74,7 +74,10 @@ const EVENTS = [
 ];
 
 // Vật phẩm rơi: lấy từ items_v19 theo nguồn bc19_<i>; nhóm hiếm = bậc 7; riêng vật phẩm Chứng Đạo được ưu tiên số lượng
-const MAT_BOOST = { tdc19_de_dao_ban_nguyen: [3, 7], tdc19_tien_ton_dao_qua: [1, 2], tdc19_bat_hu_de_cot: [1, 1], tdc19_tien_nguyen_tinh: [1, 3] };
+// v19.10: Bất Hủ Đế Cốt trước đây chỉ rơi ở bí cảnh 9–12 (yêu cầu Tiên Đế — cảnh giới chỉ có SAU khi Chứng Đạo) nên người chưa Chứng Đạo không thể gom đủ 5 → mở thêm ở bí cảnh 8 (Đế Đạo Cổ Lộ, Chuẩn Tiên Đế); Bản Nguyên tăng [3,7]→[5,10] để bù vì bí cảnh 8 nay có 2 vật phẩm hiếm.
+const MAT_BOOST = { tdc19_de_dao_ban_nguyen: [5, 10], tdc19_tien_ton_dao_qua: [1, 2], tdc19_bat_hu_de_cot: [1, 2], tdc19_tien_nguyen_tinh: [1, 3] };
+// Boss cuối bí cảnh 8: Bất Hủ Đế Cốt — lần đầu chinh phục chắc chắn có 1, các lần sau xác suất này
+const DE_COT_BOSS8 = 0.30;
 // Mảnh công pháp theo bí cảnh (id mảnh → chỉ số bí cảnh có thể rơi)
 const FRAG_BY_BC = {
   8: ['manh19_tran_the', 'manh19_bat_hu'], 9: ['manh19_de_kinh', 'manh19_tran_the', 'manh19_bat_hu'], 10: ['manh19_hu_khong', 'manh19_thoi_gian'],
@@ -102,4 +105,4 @@ const BCS = RAW.map((r, i) => {
   });
 });
 
-module.exports = { REALM0, BCS, DIFF, MOB_KINDS, KINDS, BOSS_KINDS, FLOORS, EVENTS, MAT_BOOST, FRAG_BY_BC, BOOK_BY_BC, LEGACY_BOOK, ELITE_SUFFIX };
+module.exports = { REALM0, BCS, DIFF, MOB_KINDS, KINDS, BOSS_KINDS, FLOORS, EVENTS, MAT_BOOST, FRAG_BY_BC, BOOK_BY_BC, LEGACY_BOOK, ELITE_SUFFIX, DE_COT_BOSS8 };

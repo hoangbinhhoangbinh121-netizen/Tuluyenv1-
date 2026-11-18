@@ -38,7 +38,16 @@ function preView(uid) {
       { name: '⚠️ Rủi ro', value: 'Thất bại: giữ cảnh giới, mất **10–20% tu vi**, nhận **Thiên Kiếp Trọng Thương**, khóa **24 giờ**, hoàn 50% tài nguyên (trừ Chứng Nhận). Mỗi đạo lôi bạn chọn cách ứng phó — đan dược, pháp bảo, công pháp, kỹ năng hoặc dốc toàn lực; không thể spam một nút.' },
       { name: '🌟 Khi thành công', value: 'Tiên Đế Sơ Kỳ · **Đế Ấn** · mở **Đế Đạo**, **Đế Binh**, **Đế Hiệu** · ghi lịch sử · thông báo toàn server.' },
     ).setFooter({ text: why ? why.replace(/\*\*/g, '').slice(0, 200) : 'Đủ điều kiện — bắt đầu sẽ trừ tài nguyên ngay' });
-  return CFX.dressPre({ embeds: [emb], components: [rowOf(btn(cid(uid, 'begin'), 'Bắt Đầu Đại Kiếp', E9.comp('dekiep', '⚡'), DG, !!why), btn(cid(uid, 'hist'), 'Lịch Sử Chứng Đạo', '📖', GR), btn(cid(uid, 'rf'), 'Làm mới', '🔄', GR))] });
+  return CFX.dressPre({ embeds: [emb], components: [rowOf(btn(cid(uid, 'begin'), 'Bắt Đầu Đại Kiếp', E9.comp('dekiep', '⚡'), DG, !!why), btn(cid(uid, 'hist'), 'Lịch Sử Chứng Đạo', '📖', GR), btn(cid(uid, 'rf'), 'Làm mới', '🔄', GR)), rowOf(btn(cid(uid, 'guide', 'ov'), 'Hướng dẫn lụm vật phẩm', E9.comp('chungdao', '📘'), SU))] });
+}
+/** v19.10: Bản hướng dẫn lụm vật phẩm Chứng Đạo (dữ liệu thật từ game/chungdaoGuide.js). */
+function guideView(uid, page = 'ov') {
+  const G = require('../game/chungdaoGuide'); const all = G.pages(uid); const key = G.PAGE_KEYS.some(([k]) => k === page) ? page : 'ov'; const pg = all[key];
+  const emb = new EmbedBuilder().setColor(0xf1c40f).setTitle(pg.title.slice(0, 250)).addFields(...(pg.fields || []).map((f) => ({ name: f.name.slice(0, 250), value: String(f.value).slice(0, 1020) })))
+    .setFooter({ text: 'Số liệu ~ là kỳ vọng solo (không tính sự kiện); tổ đội & Dị Biến nhặt nhiều hơn. Gõ /chungdao để quay lại.' });
+  if (pg.description) emb.setDescription(pg.description.slice(0, 3900));
+  const sel = new StringSelectMenuBuilder().setCustomId(cid(uid, 'gpick')).setPlaceholder('Chọn vật phẩm cần xem chỗ lụm…').addOptions(G.PAGE_KEYS.map(([k, l, ic]) => ({ label: l, value: k, emoji: { name: ic }, default: k === key })));
+  return { content: '', embeds: [emb], components: [rowOf(sel), rowOf(btn(cid(uid, 'rf'), 'Quay lại /chungdao', '↩️', GR), btn(cid(uid, 'guide', key), 'Làm mới', '🔄', GR))] };
 }
 function kiepView(uid, k, note = '') {
   const n = Math.min(12, k.step); const L = CD.LOI[n - 1]; const pv = CD.loiPreview(k, n); const row = Cu.getCultivator(uid);
@@ -123,6 +132,8 @@ registerStatic('cd19', async (i, parts) => {
   const bad = (m) => safeReply(i, { content: `❌ ${m}`, flags: EPH });
   switch (act) {
     case 'rf': return upd(open(uid));
+    case 'guide': return upd(guideView(uid, arg));
+    case 'gpick': return upd(guideView(uid, (i.values || [])[0]));
     case 'hist': { const h = CD.historyOf(uid, 8); return safeReply(i, { flags: EPH, content: h.length ? h.map((x) => `<t:${Math.floor(x.ts)}:f> — **${({ begin: 'Bắt đầu Đại Kiếp', win: '👑 Chứng đạo thành công', fail: '💥 Thất bại', dao_pick: 'Lĩnh ngộ Đế Đạo', dao_up: 'Nâng Đế Đạo', dao_awake: 'Thức tỉnh Đế Đạo', dao_switch: 'Đổi Đế Đạo', binh_craft: 'Chế Đế Binh', binh_up: 'Cường hóa Đế Binh', hieu: 'Đặt Đế Hiệu' })[x.kind] || x.kind}**`).join('\n') : 'Chưa có lịch sử Chứng Đạo.' }); }
     case 'begin': { const r = CD.begin(uid); if (!r.ok) return bad(r.error); return upd(kiepView(uid, r.k, 'Tài nguyên đã được trừ')); }
     case 'info': return safeReply(i, { flags: EPH, content: Object.values(CD.RESP).map((x) => `${x.icon} **${x.name}** — ${x.desc}`).join('\n') });
@@ -178,4 +189,4 @@ registerStatic('bm19', async (i, parts) => {
   if (act === 'awk') { const r = BM.awaken(uid); return r.ok ? i.update(bmView(uid, `Thức tỉnh ${r.n}: ${r.info.name}`)) : bad(r.error); }
   return null;
 });
-module.exports = { open, preView, kiepView, deView, bmView, resultEmbed };
+module.exports = { open, guideView, preView, kiepView, deView, bmView, resultEmbed };

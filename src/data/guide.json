@@ -362,7 +362,7 @@
       ],
       [
         "chungdao",
-        "Chứng Đạo Thành Đế: vượt 12 đạo Đế Kiếp tại Đại Đạo Chí Tôn · Viên Mãn. Sau khi thành Đế mở Đế Đạo, Đế Binh, Đế Hiệu."
+        "Chứng Đạo Thành Đế: vượt 12 đạo Đế Kiếp khi đạt Chuẩn Tiên Đế · Viên Mãn (cần Đế Đạo Bản Nguyên ×100, Chứng Nhận ×1, Bất Hủ Đế Cốt ×5, Tiên Tôn Đạo Quả ×10). Sau khi thành Đế mở Đế Đạo, Đế Binh, Đế Hiệu. Nút **Hướng dẫn lụm vật phẩm** trong menu chỉ chỗ nhặt từng món."
       ],
       [
         "benmenh",
@@ -375,6 +375,10 @@
       [
         "sukienthegioi",
         "Xem sự kiện thế giới (Dị Biến, Truyền Thừa, Đế Cảnh, Siêu Thoát). Admin: thêm tham số khoi để mở sự kiện."
+      ],
+      [
+        "huongdanchungdao",
+        "Bản hướng dẫn lụm vật phẩm Chứng Đạo: chỗ rơi, số lượt cần, sự kiện (lệnh chữ ?huongdanchungdao hoặc nút trong /chungdao)."
       ]
     ]
   }

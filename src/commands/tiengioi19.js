@@ -9,6 +9,7 @@ const CD = require('../game/chungdao19');
 const EV = require('../game/event19');
 
 defineCommand({ name: 'bicanhtiengioi', description: 'Bí Cảnh Tiên Giới (19 bí cảnh × 5 tầng, solo hoặc tổ đội 2–5 người)', needsCultivator: true, run: (c) => c.send(B19.menuView(c.user.id)) });
+defineCommand({ name: 'huongdanchungdao', description: 'Hướng dẫn lụm vật phẩm Chứng Đạo (nơi rơi, số lượt cần)', needsCultivator: true, prefixOnly: true, run: (c) => c.send(CDV.guideView(c.user.id)) });
 defineCommand({ name: 'chungdao', description: 'Chứng Đạo Thành Đế — vượt 12 đạo Đế Kiếp, mở Đế Đạo / Đế Binh / Đế Hiệu', needsCultivator: true, run: (c) => c.send(CDV.open(c.user.id)) });
 defineCommand({ name: 'benmenh', description: 'Công Pháp Bản Mệnh — lĩnh ngộ & thức tỉnh ở cấp 30/60/90', needsCultivator: true, run: (c) => c.send(CDV.bmView(c.user.id)) });
 defineCommand({

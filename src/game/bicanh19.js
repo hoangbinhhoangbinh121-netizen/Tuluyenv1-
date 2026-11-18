@@ -584,6 +584,19 @@ function auto(runId, userId, n = 3) {
 // ---------------------------------------------------------------- phần thưởng
 const poolOf = (idx) => IT.ITEMS.filter((it) => require('../data/items_v19').SRC[it.id] && require('../data/items_v19').SRC[it.id].includes(`bc19_${idx}`) && !it.is_quest_item);
 const rr = (a, b) => randInt(a, b);
+/** v19.10: KỲ VỌNG số vật phẩm `id` nhặt được sau MỘT lượt thông 5 tầng bí cảnh `idx` (solo, không Dị Biến, không tính truyền thừa/mảnh) — dùng cho bản hướng dẫn lụm đồ Chứng Đạo; cùng công thức với rollMember. */
+function expectedDrop(id, idx) {
+  const pool = poolOf(idx); const rare = pool.filter((it) => it.rarity >= 7); const common = pool.filter((it) => it.rarity <= 6 || it.id.startsWith('cp19_'));
+  const b = B.MAT_BOOST[id]; const avg = b ? (b[0] + b[1]) / 2 : 1.5; let e = 0;
+  const inR = rare.some((it) => it.id === id); const inC = common.some((it) => it.id === id);
+  for (const F of B.FLOORS) {
+    if (inR) { const p0 = 0.25 * F.rareMult; e += (p0 + F.chest * p0 * 1.6) / rare.length * avg; }
+    if (inC) e += F.commonRate / common.length * avg;
+  }
+  if (id === 'tdc19_bat_hu_de_cot' && idx === 8) e += B.DE_COT_BOSS8 * 1;
+  if (id === 'tdc19_de_dao_chung_nhan' && idx >= 8) e += 0.20;
+  return e;
+}
 const ownedBook = (row, tier) => Cu.ownedCongphapTiers(row).has(tier);
 function rollMember(st, uid, mult, floor, share) {
   const idx = st.bc; const bc = bcOf(idx); const row = Cu.getCultivator(uid); if (!row) return { lines: [] };
@@ -630,6 +643,7 @@ function rollMember(st, uid, mult, floor, share) {
       if (bk && random() < ch * (isFirst ? 2 : 1) && !ownedBook(row, tier) && row.realm_index >= bk.require_realm) { const C16 = require('./congphapV16'); if (C16.grantInto(up, row, tier)) lines.push(`📜✨ **${bk.name}** hiện ra từ thi hài Boss!`); }
     }
     if (idx >= 8 && (isFirst || random() < 0.20)) addItem('tdc19_de_dao_chung_nhan', 1);
+    if (idx === 8 && (isFirst || random() < B.DE_COT_BOSS8)) addItem('tdc19_bat_hu_de_cot', 1);   // v19.10: đường gom Đế Cốt cho người chưa Chứng Đạo
   }
   Cu.updateCultivator(uid, up);
   for (const [id, n] of Object.entries(items)) { const g = Inv.add(uid, id, n, { why: `bicanh19:${idx}:${floor}` }); if (g) lines.push(`${I19ItemEmoji(id)} **${g}** ${IT.BY_ID[id].name}`); }
@@ -682,7 +696,7 @@ function progOf(uid) {
 }
 
 module.exports = {
-  bossPower,
+  bossPower, expectedDrop,
   CFG, ACT, SIG, ACH, FLOOR_TU, FLOOR_LT, LT_BASE, bcOf, REALM_NAME, sigOf, snapMember, newState, step, nextFloor, autoPick, canAct, spawnEnemy, alive, kindName,
   whyCannotEnter, createLobby, join, leave, startRun, load, act, next, retreat, auto, activeRunId, sweepStale, entriesToday, progOf, recordBest, payFloor, rollMember, save, rowOf,
 };

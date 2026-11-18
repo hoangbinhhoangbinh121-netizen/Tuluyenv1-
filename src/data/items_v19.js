@@ -14,7 +14,7 @@ const MATS = [
   ['tdc19_vuong_dao_chan_huyet', 'Vương Đạo Chân Huyết', 6, 'Máu thật của Tiên Vương cổ. Dùng chế Đế Binh và nâng Đế Đạo.', [4, 7], ['debinh', 'dedao']],
   ['tdc19_tien_ton_dao_qua', 'Tiên Tôn Đạo Quả', 6, 'Đạo quả của Tiên Tôn. Điều kiện Chứng Đạo (cần 10 quả) và nâng cấp Công Pháp.', [6, 9], ['chungdao', 'cp_up']],
   ['tdc19_de_dao_ban_nguyen', 'Đế Đạo Bản Nguyên', 7, 'Bản nguyên của Đế Đạo. Điều kiện Chứng Đạo (cần 100) và nâng Đế Đạo.', [8, 11], ['chungdao', 'dedao']],
-  ['tdc19_bat_hu_de_cot', 'Bất Hủ Đế Cốt', 7, 'Xương của Đế Linh bất hủ. Điều kiện Chứng Đạo (cần 5) và chế Đế Binh.', [9, 12], ['chungdao', 'debinh']],
+  ['tdc19_bat_hu_de_cot', 'Bất Hủ Đế Cốt', 7, 'Xương của Đế Linh bất hủ. Điều kiện Chứng Đạo (cần 5) và chế Đế Binh. Rơi từ Đế Đạo Cổ Lộ (Boss cuối chắc chắn lần đầu) trở lên.', [8, 12], ['chungdao', 'debinh']],
   ['tdc19_de_cung_co_an', 'Đế Cung Cổ Ấn', 7, 'Cổ ấn từ Vô Thượng Đế Cung. Chế Đế Binh và nâng Đế Đạo.', [9, 12], ['debinh', 'dedao']],
   ['tdc19_tien_to_chan_huyet', 'Tiên Tổ Chân Huyết', 7, 'Máu thật của Tiên Tổ. Nâng cấp Công Pháp (Đại Thành → Viên Mãn) và Đế Binh.', [10, 13], ['cp_up', 'debinh']],
   ['tdc19_van_dao_nguyen_tinh', 'Vạn Đạo Nguyên Tinh', 7, 'Nguyên tinh của vạn đạo. Nâng cấp Công Pháp và Đế Đạo.', [11, 14], ['cp_up', 'dedao']],
