@@ -61,9 +61,9 @@ function useOne(user, id, q, row) {
     const old = FX.activeBuff(user, p.key || 'tam_canh');
     if (old && old.charges <= 0 && p.charges) { /* hết lượt → cho phép dùng lại */ }
   }
+  try { require('./marks20').consume(user, id, q, mk); } catch (_) { /* bỏ qua */ }
   if (!Inv.take(user, id, 1, { q, why: `dùng ${id}` })) return { ok: false, msg: `Bạn không còn ${nm}.` };
   Inv.dailyAdd(user, `pill:${id}`, 1);
-  try { require('./marks20').consume(user, id, q, mk); } catch (_) { /* bỏ qua */ }
   const eff = pot < 1 ? ' _(đã dùng nhiều trong ngày: hiệu lực giảm một nửa)_' : '';
   if (p.k === 'tuvi') {
     const gain = Math.max(1, int(randInt(p.lo, p.hi) * m * pot * BAL.paceFactor(row)));

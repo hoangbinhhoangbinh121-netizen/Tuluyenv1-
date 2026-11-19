@@ -27,7 +27,7 @@ const profLv = (user) => X.state(user, 'thuc').level;
 const growTime = (user, seed) => Math.round(C.SEEDS[seed].time * (1 - Math.min(0.4, tf(user).grow || 0)));
 const seedInfo = (user, seed) => {
   const s = C.SEEDS[seed]; const t = tf(user); const crop = I.BY_ID[s.crop];
-  const yAvg = (s.yield[0] + s.yield[1]) / 2 + (t.yield || 0);
+  const yAvg = (s.yield[0] + s.yield[1]) / 2 + (t.yield || 0) + require('./field20').soilYield(user);   // v20.3: Linh Thổ
   return { ...s, seed, cropName: crop.name, growSec: growTime(user, seed), yAvg, seedBack: Math.min(0.9, F.seedBack + (t.seed || 0)), mutP: s.mut.p + (t.mut || 0), mutName: I.BY_ID[s.mut.to].name };
 };
 
@@ -119,7 +119,7 @@ function harvest(user, slot) {
     // mùa vụ: nước + phân → phẩm cấp mùa (1..3) cộng sản lượng
     const score = p.water + (p.fert === 'duong_mach' ? 2 : 0) + (profLv(user) >= 5 ? 1 : 0);
     const tier = score >= 5 ? 3 : score >= 3 ? 2 : 1; const tName = ['', 'Thường', 'Tốt', 'Đại Phong'][tier];
-    let n = randInt(s.yield[0], s.yield[1]) + int(T.yield || 0) + (random() < ((T.yield || 0) % 1) ? 1 : 0);
+    let n = randInt(s.yield[0], s.yield[1]) + int(T.yield || 0) + (random() < ((T.yield || 0) % 1) ? 1 : 0) + (random() < require('./field20').soilChance(user) ? 1 : 0);   // v20.3: Linh Thổ
     n = Math.max(1, Math.round(n * (1 + 0.12 * (tier - 1))));
     if (wither) n = Math.max(1, Math.floor(n * 0.5));
     const got = {}; got[s.crop] = n;

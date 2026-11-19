@@ -56,7 +56,7 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - v12.1: sao lưu tự động CHỈ GIỮ BẢN MỚI NHẤT (mỗi loại: tự động / thủ công / trước-khôi-phục giữ 1 bản), bản cũ tự xoá; tạo bản mới ngay 1 phút sau khi bot khởi động rồi mỗi `AUTO_BACKUP_HOURS` giờ. Muốn giữ nhiều hơn: đặt `AUTO_BACKUP_KEEP`, `BACKUP_KEEP_MANUAL`, `BACKUP_KEEP_PRE`.
 - v12.2: **cấu hình tự động** (`src/autoconfig.js`) — chỉ cần `DISCORD_TOKEN`. Biến thiếu tự lấy mặc định; chủ bot tự là admin; slash tự đăng ký ngay cho mọi server (và server mới); intent bị từ chối thì tự hạ cấu hình (content+members → content → members → không); nhóm biến sao lưu cố định ở mức "giữ bản mới nhất" (bỏ qua biến trên host trừ khi `CONFIG_FROM_ENV=1`); lỗi tự nhắn riêng cho chủ bot (5 phút/lần).
 
-## V20.0 — chưa làm / hạn chế (chi tiết: BAO_CAO_V20.md mục 5)
-- Chưa làm: khảm / thức tỉnh / sửa trang bị mới; nâng cấp-sửa-thu hồi Trận; ghép giống – lai tạo – nâng đất Linh Điền; giao dịch mở rộng; "thành phẩm đặc biệt".
-- Dấu ấn đan chỉ chặn ≤ số viên đang có (không gắn từng viên).
+## V20.3 — còn hạn chế (chi tiết: BAO_CAO_V20.md mục 5)
+- Gia Cố không áp cho trận có giới hạn lượt; không có cơ chế "hỏng trận" nên không có "sửa" riêng cho Trận.
+- Thức tỉnh nhân toàn bộ chỉ số của món. Dấu ấn đan không gắn từng viên (chặn ≤ số viên, dọn mỗi lần lấy đan ra).
 - Chưa thử trên Discord thật (chỉ discord.js giả lập chặt + SQLite thật); số cân bằng của Khai Thác / Đơn Hàng / bảng rơi V20 cần chỉnh sau vài ngày chạy thật.

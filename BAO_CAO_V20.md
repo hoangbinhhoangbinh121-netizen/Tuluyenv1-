@@ -18,7 +18,11 @@
 | **Sổ Tay** | 7 trang: Nguyên Liệu · Đan Phương · Bản Vẽ · Trận Đồ · Linh Thực · Cuộn Thất Truyền (học) · Danh Hiệu & Thành Tựu. Nguồn/công dụng đọc **trực tiếp** từ catalog17 nên luôn khớp. |
 | **Đồng bộ nguồn rơi** | Boss sự kiện (`v20_event`), Bí Cảnh Tiên Giới giai đoạn ≥6 từ tầng 3 (`v20_bc19_s6..10`), Mỏ/Thu thập (`kt20_*`) — đều qua bảng rơi `drops17` (có trần ngày/tuần theo vật phẩm + trần hạng 5/6/7 toàn cục). |
 | **Danh hiệu** | 12 danh hiệu theo bộ đếm trọn đời (chỉ danh hiệu — không cộng chỉ số). |
-| **Giao diện** | 4 tab mới trong bảng `/nghenghiep`: ⛏️ Khai Thác · 🔥 Dị Hỏa Đan Sư · 📋 Đơn Hàng · 📒 Sổ Tay. 26 emoji pixel mới (`n20_*`). GIF túi trữ vật ở `/khodo`, GIF sách ở Công Pháp (ảnh nhỏ của embed). |
+| **V20.3 — Trang bị** | **Khảm** Yêu Hạch (1 ô với bậc ≤5, 2 ô với bậc ≥6) cộng chỉ số cố định theo giai đoạn hạch; **Thức Tỉnh** (bậc ≥6, tinh luyện ≥3, tối đa 3 lần, tỉ lệ 70/50/30%) +5% toàn bộ chỉ số mỗi lần. Sửa chữa/cường hoá/tinh luyện vẫn do hệ V17 (đã áp dụng cho trang bị V20, có độ bền). |
+| **V20.3 — Trận** | Nâng Phẩm (3 trận bàn cùng loại+phẩm → 1 phẩm +1), Thu Hồi (hoàn 50% phí duy trì theo thời gian còn lại), Gia Cố (còn <50% thời gian: trả 60% phí kéo về đủ, 1 lần/ngày/trận, không áp cho trận giới hạn lượt). |
+| **V20.3 — Linh Điền** | **Linh Thổ** cấp 0–5 (+0,04 cây/lần thu hoạch mỗi cấp), **Ghép Giống** (4 hạt (a) → 1 hạt (b)), **Lai Tạo** (25% +2%/cấp Linh Thực Sư, tối đa 50%, ra hạt giai đoạn kế; thất bại mất hết). Kiểm bằng test: ở Linh Thổ tối đa trồng vẫn không có lời, ghép/lai luôn lỗ hơn mua. |
+| **V20.3 — Đan** | **Tuyệt Phẩm**: thành phẩm đặc biệt (1,5% với đan phẩm 5, +30% hiệu lực). Dấu ấn đan được dọn ngay mỗi khi lấy đan ra khỏi kho (bán/dùng/giao dịch). |
+| **Giao diện** | 7 tab mới trong bảng `/nghenghiep`: ⛏️ Khai Thác · 🔥 Dị Hỏa Đan Sư · 📋 Đơn Hàng · 📒 Sổ Tay · 💎 Khảm & Thức Tỉnh · 🔯 Trận (Nâng/Thu/Gia Cố) · 🟫 Linh Điền Mở Rộng. 26 emoji pixel mới (`n20_*`). GIF túi trữ vật ở `/khodo`, GIF sách ở Công Pháp (ảnh nhỏ của embed). |
 
 ## 2. Kiến trúc (file mới / sửa)
 - Dữ liệu thuần: `src/data/v20_data.js`, `items_v20.js`, `craft_v20.js` (cắm vào `craft_v17`/`items_v17` qua `install()`, **không tạo danh mục thứ hai**).
@@ -30,16 +34,18 @@
 Thuần cộng thêm: 7 bảng `v20_learned, v20_marks, v20_dihoa, v20_gather, v20_orders, v20_titles, v20_stats` (`CREATE IF NOT EXISTS`). Quy trình: sao lưu `db_backups/tutien_PRE_V20_<giờ>.db` (VACUUM INTO) + mở lại kiểm tra đủ số người → tạo bảng → **đối chiếu băm** cultivators / inv_items / prof_state / inv_log / inv_lock / inv_daily trước-sau → đặt cờ `v20_migrated` (chạy 1 lần). Sao lưu hỏng ⇒ không đặt cờ, bot vẫn chạy (an toàn vì chỉ thêm bảng). `rollback()` xoá dữ liệu 7 bảng v20 + gỡ cờ, không đụng dữ liệu cũ. Muốn dọn hẳn vật phẩm V20 đã nhận: `/restoredb` từ bản PRE_V20.
 
 ## 4. Kiểm thử
-- `scripts/test_v20.js`: **956 kiểm tra đạt** — dữ liệu 10 giai đoạn / ID không trùng / emoji mọi vật phẩm; học công thức (cuộn chỉ tiêu 1 lần); chế thật + hook; Phế Đan; dấu ấn (chặn ≤ số viên, tiêu khi dùng); Dị Hỏa (điều kiện, tự kích hoạt, đổi chính, EXP, tiến hoá, giới hạn); Khai Thác (cảnh giới, 2 lượt, không nhận 2 lần, giới hạn ngày, trần hạng 7); Đơn Hàng (ổn định, nhận 1 lần, giao đồ); Linh Điền theo cấp ruộng; danh hiệu; migration (sao lưu hỏng→huỷ, chạy lặp, rollback, chạy lại); mọi màn hình ở giới hạn Discord (≤25 lựa chọn, ≤5 hàng, embed ≤6000, custom_id ≤100); mọi hành động nút; GIF.
+- `scripts/test_v20.js`: **1201 kiểm tra đạt** — dữ liệu 10 giai đoạn / ID không trùng / emoji mọi vật phẩm; học công thức (cuộn chỉ tiêu 1 lần); chế thật + hook; Phế Đan; dấu ấn (chặn ≤ số viên, tiêu khi dùng); Dị Hỏa (điều kiện, tự kích hoạt, đổi chính, EXP, tiến hoá, giới hạn); Khai Thác (cảnh giới, 2 lượt, không nhận 2 lần, giới hạn ngày, trần hạng 7); Đơn Hàng (ổn định, nhận 1 lần, giao đồ); Linh Điền theo cấp ruộng; danh hiệu; migration (sao lưu hỏng→huỷ, chạy lặp, rollback, chạy lại); mọi màn hình ở giới hạn Discord (≤25 lựa chọn, ≤5 hàng, embed ≤6000, custom_id ≤100); mọi hành động nút; GIF; (V20.3) khảm/thức tỉnh/hỏng đồ, trận nâng-thu-gia cố, Linh Thổ + kinh tế, ghép/lai, Tuyệt Phẩm, dọn dấu ấn, giao dịch nguyên liệu V20.
 - Test cũ: giữ nguyên toàn bộ; chỉnh 3 test cho đúng dữ liệu mới (tổng emoji 570; người thử kinh tế cần cảnh giới/học công thức theo công thức; mặc đủ trang bị cần cảnh giới cao). Test kinh tế cũ **bắt được 1 lỗi thật** của V20 (trồng Linh Chủng có lời) → đã sửa giá.
 - `catalog17.validate()` = 0 lỗi (mọi vật phẩm có nguồn + công dụng, không có công thức lãi).
 - **Không** có test trên Discord thật; GIF làm ảnh nhỏ embed chưa xem trên app thật (Discord có thể hiện đứng hình ở một số nơi).
 
 ## 5. Chưa làm / hạn chế (nói thẳng)
-- **Chưa làm:** khảm/thức tỉnh/sửa trang bị mới; nâng cấp/sửa/thu hồi Trận; ghép giống, lai tạo, nâng đất Linh Điền; giao dịch mở rộng giữa người chơi; "thành phẩm đặc biệt"; thành tựu riêng cho 4 nghề ở giai đoạn 6–10 ngoài các mốc có sẵn; trận pháp mới chưa có hiệu ứng riêng ngoài khung trận V17 (dùng cơ chế sẵn có).
-- Dấu ấn đan: vì lưu theo (đan, phẩm) chứ không gắn từng viên nên khi bán/giao dịch, dấu ấn chỉ được **chặn ≤ số viên đang có** (không đúng tới từng viên).
+- **Đã làm ở V20.3 (trước đây liệt kê là chưa làm):** khảm, thức tỉnh, nâng/thu hồi/gia cố Trận, Linh Thổ, ghép giống, lai tạo, thành phẩm đặc biệt (Tuyệt Phẩm), dọn dấu ấn khi bán. **Sửa trang bị** và **giao dịch vật phẩm giữa người chơi** đã có sẵn từ V17 và dùng được cho vật phẩm V20 (có test).
+- **Vẫn chưa làm:** Gia Cố không áp cho trận có giới hạn lượt; không có "sửa" riêng cho Trận (không có cơ chế hỏng trận); khảm không có Yêu Hạch phân loại theo thuộc tính (chỉ số theo giai đoạn của hạch); trận pháp mới chưa có hiệu ứng riêng ngoài khung trận V17; thành tựu riêng cho giai đoạn 6–10 ngoài các mốc có sẵn.
+- Thức tỉnh nhân toàn bộ chỉ số của món (gồm cả thuộc tính phụ), không riêng chỉ số chính.
+- Dấu ấn đan lưu theo (đan, phẩm) chứ không gắn từng viên: bị chặn ≤ số viên đang có và dọn mỗi lần lấy đan ra, nhưng không biết viên nào mang dấu ấn nào.
 - Bảng rơi/giá/thời gian/xác suất là số **ước lượng cân bằng bằng test kinh tế**, chưa có dữ liệu người chơi thật — cần chỉnh sau vài ngày chạy.
-- Tên một số công thức/vật phẩm V20 là tên tôi đặt theo văn phong game; đổi được ở `v20_data.js`.
+- Chưa thử trên Discord thật.
 
 ## 6. Cách dùng nhanh
 `/nghenghiep` → chọn mục **Khai Thác / Dị Hỏa Đan Sư / Đơn Hàng / Sổ Tay** ở menu trên cùng. Học công thức thất truyền: Sổ Tay → *Cuộn Thất Truyền* → chọn cuộn.

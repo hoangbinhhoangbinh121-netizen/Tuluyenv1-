@@ -15,6 +15,9 @@ const CREATE_V20 = [
   // Danh hiệu nghề nghiệp + bộ đếm trọn đời
   `CREATE TABLE IF NOT EXISTS v20_titles (user_id TEXT NOT NULL, title TEXT NOT NULL, at REAL NOT NULL, PRIMARY KEY (user_id, title))`,
   `CREATE TABLE IF NOT EXISTS v20_stats (user_id TEXT NOT NULL, key TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, key))`,
+  // V20.3: khảm/thức tỉnh trang bị + Linh Thổ (nâng đất Linh Điền)
+  `CREATE TABLE IF NOT EXISTS v20_gear (gear_id INTEGER PRIMARY KEY, user_id TEXT NOT NULL, sockets INTEGER NOT NULL DEFAULT 0, gems TEXT NOT NULL DEFAULT '[]', awaken INTEGER NOT NULL DEFAULT 0)`,
+  `CREATE TABLE IF NOT EXISTS v20_field (user_id TEXT PRIMARY KEY, soil INTEGER NOT NULL DEFAULT 0)`,
 ];
-const V20_TABLES = ['v20_learned', 'v20_marks', 'v20_dihoa', 'v20_gather', 'v20_orders', 'v20_titles', 'v20_stats'];
+const V20_TABLES = ['v20_learned', 'v20_marks', 'v20_dihoa', 'v20_gather', 'v20_orders', 'v20_titles', 'v20_stats', 'v20_gear', 'v20_field'];
 module.exports = { CREATE_V20, V20_TABLES };

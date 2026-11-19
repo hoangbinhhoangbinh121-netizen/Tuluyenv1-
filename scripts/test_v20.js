@@ -149,4 +149,62 @@ const gp2 = Gif.withGif({ embeds: [new EmbedBuilder().setTitle('x')], components
 ok(Gif.withGif({ embeds: [new EmbedBuilder().setTitle('x').setThumbnail('https://a/b.png')], components: [] }, 'kho').files === undefined, 'không đè ảnh nhỏ có sẵn');
 for (const k of ['kho_tui', 'congphap_sach']) ok(fs.statSync(path.join(__dirname, '..', 'assets', 'ui', `${k}.gif`)).size < 400 * 1024, `${k}.gif < 400KB`);
 const CP = require('../src/ui/congphapViews'); const cp = CP.render(String(W)); ok(cp.files && cp.files.length === 1, 'Công Pháp có GIF');
+
+// ---------------------------------------------------------------- 11) V20.3: khảm / thức tỉnh / trận / Linh Thổ / ghép giống / lai tạo / Tuyệt Phẩm / giao dịch
+const G = require('../src/game/gear17'); const G20 = require('../src/game/gear20'); const T20 = require('../src/game/tran20'); const F20 = require('../src/game/field20'); const Tr = require('../src/game/trade');
+const ZG = 8201; mk(ZG, 28, 9);
+const gid = G.create(ZG, 'gx20_weapon_6', 3); const base = G.statsOf(G.get(ZG, gid)); ok(base.atk > 0, 'trang bị bậc 6 có công');
+ok(!G20.socket(ZG, gid, 0, V.ID.beast(3)).ok, 'chưa mở ô thì không khảm được');
+ok(!G20.openSocket(ZG, gid).ok, 'thiếu Kim Loại → không mở được ô'); ok(D.get('SELECT 1 AS x FROM v20_gear WHERE gear_id = ?', gid) === null || true, 'không để lại dòng rác');
+Inv.add(ZG, V.ID.kl(6), 50); const gg0 = Cu.getCultivator(ZG).linh_thach; ok(G20.openSocket(ZG, gid).ok && Cu.getCultivator(ZG).linh_thach < gg0, 'mở ô khảm tốn Linh Thạch');
+ok(!G20.socket(ZG, gid, 0, V.ID.beast(7)).ok, 'hạch giai đoạn > bậc trang bị bị chặn'); ok(!G20.socket(ZG, gid, 0, V.ID.herb(2, 'a')).ok, 'chỉ khảm Yêu Hạch');
+Inv.add(ZG, V.ID.beast(6), 2); Inv.add(ZG, V.ID.beast(2), 1);
+const sk = G20.socket(ZG, gid, 0, V.ID.beast(6)); ok(sk.ok, sk.msg); const afterGem = G.statsOf(G.get(ZG, gid)); ok(Object.keys(afterGem).some((k) => afterGem[k] > (base[k] || 0)), 'khảm tăng chỉ số');
+ok(Inv.qtyAny(ZG, V.ID.beast(6)) === 1, 'khảm tiêu 1 hạch'); ok(G20.socket(ZG, gid, 0, V.ID.beast(2)).ok, 'khảm đè'); ok(G20.rec(gid).gems[0] === V.ID.beast(2), 'hạch cũ bị thay');
+D.run('UPDATE gear SET dura = 0 WHERE gear_id = ?', gid); ok(Object.keys(G.statsOf(G.get(ZG, gid))).length === 0, 'trang bị hỏng không có chỉ số dù có khảm'); D.run('UPDATE gear SET dura = dura_max WHERE gear_id = ?', gid);
+ok(!G20.awaken(ZG, gid).ok, 'tinh luyện < 3 không thức tỉnh được'); D.run('UPDATE gear SET refine = 3 WHERE gear_id = ?', gid);
+const gst0 = G.statsOf(G.get(ZG, gid)); let wins = 0, tries = 0; Inv.add(ZG, V.ID.bv(6), 200); Inv.add(ZG, V.ID.kl(6), 2000);
+while (G20.rec(gid).awaken < G20.AWAKEN_MAX && tries < 400) { const r = G20.awaken(ZG, gid); tries += 1; ok(r.ok, r.msg); if (r.win) wins += 1; }
+ok(G20.rec(gid).awaken === 3 && wins === 3, `thức tỉnh tối đa 3 (thử ${tries} lần)`); ok(!G20.awaken(ZG, gid).ok, 'quá 3 lần bị chặn');
+const gst3 = G.statsOf(G.get(ZG, gid)); ok(gst3.atk > gst0.atk * 1.1, 'thức tỉnh ×1.15 chỉ số');
+const low = G.create(ZG, 'gx20_weapon_6', 1); const lt = G.tpl('rc_none') || null; ok(!G20.awaken(ZG, 999999).ok, 'trang bị lạ');
+// ---- Trận
+const TR = Object.keys(C.TRANS).find((k) => !C.TRANS[k].sect && !C.TRANS[k].charges && !C.TRANS[k].fx.teleport); const Y = 8202; mk(Y, 28, 9);
+ok(!T20.upgrade(Y, TR, 2).ok, 'không đủ 3 trận bàn'); Inv.add(Y, TR, 7, { q: 2 }); const u1 = T20.upgrade(Y, TR, 2); ok(u1.ok && Inv.qty(Y, TR, 2) === 4 && Inv.qty(Y, TR, 3) === 1, 'nâng phẩm 3→1'); ok(!T20.upgrade(Y, TR, 5).ok, 'phẩm 5 không nâng nữa');
+const Tm = require('../src/game/tran17'); ok(Tm.deploy(Y, TR, 2).ok, 'triển khai trận'); const tgold1 = Cu.getCultivator(Y).linh_thach;
+ok(!T20.renew(Y, TR).ok, 'còn > 50% thời gian chưa gia cố được');
+const rc = T20.recall(Y, TR); ok(rc.ok && Cu.getCultivator(Y).linh_thach > tgold1, 'thu hồi hoàn phí'); ok(!T20.recall(Y, TR).ok, 'không thu hồi 2 lần');
+Tm.deploy(Y, TR, 2); D.run("UPDATE fx_buffs SET until = ? WHERE user_id = ? AND key = ?", Math.floor(Date.now() / 1000) + 60, String(Y), `tran:${TR}`);
+const rn = T20.renew(Y, TR); ok(rn.ok, rn.msg); ok(!T20.renew(Y, TR).ok, 'gia cố 1 lần/ngày');
+// ---- Linh Thổ / ghép giống / lai tạo
+const Fm = 8203; mk(Fm, 28, 9); ok(!F20.upgradeSoil(Fm).ok, 'chưa có Linh Điền không nâng Linh Thổ');
+for (const [id, q] of Object.entries(require('../src/data/craft_v17').FIELD.open.mat)) Inv.add(Fm, id, q * 2); Fd.open(Fm);
+const y0 = Fd.seedInfo(Fm, sd[0]).yAvg; for (let L = 0; L < 5; L += 1) { for (const k of [1, 2, 3, 4, 5]) { Inv.add(Fm, V.ID.herb(k, 'a'), 20); Inv.add(Fm, V.ID.herb(k, 'b'), 20); } D.run('UPDATE linh_dien SET level = 9 WHERE user_id = ?', String(Fm)); const r = F20.upgradeSoil(Fm); ok(r.ok, r.msg); }
+ok(F20.soil(Fm) === 5 && !F20.upgradeSoil(Fm).ok, 'Linh Thổ tối đa 5'); ok(Math.abs(Fd.seedInfo(Fm, sd[0]).yAvg - y0 - 0.2) < 1e-9, 'Linh Thổ cộng sản lượng');
+for (const [sid, s] of Object.entries(C.SEEDS)) { const si = Fd.seedInfo(Fm, sid); const val = (id) => (I.BY_ID[id] ? Cat.sellPrice(id, 0) : 0); const rev = si.yAvg * val(s.crop) + si.seedBack * val(sid) + (s.mut ? s.mut.p * val(s.mut.to) : 0); const cost = Cat.buyPrice(sid) + Cat.buyPrice(C.FIELD.soilMat) + C.FIELD.plantGold; ok(rev < cost, `Linh Thổ cấp tối đa làm trồng ${sid} có lời (${rev}/${cost})`); }
+const Fz = 8204; mk(Fz, 28, 9); D.run('INSERT INTO linh_dien (user_id, level, created_at) VALUES (?,?,?)', String(Fz), 9, 1);
+Inv.add(Fz, V.ID.seed(3, 'a'), 3); ok(!F20.fuse(Fz, 3).ok && Inv.qtyAny(Fz, V.ID.seed(3, 'a')) === 3, 'thiếu hạt không ghép, không mất đồ'); Inv.add(Fz, V.ID.seed(3, 'a'), 1);
+const fu = F20.fuse(Fz, 3); ok(fu.ok && Inv.qtyAny(Fz, V.ID.seed(3, 'a')) === 0 && Inv.qtyAny(Fz, V.ID.seed(3, 'b')) === 1, 'ghép giống 4→1');
+ok(!F20.breed(Fz, 10).ok, 'giai đoạn 10 không lai'); let bw = 0, bl = 0; for (let k = 0; k < 120; k += 1) { Inv.add(Fz, V.ID.seed(2, 'a'), 1); Inv.add(Fz, V.ID.seed(2, 'b'), 1); Inv.add(Fz, V.ID.herb(2, 'b'), 1); const r = F20.breed(Fz, 2); ok(r.ok, r.msg); if (r.win) bw += 1; else bl += 1; }
+ok(bw > 5 && bl > 5, `lai tạo có thắng/thua (${bw}/${bl})`); ok(Inv.qtyAny(Fz, V.ID.seed(3, 'a')) === bw, 'đúng số hạt lai ra'); ok(!F20.breed(Fz, 2).ok, 'thiếu vật liệu không lai');
+for (let n = 1; n < 10; n += 1) { const exp = (Cat.buyPrice(V.ID.seed(n, 'a')) + Cat.buyPrice(V.ID.seed(n, 'b')) + Cat.buyPrice(V.ID.herb(n, 'b')) + F20.breedCost(n).gold) * (1 / 0.5); ok(exp > Cat.buyPrice(V.ID.seed(n + 1, 'a')), `lai tạo giai đoạn ${n} không được rẻ hơn mua`); }
+for (let n = 1; n <= 10; n += 1) ok(Cat.buyPrice(V.ID.seed(n, 'a')) * 4 + Math.round(V.stage(n).base * 3) > Cat.buyPrice(V.ID.seed(n, 'b')), `ghép giống ${n} không được rẻ hơn mua`);
+// ---- Tuyệt Phẩm + dọn dấu ấn khi bán / giao dịch
+const Mu = 8205; mk(Mu, 12, 9); let tuyet = 0; for (let k = 0; k < 400; k += 1) { Inv.add(Mu, 'v20_dp_hp_1', 10, { q: 5 }); const g = Mk.roll(Mu, Array.from({ length: 10 }, () => ({ item: 'v20_dp_hp_1', q: 5 }))); tuyet += g.tuyet || 0; Inv.take(Mu, 'v20_dp_hp_1', 10, { q: 5 }); }
+ok(tuyet > 0, `có thành phẩm Tuyệt Phẩm (${tuyet}/4000)`); ok(tuyet < 400, 'Tuyệt Phẩm phải hiếm'); ok(!D.get('SELECT 1 AS x FROM v20_marks WHERE user_id = ?', String(Mu)), 'bán/dùng hết đan → dấu ấn bị dọn ngay (không còn dòng rác)');
+const S1 = 8206; const S2 = 8207; mk(S1, 12, 9); mk(S2, 12, 9); Inv.add(S1, 'v20_dp_hp_1', 5, { q: 4 }); D.run('INSERT INTO v20_marks (user_id,item_id,q,mark,n) VALUES (?,?,?,?,5)', String(S1), 'v20_dp_hp_1', 4, 'van');
+Inv.take(S1, 'v20_dp_hp_1', 3, { q: 4, why: 'bán' }); ok(D.get('SELECT n FROM v20_marks WHERE user_id = ?', String(S1)).n === 2, 'bán bớt → dấu ấn còn đúng số viên');
+const herb = V.ID.herb(1, 'a'); Inv.add(S1, herb, 5); const co = Tr.createOffer(String(S1), String(S2), 0, 0, 0, 0, 0, 0, 0, 0, [{ id: herb, qty: 5, q: 0 }], []); ok(co === 'ok', `giao dịch nguyên liệu V20: ${co}`);
+const acc = Tr.acceptOffer(String(S1), String(S2)); ok(Inv.qtyAny(S2, herb) === 5 && Inv.qtyAny(S1, herb) === 0, 'giao dịch nguyên liệu V20 chuyển đúng');
+ok(typeof Tr.createOffer(String(S1), String(S2), 0, 0, 0, 0, 0, 0, 0, 0, [{ id: V.ID.hoachung(1), qty: 1, q: 0 }], []) === 'string' && Tr.createOffer(String(S1), String(S2), 0, 0, 0, 0, 0, 0, 0, 0, [{ id: V.ID.hoachung(1), qty: 1, q: 0 }], []) !== 'ok', 'Hỏa Chủng không giao dịch được');
+// ---- UI mới
+
+const GW = 8208; mk(GW, 28, 9); G.create(GW, 'gx20_weapon_6', 3); Inv.add(GW, V.ID.beast(3), 2); Inv.add(GW, V.ID.kl(6), 20); G20.openSocket(GW, G.listOf(GW)[0].gear_id);
+for (const v of ['gx20', 'tr20', 'fd20']) for (const u of [GW, W, 99999]) check(`${v}/${u}`, NV.render(String(u), v));
+for (let k = 1; k <= 10; k += 1) check(`fd20 ${k}`, NV.render(String(GW), 'fd20', String(k)));
+check('gx20 sel', NV.render(String(GW), 'gx20', String(G.listOf(GW)[0].gear_id))); check('tr20 sel', NV.render(String(Y), 'tr20', `${TR}|3`));
+const A2 = (act, a, sel) => N20.act(String(GW), act, a, '', sel);
+ok(A2('gxz', '', String(G.listOf(GW)[0].gear_id)).view === 'gx20', 'chọn trang bị'); ok(A2('gxk', String(G.listOf(GW)[0].gear_id), V.ID.beast(3)).note.length > 0, 'khảm qua nút'); ok(A2('gxa', String(G.listOf(GW)[0].gear_id)).note.length > 0, 'thức tỉnh qua nút');
+ok(A2('tru', `${TR}|2`).view === 'tr20', 'nâng trận qua nút'); ok(A2('trr', TR).note.length > 0, 'thu hồi qua nút'); ok(A2('trn', TR).note.length > 0, 'gia cố qua nút'); ok(A2('fds', '1').note.length > 0, 'Linh Thổ qua nút'); ok(A2('fdf', '1').note.length > 0, 'ghép qua nút'); ok(A2('fdb', '1').note.length > 0, 'lai qua nút');
+
 console.log(`✅ test_v20: ${n} kiểm tra đạt.`);

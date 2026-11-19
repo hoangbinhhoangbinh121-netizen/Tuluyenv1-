@@ -72,7 +72,7 @@ function take(user, id, n, { q = 0, why = '' } = {}) {
   let ok;
   if (isCol(it, q)) ok = Cu.updateCultivator(user, { [it.legacy_col]: new Delta(-n) }, { [it.legacy_col]: n });
   else ok = D.run('UPDATE inv_items SET qty = qty - ? WHERE user_id = ? AND item_id = ? AND q = ? AND qty >= ?', n, uid(user), id, q, n).changes > 0;
-  if (ok) log(user, id, q, -n, why);
+  if (ok) { log(user, id, q, -n, why); if (q > 0) { try { require('./marks20').trim(user, id, q); } catch (_) { /* v20: dọn dấu ấn — lỗi không chặn */ } } }
   return !!ok;
 }
 const normList = (items) => (Array.isArray(items) ? items.map((x) => ({ id: x.id, qty: x.qty, q: x.q || 0 })) : Object.entries(items).map(([id, n]) => ({ id, qty: n, q: 0 })));

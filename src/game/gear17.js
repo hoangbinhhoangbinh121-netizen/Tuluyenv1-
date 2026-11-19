@@ -28,6 +28,7 @@ function statsOf(row) {
   for (const [k, v] of Object.entries(t.pri)) out[k] = (out[k] || 0) + v * qm * C.enhMult(row.enh);
   const s = sec(row); const rm = C.refineMult(row.refine);
   for (const [k, v] of Object.entries(s)) out[k] = (out[k] || 0) + v * qm * rm;
+  try { for (const [k, v] of Object.entries(require('./gear20').bonus(row, out))) out[k] = (out[k] || 0) + v; } catch (_) { /* v20: khảm/thức tỉnh lỗi → bỏ qua */ }
   return out;
 }
 const fmtStats = (st) => Object.entries(st).map(([k, v]) => `${LABEL[k] || k} +${(v * 100).toFixed(v * 100 >= 10 ? 0 : 1)}%`).join(' · ') || '(không có chỉ số)';

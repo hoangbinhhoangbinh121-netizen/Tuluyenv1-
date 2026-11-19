@@ -49,6 +49,9 @@ const NAV = [
   ['kt20', 'Khai Thác', 'E:n20_khaithac', 'Mỏ khoáng vật & khu thu thập nguyên liệu'],
   ['dh20', 'Dị Hỏa Đan Sư', 'E:n20_dihoa', 'Thu phục Dị Hỏa, tăng cấp, tiến hoá'],
   ['od20', 'Đơn Hàng', 'E:n20_donhang', '3 đơn nghề nghiệp mỗi ngày'],
+  ['gx20', 'Khảm & Thức Tỉnh', '💎', 'Khảm Yêu Hạch · thức tỉnh trang bị'],
+  ['tr20', 'Trận: Nâng · Thu · Gia Cố', '🔯', 'Nâng phẩm, thu hồi, gia cố trận pháp'],
+  ['fd20', 'Linh Điền Mở Rộng', '🟫', 'Linh Thổ · ghép giống · lai tạo'],
   ['st20', 'Sổ Tay', 'E:n20_sotay', 'Nguyên liệu · công thức · cuộn thất truyền · danh hiệu'],
 ];
 function groupOf(view) {
@@ -438,7 +441,7 @@ function render(uid, view = 'home', a = '', b = '', note = '') {
     case 'npc': out = viewNpc(uid, a); break;
     case 'npcc': out = viewNpcConfirm(uid, a); break;
     case 'npcb': out = viewNpcBuy(uid, a); break;
-    case 'kt20': case 'dh20': case 'od20': case 'st20': { const r = N20.build(uid, v, a, b, H20); out = shell(uid, v, r.e, r.rows); break; }   // v20
+    case 'kt20': case 'dh20': case 'od20': case 'st20': case 'gx20': case 'tr20': case 'fd20': { const r = N20.build(uid, v, a, b, H20); out = shell(uid, v, r.e, r.rows); break; }   // v20
     default: out = viewHome(uid);
   }
   if (note) out.content = fit(note, 1900, '');

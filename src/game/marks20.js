@@ -13,9 +13,10 @@ const MARKS = {
   van: { name: 'Đan Văn', bonus: 0.06, icon: 'n20_van', desc: 'Vân đan rõ nét: hiệu lực +6%.' },
   huong: { name: 'Đan Hương', bonus: 0.09, icon: 'n20_huong', desc: 'Hương đan nồng: hiệu lực +9%.' },
   linh: { name: 'Đan Linh', bonus: 0.12, icon: 'n20_linh', desc: 'Đan đã sinh linh: hiệu lực +12%.' },
+  tuyet: { name: 'Tuyệt Phẩm', bonus: 0.30, icon: 'n20_dibien', desc: 'Thành phẩm đặc biệt (chỉ đan phẩm 5): hiệu lực +30%.' },
   dibien: { name: 'Dị Biến', bonus: 0.20, icon: 'n20_dibien', desc: 'Đan dị biến cực hiếm: hiệu lực +20%.' },
 };
-const ORDER = ['dibien', 'linh', 'huong', 'van'];
+const ORDER = ['tuyet', 'dibien', 'linh', 'huong', 'van'];
 /** Xác suất mang dấu ấn theo phẩm chất q (q<3 → 0). */
 const chance = (q) => (q >= 5 ? 0.14 : q === 4 ? 0.08 : q === 3 ? 0.03 : 0);
 function pick() { const u = random(); return u < 0.03 ? 'dibien' : u < 0.18 ? 'linh' : u < 0.52 ? 'huong' : 'van'; }
@@ -23,8 +24,8 @@ function pick() { const u = random(); return u < 0.03 ? 'dibien' : u < 0.18 ? 'l
 function roll(user, made) {
   const got = {};
   for (const { item, q } of made) {
-    if (!(random() < chance(q))) continue;
-    const m = pick();
+    const m = q >= 5 && random() < 0.015 ? 'tuyet' : (random() < chance(q) ? pick() : null);   // Tuyệt Phẩm: thành phẩm đặc biệt 1,5% với đan phẩm 5
+    if (!m) continue;
     D.run('INSERT INTO v20_marks (user_id, item_id, q, mark, n) VALUES (?,?,?,?,1) ON CONFLICT(user_id, item_id, q, mark) DO UPDATE SET n = n + 1', uid(user), item, q, m);
     got[m] = (got[m] || 0) + 1;
   }
@@ -52,5 +53,11 @@ function consume(user, item, q, pk) {
   D.run('UPDATE v20_marks SET n = MAX(0, n - 1) WHERE user_id = ? AND item_id = ? AND q = ? AND mark = ?', uid(user), item, q, pk.mark);
   D.run('DELETE FROM v20_marks WHERE user_id = ? AND item_id = ? AND q = ? AND n <= 0', uid(user), item, q);
 }
+/** Dọn dấu ấn thừa so với số viên còn trong kho (gọi mỗi khi lấy đan ra: bán/dùng/giao dịch/vứt). */
+function trim(user, item, q) {
+  const rows = D.all('SELECT mark, n FROM v20_marks WHERE user_id = ? AND item_id = ? AND q = ? AND n > 0', uid(user), item, q); if (!rows.length) return;
+  const by = marksOf(user, item, q);
+  for (const r of rows) { const keep = by[r.mark] || 0; if (keep <= 0) D.run('DELETE FROM v20_marks WHERE user_id = ? AND item_id = ? AND q = ? AND mark = ?', uid(user), item, q, r.mark); else if (keep < r.n) D.run('UPDATE v20_marks SET n = ? WHERE user_id = ? AND item_id = ? AND q = ? AND mark = ?', keep, uid(user), item, q, r.mark); }
+}
 const summary = (user, item, q) => { const by = marksOf(user, item, q); return ORDER.filter((k) => by[k] > 0).map((k) => `${MARKS[k].name} ×${by[k]}`).join(', '); };
-module.exports = { MARKS, ORDER, chance, roll, marksOf, peek, consume, summary };
+module.exports = { MARKS, ORDER, chance, roll, marksOf, peek, consume, trim, summary };

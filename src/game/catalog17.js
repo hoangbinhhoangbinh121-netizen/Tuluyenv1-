@@ -42,6 +42,12 @@ Object.assign(EXTRA_USES, I19.USES);
 // v20.0: công dụng/nguồn của vật phẩm nghề nghiệp mới
 const V20 = require('../data/v20_data');
 for (let n = 1; n <= 10; n += 1) (EXTRA_USES[V20.ID.hoachung(n)] = EXTRA_USES[V20.ID.hoachung(n)] || []).push('dihoa');
+const addUse = (id, u) => { (EXTRA_USES[id] = EXTRA_USES[id] || []).push(u); };
+for (let n = 1; n <= 10; n += 1) {   // v20.3: khảm / thức tỉnh / Linh Thổ / ghép giống / lai tạo
+  addUse(V20.ID.beast(n), 'gem_socket'); addUse(V20.ID.kl(n), 'gear_socket'); addUse(V20.ID.seed(n, 'a'), 'fuse'); addUse(V20.ID.seed(n, 'a'), 'breed'); addUse(V20.ID.seed(n, 'b'), 'breed'); addUse(V20.ID.herb(n, 'b'), 'breed');
+  if (n <= 5) { addUse(V20.ID.herb(n, 'a'), 'soil_up'); addUse(V20.ID.herb(n, 'b'), 'soil_up'); }
+  if (n >= 6) { addUse(V20.ID.bv(n), 'awaken'); addUse(V20.ID.kl(n), 'awaken'); }
+}
 EXTRA_USES[V20.ID.phe] = ['pet_feed']; LEGACY_SRC[V20.ID.phe] = ['craft_fail'];
 for (const x of [...V20.pillSpecs().filter((p) => p.rare), ...V20.TRAN_SPECS]) EXTRA_USES[V20.ID.scroll(x.id)] = ['learn_recipe'];
 for (const id of Object.keys(C.SEEDS)) { (EXTRA_USES[id] = EXTRA_USES[id] || []).push('field'); }
@@ -124,6 +130,7 @@ const SRC_LABEL = {
 };
 const USE_LABEL = {
   ...I19.USE_LABEL,
+  gem_socket: 'Khảm Yêu Hạch vào trang bị', gear_socket: 'Mở ô khảm trang bị', awaken: 'Thức tỉnh trang bị', soil_up: 'Nâng Linh Thổ', fuse: 'Ghép Giống', breed: 'Lai Tạo giống',
   pet_feed: 'Cho Linh Thú ăn', talent_exchange: 'Đổi Bảo Thạch Thể Chất/Linh Căn', phithang: 'Con Đường Phi Thăng', thiendao: 'Thiên Đạo', gear_enh: 'Cường hoá trang bị', gear_refine: 'Tinh luyện trang bị',
   gear_repair: 'Sửa trang bị', catalyst_khi: 'Xúc tác Luyện Khí', catalyst_dan: 'Xúc tác Đan Sư', catalyst_tran: 'Xúc tác Trận Pháp', field: 'Linh Điền (gieo/tưới)', field_up: 'Nâng cấp Linh Điền',
   field_fert: 'Bón Linh Điền', dihoa: 'Thu phục Dị Hỏa (Đan Sư)', learn_recipe: 'Học công thức thất truyền', use_tanquyen: 'Đọc để tăng EXP Đan Sư', use_dan: 'Dùng (cắn đan)', deploy: 'Triển khai trận pháp', taytuy: 'Tẩy Tủy', moruong: 'Mở Rương', bicanh_db: 'Vào Bí Cảnh Đặc Biệt',

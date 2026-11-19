@@ -14,6 +14,11 @@ const Learn = require('../game/learn20');
 const So = require('../game/so20');
 const Mk = require('../game/marks20');
 const X = require('../game/craft17');
+const Gear = require('../game/gear17');
+const G20 = require('../game/gear20');
+const T20 = require('../game/tran20');
+const F20 = require('../game/field20');
+const Fx = require('../game/fx17');
 const V = require('../data/v20_data');
 const K = require('../game/constants');
 const { fmtNum, now } = require('../util');
@@ -115,11 +120,58 @@ function viewSt(uid, a, H) {
   return { e, rows };
 }
 
+// ---------------------------------------------------------------- V20.3: Khảm & Thức Tỉnh trang bị
+function viewGx(uid, a, H) {
+  const { E0, cid, btn, rowOf, StringSelectMenuBuilder, optEmoji, ButtonStyle, fit } = H;
+  const gs = Gear.listOf(uid).slice(0, 25); const sel = gs.find((g) => String(g.gear_id) === String(a)) || gs[0];
+  const e = E0('💎 Khảm & Thức Tỉnh Trang Bị', 0x06b6d4).setDescription('**Khảm Yêu Hạch** (nguyên liệu yêu thú giai đoạn ≤ bậc trang bị) cộng chỉ số cố định; **Thức Tỉnh** (bậc ≥ 6, tinh luyện ≥ 3, tối đa 3 lần) tăng 5% toàn bộ chỉ số mỗi lần, thất bại mất vật liệu nhưng trang bị an toàn. Cường hoá / tinh luyện / sửa chữa vẫn ở trang **Luyện Khí Sư**.');
+  if (!sel) { e.addFields({ name: 'Trang bị', value: 'Bạn chưa có trang bị nào — chế ở Luyện Khí Sư.' }); return { e, rows: [rowOf(btn(cid(uid, 'v', 'gx20'), 'Làm mới', '🔄'))] }; }
+  const inf = G20.info(uid, sel.gear_id);
+  const gemLines = Array.from({ length: inf.max }, (_, i) => { if (i >= inf.sockets) return `🔒 Ô ${i + 1}: chưa mở`; const g = inf.gems[i]; return g ? `💎 Ô ${i + 1}: **${itn(g)}** (${Object.entries(G20.gemFx(g)).map(([k, v]) => `${Gear.LABEL[k] || k} +${(v * 100).toFixed(1)}%`).join(', ')})` : `▫️ Ô ${i + 1}: trống`; });
+  e.addFields({ name: `${Gear.name(sel)} · bậc ${inf.tier}${sel.equipped ? ' · đang mặc' : ''}`, value: fit(`Độ bền ${Math.round(sel.dura)}/${Math.round(sel.dura_max)} · tinh luyện ${sel.refine}\n${gemLines.join('\n')}\n🌟 Thức tỉnh **${inf.awaken}/${G20.AWAKEN_MAX}**${inf.awaken ? ` (×${(1 + G20.AWAKEN_PCT * inf.awaken).toFixed(2)})` : ''}\n${inf.openCost ? `Mở ô tiếp: 💰 ${fmtNum(inf.openCost.gold)} + ${G20.matsText(inf.openCost.mats)}\n` : ''}${inf.awakenCost && inf.tier >= 6 ? `Thức tỉnh: 💰 ${fmtNum(inf.awakenCost.gold)} + ${G20.matsText(inf.awakenCost.mats)} · tỉ lệ ${Math.round(G20.AWAKEN_RATE[inf.awaken] * 100)}%` : ''}`, 1000) });
+  const sm = new StringSelectMenuBuilder().setCustomId(cid(uid, 'gxz')).setPlaceholder('Chọn trang bị…');
+  sm.addOptions(gs.map((g) => ({ label: Gear.name(g).slice(0, 100), value: String(g.gear_id), description: `bậc ${G20.info(uid, g.gear_id).tier} · ${I.qName ? I.qName(g.q) : ''}`.slice(0, 100), emoji: optEmoji('🗡️'), default: g.gear_id === sel.gear_id })));
+  const rows = [rowOf(sm)];
+  const gems = I.ITEMS.filter((it) => G20.gemStage(it.id) && G20.gemStage(it.id) <= inf.tier && Inv.qtyAny(uid, it.id) > 0).slice(0, 25);
+  if (gems.length && inf.sockets) { const gm = new StringSelectMenuBuilder().setCustomId(cid(uid, 'gxk', sel.gear_id)).setPlaceholder('Chọn Yêu Hạch để KHẢM…'); gm.addOptions(gems.map((it) => ({ label: it.name.slice(0, 100), value: it.id, description: `×${Inv.qtyAny(uid, it.id)}`, emoji: optEmoji('💎') }))); rows.push(rowOf(gm)); }
+  rows.push(rowOf(btn(cid(uid, 'gxo', sel.gear_id), 'Mở ô khảm', '🔹', ButtonStyle.Primary, !inf.openCost), btn(cid(uid, 'gxa', sel.gear_id), 'Thức Tỉnh', '🌟', ButtonStyle.Success, !inf.canAwaken), btn(cid(uid, 'v', 'gx20', sel.gear_id), 'Làm mới', '🔄')));
+  return { e, rows };
+}
+
+// ---------------------------------------------------------------- V20.3: Trận — Nâng Phẩm / Thu Hồi / Gia Cố
+function viewTr(uid, a, H) {
+  const { E0, cid, btn, rowOf, StringSelectMenuBuilder, optEmoji, ButtonStyle, fit } = H;
+  const owned = []; for (const id of Object.keys(C.TRANS)) for (let q = 1; q <= 5; q += 1) { const n = Inv.qty(uid, id, q); if (n > 0) owned.push({ id, q, n }); }
+  const act = Fx.listBuffs(uid, 'tran'); const [ia, qa] = String(a || '').split('|'); const selId = C.TRANS[ia] ? ia : (owned[0] ? owned[0].id : (act[0] ? act[0].key.slice(5) : null)); const selQ = Number(qa) || (owned.find((o) => o.id === selId) || {}).q || 2;
+  const e = E0('🔯 Trận Pháp — Nâng Phẩm · Thu Hồi · Gia Cố', 0x14b8a6).setDescription('**Nâng phẩm:** 3 trận bàn cùng loại + cùng phẩm → 1 trận bàn phẩm +1 (tối đa phẩm 5), tốn Linh Thạch.\n**Thu hồi:** dỡ trận đang chạy, hoàn 50% phí duy trì theo thời gian còn lại.\n**Gia cố:** trận (không giới hạn lượt) còn dưới 50% thời gian → trả 60% phí duy trì để kéo về đủ thời gian, 1 lần/ngày/trận.');
+  e.addFields({ name: 'Trận bàn trong kho', value: fit(owned.map((o) => `${itn(o.id)} (${I.qName(o.q)}) ×${o.n}`).join('\n') || '_Chưa có._', 1000) });
+  e.addFields({ name: 'Trận đang chạy', value: fit(act.map((b) => `${itn(b.key.slice(5))} (${I.qName(b.q)}) — còn ${fmtT(Math.max(0, b.until - now()))}`).join('\n') || '_Không có._', 1000) });
+  const rows = [];
+  if (owned.length) { const sm = new StringSelectMenuBuilder().setCustomId(cid(uid, 'trz')).setPlaceholder('Chọn trận bàn…'); sm.addOptions(owned.slice(0, 25).map((o) => ({ label: `${itn(o.id)} (${I.qName(o.q)})`.slice(0, 100), value: `${o.id}|${o.q}`, description: `×${o.n}`, emoji: optEmoji('🔯'), default: o.id === selId && o.q === selQ }))); rows.push(rowOf(sm)); }
+  const run = selId && act.some((b) => b.key === `tran:${selId}`);
+  rows.push(rowOf(btn(cid(uid, 'tru', `${selId}|${selQ}`), 'Nâng phẩm (3→1)', '⬆️', ButtonStyle.Primary, !selId || Inv.qty(uid, selId, selQ) < 3 || selQ >= 5), btn(cid(uid, 'trr', selId || ''), 'Thu hồi', '↩️', ButtonStyle.Danger, !run), btn(cid(uid, 'trn', selId || ''), 'Gia cố', '🛡️', ButtonStyle.Success, !run), btn(cid(uid, 'v', 'tr20', `${selId}|${selQ}`), 'Làm mới', '🔄')));
+  return { e, rows };
+}
+
+// ---------------------------------------------------------------- V20.3: Linh Điền mở rộng
+function viewFd(uid, a, H) {
+  const { E0, cid, btn, rowOf, StringSelectMenuBuilder, optEmoji, ButtonStyle, fit } = H;
+  const n = Math.min(10, Math.max(1, Number(a) || 1)); const S = V.stage(n); const L = F20.soil(uid);
+  const e = E0('🟫 Linh Điền Mở Rộng — Linh Thổ · Ghép Giống · Lai Tạo', 0x65a30d);
+  const sc = L < F20.SOIL_MAX ? F20.soilCost(L) : null;
+  e.setDescription(fit(`**Linh Thổ cấp ${L}/${F20.SOIL_MAX}** — mỗi cấp +${F20.SOIL_YIELD} cây/lần thu hoạch (trung bình).\n${sc ? `Nâng cấp ${L + 1}: 💰 ${fmtNum(sc.gold)} + ${F20.matsText(sc.mats)} (cần Linh Điền cấp ≥ ${L + 1})` : 'Đã đạt cấp tối đa.'}\n\n**Giai đoạn ${n}: ${S.name}**\n🌱 Ghép Giống: 4 × ${itn(V.ID.seed(n, 'a'))} + 💰 ${fmtNum(Math.round(S.base * 3))} → 1 × ${itn(V.ID.seed(n, 'b'))}\n🧬 Lai Tạo${n < 10 ? ` (ra ${itn(V.ID.seed(n + 1, 'a'))}, tỉ lệ ${Math.round(F20.breedRate(uid) * 100)}%)` : ' (giai đoạn 10 không lai thêm)'}: ${n < 10 ? `${F20.matsText(F20.breedCost(n).mats)} + 💰 ${fmtNum(F20.breedCost(n).gold)} — thất bại mất hết` : '—'}`, 3500));
+  const sm = new StringSelectMenuBuilder().setCustomId(cid(uid, 'fdz')).setPlaceholder('Chọn giai đoạn…'); sm.addOptions(V.STAGES.map((s) => ({ label: `${s.n}. ${s.name}`, value: String(s.n), emoji: optEmoji('🌱'), default: s.n === n })));
+  return { e, rows: [rowOf(sm), rowOf(btn(cid(uid, 'fds', n), 'Nâng Linh Thổ', '🟫', ButtonStyle.Primary, L >= F20.SOIL_MAX), btn(cid(uid, 'fdf', n), 'Ghép Giống', '🌱', ButtonStyle.Success), btn(cid(uid, 'fdb', n), 'Lai Tạo', '🧬', ButtonStyle.Success, n >= 10), btn(cid(uid, 'v', 'fd20', n), 'Làm mới', '🔄'))] };
+}
+
 function build(uid, v, a, b, H) {
   switch (v) {
     case 'kt20': return viewKt(uid, a, H);
     case 'dh20': return viewDh(uid, a, H);
     case 'od20': return viewOd(uid, a, H);
+    case 'gx20': return viewGx(uid, a, H);
+    case 'tr20': return viewTr(uid, a, H);
+    case 'fd20': return viewFd(uid, a, H);
     default: return viewSt(uid, a, H);
   }
 }
@@ -136,6 +188,18 @@ function act(u, action, a, b, sel) {
     case 'odc': { const r = Od.claim(u, Number(a)); return { view: 'od20', note: r.msg }; }
     case 'stp': return { view: 'st20', a: `${sel}:${['cuon', 'tt'].includes(sel) ? '' : 1}` };
     case 'sts': return { view: 'st20', a: `${a}:${sel}` };
+    case 'gxz': return { view: 'gx20', a: sel };
+    case 'gxo': { const r = G20.openSocket(u, a); return { view: 'gx20', a, note: r.msg }; }
+    case 'gxk': { const inf = G20.info(u, a); const idx = inf && inf.sockets ? Math.max(0, Array.from({ length: inf.sockets }, (_, i) => i).find((i) => !inf.gems[i]) ?? 0) : 0; const r = G20.socket(u, a, idx, sel); return { view: 'gx20', a, note: r.msg }; }
+    case 'gxa': { const r = G20.awaken(u, a); return { view: 'gx20', a, note: r.msg }; }
+    case 'trz': return { view: 'tr20', a: sel };
+    case 'tru': { const [id, q] = String(a).split('|'); const r = T20.upgrade(u, id, Number(q)); return { view: 'tr20', a: `${id}|${Number(q) + (r.ok ? 1 : 0)}`, note: r.msg }; }
+    case 'trr': { const r = T20.recall(u, a); return { view: 'tr20', a, note: r.msg }; }
+    case 'trn': { const r = T20.renew(u, a); return { view: 'tr20', a, note: r.msg }; }
+    case 'fdz': return { view: 'fd20', a: sel };
+    case 'fds': { const r = F20.upgradeSoil(u); return { view: 'fd20', a, note: r.msg }; }
+    case 'fdf': { const r = F20.fuse(u, a); return { view: 'fd20', a, note: r.msg }; }
+    case 'fdb': { const r = F20.breed(u, a); return { view: 'fd20', a, note: r.msg }; }
     case 'stl': { const r = Learn.learn(u, sel); return { view: 'st20', a: 'cuon:', note: r.msg }; }
     default: return null;
   }

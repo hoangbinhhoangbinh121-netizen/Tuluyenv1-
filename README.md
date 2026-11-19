@@ -1,6 +1,6 @@
-# Tiên Giới Bot v20.2 — Node.js + discord.js + SQLite
+# Tiên Giới Bot v20.3 — Node.js + discord.js + SQLite
 
-> **v20.2** — Emoji Dị Hỏa + Hỏa Chủng thay bằng ảnh người dùng cung cấp. **v20.0** — Đại Hoàn Thiện Nghề Nghiệp: 10 giai đoạn chế tạo, Dị Hỏa Đan Sư, Khai Thác (mỏ + khu thu thập), Đơn Hàng ngày, Sổ Tay, học công thức thất truyền, dấu ấn đan, Phế Đan. Chỉ THÊM — dữ liệu và công thức V17–V19 giữ nguyên. Chi tiết: `BAO_CAO_V20.md`. Lịch sử các bản cũ: `BAO_CAO_V17.md`, `BAO_CAO_V18.md`, `BAO_CAO_V19.md`.
+> **v20.3** — hoàn thiện nghề nghiệp: Khảm & Thức Tỉnh trang bị, Trận (nâng phẩm / thu hồi / gia cố), Linh Điền (Linh Thổ / ghép giống / lai tạo), thành phẩm Tuyệt Phẩm, dọn dấu ấn khi bán. **v20.2** — Emoji Dị Hỏa + Hỏa Chủng thay bằng ảnh người dùng cung cấp. **v20.0** — Đại Hoàn Thiện Nghề Nghiệp: 10 giai đoạn chế tạo, Dị Hỏa Đan Sư, Khai Thác (mỏ + khu thu thập), Đơn Hàng ngày, Sổ Tay, học công thức thất truyền, dấu ấn đan, Phế Đan. Chỉ THÊM — dữ liệu và công thức V17–V19 giữ nguyên. Chi tiết: `BAO_CAO_V20.md`. Lịch sử các bản cũ: `BAO_CAO_V17.md`, `BAO_CAO_V18.md`, `BAO_CAO_V19.md`.
 
 Bot Discord game tu tiên, chuyển từ bản Python (`tuluyenv1_daolu_fixed_v10`) sang **Node.js**.
 Dữ liệu lưu trong **1 file SQLite** (`data/tutien.db`) đi kèm bot — không cần PostgreSQL hay dịch vụ database riêng.
