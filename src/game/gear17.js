@@ -150,7 +150,7 @@ function refine(user, gearId) {
 }
 
 // ------------------------------------------------------------------ phân giải
-const PHOI_BY_TIER = { 1: 'pk_tho', 2: 'pk_trung', 3: 'pk_trung', 4: 'pk_cao', 5: 'pk_tien' };
+const PHOI_BY_TIER = { 1: 'pk_tho', 2: 'pk_trung', 3: 'pk_trung', 4: 'pk_cao', 5: 'pk_tien', 6: 'v20_pk_6', 7: 'v20_pk_7', 8: 'v20_pk_8', 9: 'v20_pk_9', 10: 'v20_pk_10' };
 function dismantle(user, gearId) {
   const row = get(user, gearId); if (!row) return { ok: false, msg: 'Không tìm thấy trang bị này.' };
   if (row.equipped) return { ok: false, msg: 'Hãy tháo trang bị ra trước khi phân giải.' };

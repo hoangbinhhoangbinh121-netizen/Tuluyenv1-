@@ -49,7 +49,7 @@ function potency(user, id, extra = 0) {
 }
 
 function useOne(user, id, q, row) {
-  const p = C.PILLS[id]; const m = I.qMult(q); const pot = potency(user, id);
+  const p = C.PILLS[id]; const mk = (() => { try { return require('./marks20').peek(user, id, q); } catch (_) { return null; } })(); const m = I.qMult(q) * (1 + (mk ? mk.bonus : 0)); const pot = potency(user, id);   // v20: dấu ấn đan
   if (pot <= 0) return { ok: false, msg: `Hôm nay bạn đã dùng đủ **${p.hard}** viên ${I.BY_ID[id].name} — thân thể không chịu thêm nữa.` };
   if (p.realm && row.realm_index < p.realm) return { ok: false, msg: `Cần cảnh giới ≥ **${K.REALMS[p.realm].name}** để dùng ${I.BY_ID[id].name}.` };
   const it = I.BY_ID[id]; const nm = `${it.name}${q ? ` (${I.qName(q)})` : ''}`;
@@ -63,6 +63,7 @@ function useOne(user, id, q, row) {
   }
   if (!Inv.take(user, id, 1, { q, why: `dùng ${id}` })) return { ok: false, msg: `Bạn không còn ${nm}.` };
   Inv.dailyAdd(user, `pill:${id}`, 1);
+  try { require('./marks20').consume(user, id, q, mk); } catch (_) { /* bỏ qua */ }
   const eff = pot < 1 ? ' _(đã dùng nhiều trong ngày: hiệu lực giảm một nửa)_' : '';
   if (p.k === 'tuvi') {
     const gain = Math.max(1, int(randInt(p.lo, p.hi) * m * pot * BAL.paceFactor(row)));

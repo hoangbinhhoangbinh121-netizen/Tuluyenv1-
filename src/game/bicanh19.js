@@ -618,6 +618,8 @@ function rollMember(st, uid, mult, floor, share) {
   if (common.length && random() < F.commonRate * boost.drop) { const it = choice(common); addItem(it.id, Math.max(1, int(pickQty(it, 1, 2 + (floor >= 4 ? 1 : 0)) * mult))); }
   const rareRolls = 1 + (share.chest ? 1 : 0);
   for (let k = 0; k < rareRolls; k += 1) if (rare.length && random() < 0.25 * F.rareMult * (k ? 1.6 : 1) * boost.drop) { const it = choice(rare); addItem(it.id, Math.max(1, int(pickQty(it, 1, 2) * mult))); }
+  // v20: nguyên liệu nghề của bí cảnh Tiên Giới (giai đoạn ≥ Tiên Cấp), từ tầng 3 — có trần ngày/tuần trong bảng rơi
+  try { const sn = require('../data/v20_data').stageOfRealm(bc.realm); if (sn >= 6 && floor >= 3) { const v = require('./drops17').roll(uid, `v20_bc19_s${sn}`, { noText: true, row }); for (const [id, n] of Object.entries(v.got)) { lines.push(`${I19ItemEmoji(id)} **${n}** ${IT.BY_ID[id].name}`); } } } catch (_) { /* không để V20 làm hỏng thưởng bí cảnh */ }
   // mảnh công pháp 18% (từ tầng 2)
   const frags = B.FRAG_BY_BC[idx];
   if (frags && F.fragRate && random() < 0.18 * F.fragRate) {

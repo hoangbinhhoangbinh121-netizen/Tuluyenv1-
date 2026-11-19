@@ -72,6 +72,7 @@ function plant(user, slot, seed) {
     if (slot < 1 || slot > plotCount(f.level)) return { ok: false, msg: 'Ô đất không hợp lệ.' };
     if (D.get('SELECT 1 AS x FROM linh_dien_plot WHERE user_id = ? AND slot = ?', uid(user), slot)) return { ok: false, msg: `Ô ${slot} đang có cây — thu hoạch trước.` };
     if (profLv(user) < s.plv) return { ok: false, msg: `Cần Linh Thực Sư cấp **${C.LEVELS[s.plv - 1].name}** để gieo ${I.BY_ID[seed].name}.` };
+    if (s.fieldLv && f.level < s.fieldLv) return { ok: false, msg: `Cần Linh Điền cấp **${s.fieldLv}** để gieo ${I.BY_ID[seed].name} (hiện ${f.level}).` };   // v20
     const me = Cu.getCultivator(user);
     if (me.linh_thach < F.plantGold) return { ok: false, msg: `Cần ${F.plantGold} Linh Thạch phí gieo.` };
     if (Inv.qty(user, F.soilMat) < 1) return { ok: false, msg: `Cần 1 ${I.BY_ID[F.soilMat].name} cho mỗi lần gieo.` };
@@ -130,7 +131,8 @@ function harvest(user, slot) {
     const gain = X.addExp(user, 'thuc', Math.round(s.exp * (mut ? 1.6 : 1) * (wither ? 0.5 : 1)));
     D.run('UPDATE prof_state SET crafts = crafts + 1, successes = successes + 1 WHERE user_id = ? AND prof_id = ?', uid(user), 'thuc');
     X.bumpExtra(user, 'thuc', 'harvests', 1); if (mut) X.bumpExtra(user, 'thuc', 'mutations', 1);
-    const ach = X.checkAch(user, 'thuc');
+    const v20 = require('./hooks20').afterHarvest(user, X, p.seed);   // v20
+    const ach = X.checkAch(user, 'thuc') + v20;
     const txt = Object.entries(real).map(([k, v]) => `${v} × ${I.BY_ID[k].name}`).join(', ');
     return { ok: true, mut, wither, msg: `🧺 Thu hoạch ô ${slot} (mùa **${tName}**${wither ? ', héo −50%' : ''}): ${txt}${mut ? ' ✨ **Biến dị!**' : ''}\n📈 +${fmtNum(gain)} EXP Linh Thực Sư${ach}` };
   });

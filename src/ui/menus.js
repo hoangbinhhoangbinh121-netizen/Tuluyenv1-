@@ -123,7 +123,7 @@ const GROUP_HANDLERS = {
   },
   async khodo(i, userId) {
     const { buildKhodoEmbed, khoDoView } = require('./khodo');
-    await i.reply({ embeds: [buildKhodoEmbed(i.user, Cu.getCultivator(userId))], components: khoDoView(userId).components(), flags: EPHEMERAL });
+    await i.reply(require('./gif20').withGif({ embeds: [buildKhodoEmbed(i.user, Cu.getCultivator(userId))], components: khoDoView(userId).components(), flags: EPHEMERAL }, 'kho'));
   },
   async khac(i, userId) {
     const v = khacGroupView(userId, i.message);

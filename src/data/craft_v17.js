@@ -215,7 +215,7 @@ const enhMult = (lv) => 1 + 0.03 * lv;                 // +3% chỉ số cơ b�
 const refineMult = (lv) => 1 + 0.20 * lv;              // +20% thuộc tính phụ mỗi cấp tinh luyện
 /** Cường hoá +n → +n+1: tỉ lệ, kim loại tinh luyện cần, Linh Thạch. Thất bại ≥ +7: hạ 1 cấp. */
 function enhCost(lvNow, tier) {
-  const kl = lvNow < 3 ? ['kl_dong', 2] : lvNow < 6 ? ['kl_huyen', 2] : lvNow < 8 ? ['kl_tu', 2] : ['kl_hon', 1];
+  const kl = tier >= 6 ? [`v20_kl_${tier}`, lvNow < 6 ? 2 : 1] : lvNow < 3 ? ['kl_dong', 2] : lvNow < 6 ? ['kl_huyen', 2] : lvNow < 8 ? ['kl_tu', 2] : ['kl_hon', 1];
   return { rate: [0.95, 0.9, 0.85, 0.75, 0.65, 0.55, 0.45, 0.35, 0.25, 0.2][lvNow] || 0.2, mat: kl, gold: Math.floor(1500 * (lvNow + 1) ** 1.8 * tier), cat: lvNow >= 6 ? 'nl_manh_phap_bao' : null, downOnFail: lvNow >= 6 };
 }
 function refineCost(lvNow, tier) {
@@ -342,7 +342,11 @@ const SOURCE_NOTES = {
 };
 const CAP_DAY_GLOBAL = { 5: 6, 6: 3, 7: 1 };      // tối đa số vật phẩm phẩm cấp 5/6/7 nhận từ BẤT KỲ nguồn rơi trong 1 ngày (chặn cày vô hạn)
 
+// V20.0 — mở rộng 10 giai đoạn sản xuất (công thức, Linh Chủng, khai thác, bảng rơi, thành tựu) — chỉ THÊM, không đổi dữ liệu cũ
+const X20 = require('./craft_v20').install({ R, RECIPES, RBY, PILLS, TRANS, GEAR, SEEDS, FIELD, DROPS, NPC_SHOP, ACH, SOURCE_NOTES });
+
 module.exports = {
+  ...X20,
   PROFS, PROF_ORDER, LEVELS, slotsOf, TECHS, ACH, RECIPES, RBY, PILLS, TRANS, TRAN_PERSONAL_MAX, SLOTS, SLOT_ORDER, GEAR, ENH_MAX, REFINE_MAX, enhMult, refineMult, enhCost, refineCost,
   REPAIR, DURA_LOSS, FIELD, SEEDS, LINHDIEN_PLOT_MAX, NPC_BUY_MULT, NPC_SHOP, DROPS, SOURCE_NOTES, CAP_DAY_GLOBAL,
 };

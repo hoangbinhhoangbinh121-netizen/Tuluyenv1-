@@ -34,7 +34,7 @@ for (const it of I.ITEMS) { for (const d of Object.values(C.DROPS)) for (const [
 for (const [sid, s] of Object.entries(C.SEEDS)) { const si = Fd.seedInfo(U, sid); const rev = si.yAvg * value(s.crop) + si.seedBack * value(sid) + (s.mut ? s.mut.p * value(s.mut.to) : 0); const cost = Cat.buyPrice(sid) + Cat.buyPrice(C.FIELD.soilMat) + C.FIELD.plantGold; ok(rev < cost, `${sid}: trồng trọt có lời ở giá NPC (${rev}/${cost})`); }
 // ---------- E. mỗi công thức: chế → đúng 1 lần → nhận 1 lần
 for (const r of C.RECIPES) {
-  const u = mkUser(100 + C.RECIPES.indexOf(r)); const g0 = gold(u);
+  const u = mkUser(100 + C.RECIPES.indexOf(r), { realm: Math.max(9, r.realm || 0) }); if (r.rare) D.run('INSERT OR IGNORE INTO v20_learned (user_id, recipe_id, at) VALUES (?,?,?)', String(u), r.id, 1); const g0 = gold(u);
   for (const [k, q] of Object.entries(r.ing)) Inv.add(u, k, q * 3 + 3, { q: I.BY_ID[k].quality ? 3 : 0 });
   Object.keys(Cat.recipesUse ? {} : {});
   const c = X.check(u, r.id, 1); if (!c.ok) { /* thiếu xúc tác/phẩm chất → bổ sung đúng chỗ thiếu */ for (const m of c.miss) Inv.add(u, m.id, m.need - m.have + 1, { q: I.BY_ID[m.id].quality ? 3 : 0 }); }
@@ -78,7 +78,7 @@ for (const r of C.RECIPES) {
   // buff không cộng dồn
   const w = mkUser(22); const buffId = pills.find((i) => ['buff', 'tamcanh'].includes(C.PILLS[i].k)); if (buffId) { Inv.add(w, buffId, 3, { q: 3 }); Dan.use(w, buffId, 3, 1); const a = JSON.stringify(FX.get(Cu.getCultivator(w))); Dan.use(w, buffId, 3, 1); ok(JSON.stringify(FX.get(Cu.getCultivator(w))) === a, 'buff cộng dồn'); } }
 // ---------- H. trang bị
-{ const u = mkUser(30); const created = []; for (const t of Object.keys(C.GEAR)) created.push(G.create(u, t, 5));
+{ const u = mkUser(30, { realm: 28 }); const created = []; for (const t of Object.keys(C.GEAR)) created.push(G.create(u, t, 5));
   for (const gid of created) { const r = G.equip(u, gid); ok(r.ok, `equip: ${r.msg}`); }
   const eq = G.equippedOf(u); const slots = new Set(eq.map((g) => G.tpl(g.tpl).slot)); ok(eq.length === slots.size, 'mặc trùng ô'); ok(eq.length <= 7, '>7 ô');
   const gid = created[0]; const t = G.tpl(G.get(u, gid).tpl); const other = G.create(u, G.listOf(u).find((g) => G.tpl(g.tpl).slot === t.slot && g.gear_id !== gid) ? G.get(u, gid).tpl : G.get(u, gid).tpl, 1); G.equip(u, other); ok(G.equippedOf(u).filter((g) => G.tpl(g.tpl).slot === t.slot).length === 1, 'cùng ô mặc 2 món');

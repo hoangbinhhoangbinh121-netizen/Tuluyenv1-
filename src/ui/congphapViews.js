@@ -250,7 +250,7 @@ function render(userId, st = DEF, note = '') {
   else out = renderOverview(uid, st, row);
   if (note && st.m !== 'dt' && st.m !== 'fr') out.content = String(note).slice(0, 1900);
   else out.content = '';
-  return out;
+  return require('./gif20').withGif(out, 'congphap');
 }
 const open = (i, userId, st = DEF) => i.reply({ ...render(userId, st), flags: EPHEMERAL });
 

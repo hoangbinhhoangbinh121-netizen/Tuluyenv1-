@@ -206,6 +206,8 @@ const GEAR_TEMPLATE_IDS = ['gx_thanh_phong', 'gx_huyen_thiet_giap', 'gx_tu_linh_
 
 // ===================================================================== V19.0 — vật phẩm Bí Cảnh Tiên Giới / Chứng Đạo / nâng cấp Công Pháp
 require('./items_v19').install(def);
+// V20.0 — vật phẩm Đại Hoàn Thiện Nghề Nghiệp (10 giai đoạn sản xuất)
+require('./items_v20').install(def);
 
 // ===================================================================== TIỆN ÍCH
 const get = (id) => BY_ID[id] || null;

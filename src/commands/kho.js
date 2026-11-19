@@ -8,7 +8,7 @@ const { buildKhodoEmbed, khoDoView, sendCodeApprovalRequest } = require('../ui/k
 
 defineCommand({
   name: 'khodo', description: 'Mở Kho Đồ — xem vật phẩm, nhập code, mở Rương Thần Bí', needsCultivator: true,
-  run: (ctx) => ctx.send({ embeds: [buildKhodoEmbed(ctx.user, Cu.getCultivator(ctx.user.id))], components: khoDoView(ctx.user.id).components() }),
+  run: (ctx) => ctx.send(require('../ui/gif20').withGif({ embeds: [buildKhodoEmbed(ctx.user, Cu.getCultivator(ctx.user.id))], components: khoDoView(ctx.user.id).components() }, 'kho')),
 });
 defineCommand({
   name: 'nhapcode', description: 'Nhập mã code nhận thưởng', needsCultivator: true,

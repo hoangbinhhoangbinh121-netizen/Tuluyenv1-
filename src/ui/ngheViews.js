@@ -46,6 +46,10 @@ const NAV = [
   ['field', 'Linh Điền', '🌱', 'Gieo · Tưới · Bón · Thu hoạch'],
   ['inv', 'Kho Đồ Phân Loại', '🎒', 'Vật phẩm theo danh mục / phẩm cấp'],
   ['npc', 'NPC Thu Mua & Bán', '🏪', 'Bán vật phẩm · mua nguyên liệu cơ bản'],
+  ['kt20', 'Khai Thác', 'E:n20_khaithac', 'Mỏ khoáng vật & khu thu thập nguyên liệu'],
+  ['dh20', 'Dị Hỏa Đan Sư', 'E:n20_dihoa', 'Thu phục Dị Hỏa, tăng cấp, tiến hoá'],
+  ['od20', 'Đơn Hàng', 'E:n20_donhang', '3 đơn nghề nghiệp mỗi ngày'],
+  ['st20', 'Sổ Tay', 'E:n20_sotay', 'Nguyên liệu · công thức · cuộn thất truyền · danh hiệu'],
 ];
 function groupOf(view) {
   const [v, p] = String(view).split('.');
@@ -60,7 +64,7 @@ function navRow(uid, cur) {
   const sm = new StringSelectMenuBuilder().setCustomId(cid(uid, 'nav')).setPlaceholder('Chọn mục…');
   sm.addOptions(NAV.map(([k, name, icon, desc]) => {
     const p = k.startsWith('hs.') ? k.slice(3) : null;
-    return { label: name, value: k, description: desc.slice(0, 100), emoji: optEmoji(p ? Emo.prof(p) : icon), default: k === cur };
+    return { label: name, value: k, description: desc.slice(0, 100), emoji: optEmoji(p ? Emo.prof(p) : (String(icon).startsWith('E:') ? (require('../game/emoji').E[icon.slice(2)] || '📒') : icon)), default: k === cur };
   }));
   return rowOf(sm);
 }
@@ -407,6 +411,10 @@ function viewNpcBuy(uid, sel = '') {
   return shell(uid, 'npcb', e, rows);
 }
 
+// ---------------------------------------------------------------- v20: bộ dựng chung cho các tab mới
+const N20 = require('./nghe20Views');
+const H20 = { E0, cid, btn, rowOf, StringSelectMenuBuilder, optEmoji, ButtonStyle, fit, listFit };
+
 // ---------------------------------------------------------------- bộ dựng trang
 function render(uid, view = 'home', a = '', b = '', note = '') {
   const [v, p] = String(view).split('.');
@@ -430,6 +438,7 @@ function render(uid, view = 'home', a = '', b = '', note = '') {
     case 'npc': out = viewNpc(uid, a); break;
     case 'npcc': out = viewNpcConfirm(uid, a); break;
     case 'npcb': out = viewNpcBuy(uid, a); break;
+    case 'kt20': case 'dh20': case 'od20': case 'st20': { const r = N20.build(uid, v, a, b, H20); out = shell(uid, v, r.e, r.rows); break; }   // v20
     default: out = viewHome(uid);
   }
   if (note) out.content = fit(note, 1900, '');
@@ -488,7 +497,7 @@ registerStatic('ng', async (i, parts) => {
     case 'nsell': { const o = parseNpc(a); const r = Npc.sellAll(u, { cat: o.cat, maxRarity: o.maxR, products: o.prod }); return go('npc', npcArg(o), '', r.msg); }
     case 'nbsel': return go('npcb', sel);
     case 'nbuy': { const r = Npc.buy(u, a, Number(b) || 1); return go('npcb', a, '', r.msg); }
-    default: return go('home');
+    default: { const r = N20.act(u, act, a, b, sel); if (r) return go(r.view, r.a || '', r.b || '', r.note || ''); return go('home'); }
   }
 });
 

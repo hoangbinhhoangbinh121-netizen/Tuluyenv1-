@@ -77,7 +77,8 @@ const MASTERY_NAMES = ['Mới học', 'Quen tay', 'Thuần thục', 'Tinh thông
 const catalystOf = { dan: 'tdc_dan_hoa_tinh', khi: 'nl_manh_phap_bao', tran: 'td_thien_dien_sa' };
 function phuongQ(user) { const me = Cu.getCultivator(user); return me ? Math.max(0, int(me.dan_phuong_quality || 0)) : 0; }
 function calc(user, rid, { boost = false } = {}) {
-  const r = C.RBY[rid]; const st = state(user, r.prof); const tf = techFx(user, r.prof); const mt = masteryTier(masteryN(user, rid));
+  const r = C.RBY[rid]; const st = state(user, r.prof); const tf = { ...techFx(user, r.prof) }; const mt = masteryTier(masteryN(user, rid));
+  try { for (const [k, v] of Object.entries(require('./dihoa20').fxFor(user, r))) tf[k] = (tf[k] || 0) + v; } catch (_) { /* Dị Hỏa lỗi → bỏ qua */ }   // v20
   const surplus = Math.max(0, st.level - r.lv);
   let rate = r.rate >= 1 ? 1 : clamp(r.rate + (tf.succ || 0) + 0.01 * mt + Math.min(0.05, 0.01 * surplus) + (boost ? 0.06 : 0) + (r.prof === 'dan' ? Math.min(0.08, 0.01 * phuongQ(user)) : 0), 0.05, 0.98);
   const cut = clamp((tf.time || 0) + 0.02 * mt, 0, 0.35);
@@ -106,6 +107,7 @@ function check(user, rid, qty = 1, { boost = false } = {}) {
   if (!me) return { ok: false, reasons: ['Bạn chưa bắt đầu tu tiên.'] };
   if (st.level < r.lv) reasons.push(`Cần ${C.PROFS[r.prof].name} cấp **${levelName(r.lv)}** (hiện ${levelName(st.level)})`);
   if (me.realm_index < r.realm) reasons.push(`Cần cảnh giới ≥ **${require('./constants').REALMS[r.realm].name}**`);
+  if (r.rare && !require('./learn20').learned(user, rid)) reasons.push('Chưa **học** công thức thất truyền này — dùng cuộn tương ứng ở **Sổ Tay**');   // v20
   const maxB = levelDef(st.level).batch; if (qty > maxB) reasons.push(`Cấp hiện tại chỉ chế tối đa ${maxB} mỗi lần`);
   if (r.cd && qty > 1) reasons.push('Công thức có hồi chiêu: chỉ chế 1 mỗi lần');
   const cl = cdLeft(user, rid); if (cl > 0) reasons.push(`Đang hồi chiêu ${require('./format').fmtTime(cl)}`);
@@ -145,14 +147,14 @@ function claim(user, jobId) {
     if (D.run("UPDATE craft_jobs SET state = 'done' WHERE job_id = ? AND user_id = ? AND state = 'brewing' AND ready_at <= ?", job.job_id, uid(user), now()).changes === 0) return { ok: false, msg: 'Lệnh chế này đã được nhận rồi.' };
     const r = C.RBY[job.recipe_id]; const cal = calc(user, r.id, { boost: !!job.boost });
     const outIt = I.BY_ID[r.out.item]; const isGear = r.kind === 'gear';
-    let ok = 0; let bad = 0; let bestQ = 0; const got = {}; const qs = {}; const refund = {}; const gearNames = [];
+    let ok = 0; let bad = 0; let bestQ = 0; const made = []; const got = {}; const qs = {}; const refund = {}; const gearNames = [];
     for (let i = 0; i < job.qty; i += 1) {
       if (random() < cal.rate) {
         ok += 1;
         const q = r.q ? rollQuality(cal.shift) : 0; bestQ = Math.max(bestQ, q);
         let n = r.out.qty; if (!isGear && random() < (cal.tf.dbl || 0)) n *= 2;
         if (isGear) { const gid = require('./gear17').create(user, r.out.item, q || 1); gearNames.push(`${C.GEAR[r.out.item].name} (${I.qName(q || 1)})`); got[`gear:${gid}`] = 1; }
-        else { const real = Inv.add(user, r.out.item, n, { q, why: `chế ${r.id}` }); const k = `${r.out.item}|${q}`; qs[k] = (qs[k] || 0) + real; }
+        else { const real = Inv.add(user, r.out.item, n, { q, why: `chế ${r.id}` }); for (let z = 0; z < real; z += 1) made.push({ item: r.out.item, q }); const k = `${r.out.item}|${q}`; qs[k] = (qs[k] || 0) + real; }
         if (random() < (cal.tf.save || 0)) for (const k of Object.keys(r.ing)) refund[k] = (refund[k] || 0) + 1;
       } else {
         bad += 1;
@@ -168,7 +170,8 @@ function claim(user, jobId) {
     D.run('INSERT INTO prof_mastery (user_id, recipe_id, n) VALUES (?,?,?) ON CONFLICT(user_id, recipe_id) DO UPDATE SET n = n + excluded.n', uid(user), r.id, job.qty);
     D.run('INSERT INTO craft_log (ts, user_id, prof_id, recipe_id, qty, ok, bad, best_q, note) VALUES (?,?,?,?,?,?,?,?,?)', now(), uid(user), r.prof, r.id, job.qty, ok, bad, bestQ, '');
     if (r.id === 'rc_dan_tay_tuy_nua' || true) D.run('UPDATE craft_jobs SET result = ? WHERE job_id = ?', JSON.stringify({ ok, bad, bestQ }), job.job_id);
-    const achMsg = checkAch(user, r.prof);
+    const v20Msg = require('./hooks20').afterCraft(user, module.exports, r, { ok, bad, bestQ, made });   // v20
+    const achMsg = checkAch(user, r.prof) + v20Msg;
     // dựng thông báo
     const lines = [];
     if (ok) {

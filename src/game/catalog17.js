@@ -39,6 +39,11 @@ const EXTRA_USES = {
   dan_pha_gioi: ['use_dan'], dan_tay_tuy_ts: ['taytuy'], dan_tay_tuy_nua: ['taytuy'], vp_ruong_than_bi: ['moruong'], vp_ve_bicanh_db: ['bicanh_db'],
 };
 Object.assign(EXTRA_USES, I19.USES);
+// v20.0: công dụng/nguồn của vật phẩm nghề nghiệp mới
+const V20 = require('../data/v20_data');
+for (let n = 1; n <= 10; n += 1) (EXTRA_USES[V20.ID.hoachung(n)] = EXTRA_USES[V20.ID.hoachung(n)] || []).push('dihoa');
+EXTRA_USES[V20.ID.phe] = ['pet_feed']; LEGACY_SRC[V20.ID.phe] = ['craft_fail'];
+for (const x of [...V20.pillSpecs().filter((p) => p.rare), ...V20.TRAN_SPECS]) EXTRA_USES[V20.ID.scroll(x.id)] = ['learn_recipe'];
 for (const id of Object.keys(C.SEEDS)) { (EXTRA_USES[id] = EXTRA_USES[id] || []).push('field'); }
 for (const id of Object.keys(C.PILLS)) (EXTRA_USES[id] = EXTRA_USES[id] || []).push('use_dan');
 for (const id of Object.keys(C.TRANS)) (EXTRA_USES[id] = EXTRA_USES[id] || []).push('deploy');
@@ -52,6 +57,7 @@ for (const [seed, s] of Object.entries(C.SEEDS)) {
 for (const id of SHOP_IDS) (EXTRA_SRC[id] = EXTRA_SRC[id] || []).push('npc_shop');
 // phân giải trang bị trả về
 const DISMANTLE = { pk_tho: 0.6, pk_trung: 0.6, pk_cao: 0.6, pk_tien: 0.5, tdc_khi_linh_hach: 0.25, tdc_manh_ban_ve: 0.1 };
+for (let n = 6; n <= 10; n += 1) DISMANTLE[`v20_pk_${n}`] = 0.5;   // v20.0: phân giải trang bị Tiên Cấp+ trả lại phôi
 for (const id of Object.keys(DISMANTLE)) (EXTRA_SRC[id] = EXTRA_SRC[id] || []).push('dismantle');
 EXTRA_SRC.nl_tap = [...(EXTRA_SRC.nl_tap || [])];
 EXTRA_SRC.dan_tu_khi = [];
@@ -114,13 +120,13 @@ const usages = (id) => {
 const SRC_LABEL = {
   ...I19.SRC_LABEL,
   field: 'Linh Điền (thu hoạch/biến dị)', field_seed: 'Linh Điền (thu hồi hạt giống)', npc_shop: 'NPC bán (Linh Thạch)', dismantle: 'Phân giải trang bị', code: 'Mã code', phithang: 'Phi Thăng',
-  shop_dan: 'Cửa Hàng Đan Dược', event: 'Sự kiện Đại Phú', boss_kill: 'Boss Thế Giới (kết liễu)',
+  shop_dan: 'Cửa Hàng Đan Dược', event: 'Sự kiện Đại Phú', boss_kill: 'Boss Thế Giới (kết liễu)', craft_fail: 'Luyện đan thất bại (sản phẩm phụ)',
 };
 const USE_LABEL = {
   ...I19.USE_LABEL,
   pet_feed: 'Cho Linh Thú ăn', talent_exchange: 'Đổi Bảo Thạch Thể Chất/Linh Căn', phithang: 'Con Đường Phi Thăng', thiendao: 'Thiên Đạo', gear_enh: 'Cường hoá trang bị', gear_refine: 'Tinh luyện trang bị',
   gear_repair: 'Sửa trang bị', catalyst_khi: 'Xúc tác Luyện Khí', catalyst_dan: 'Xúc tác Đan Sư', catalyst_tran: 'Xúc tác Trận Pháp', field: 'Linh Điền (gieo/tưới)', field_up: 'Nâng cấp Linh Điền',
-  field_fert: 'Bón Linh Điền', use_tanquyen: 'Đọc để tăng EXP Đan Sư', use_dan: 'Dùng (cắn đan)', deploy: 'Triển khai trận pháp', taytuy: 'Tẩy Tủy', moruong: 'Mở Rương', bicanh_db: 'Vào Bí Cảnh Đặc Biệt',
+  field_fert: 'Bón Linh Điền', dihoa: 'Thu phục Dị Hỏa (Đan Sư)', learn_recipe: 'Học công thức thất truyền', use_tanquyen: 'Đọc để tăng EXP Đan Sư', use_dan: 'Dùng (cắn đan)', deploy: 'Triển khai trận pháp', taytuy: 'Tẩy Tủy', moruong: 'Mở Rương', bicanh_db: 'Vào Bí Cảnh Đặc Biệt',
 };
 const srcLabel = (s) => {
   if (s.startsWith('recipe:')) { const r = C.RBY[s.slice(7)]; return r ? `Chế: ${r.name} (${C.PROFS[r.prof].name} cấp ${r.lv})` : s; }

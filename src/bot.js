@@ -131,7 +131,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v19.11 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v20.2 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);
@@ -149,6 +149,7 @@ async function main() {
   try { const n = require('./game/pets').migrateAll(); console.log(`🐾 Linh Thú v14.0: đã chuyển đổi ${n} Linh Thú kiểu cũ sang hệ thống mới.`); } catch (e) { console.error('⚠️ migrate Linh Thú:', e.message); }
   try { const m = require('./game/migrateV16').run(); console.log(m.skipped ? '📜 Công Pháp v16: đã migrate trước đó.' : `📜 Công Pháp v16: chuẩn hoá ${m.fixed}/${m.players} người có công pháp (bỏ ô lỗi: ${m.cleaned}). Sao lưu: ${m.backup || 'KHÔNG sao lưu được — xem log'}`); } catch (e) { console.error('⚠️ migrate Công Pháp v16:', e.message); }
   try { const m = require('./game/migrateV17').run(); console.log(m.skipped ? '🏮 Bách Nghề v17: đã migrate trước đó.' : `🏮 Bách Nghề v17: ${m.players} người chơi, dữ liệu V16 nguyên vẹn (${m.ok ? 'đối chiếu KHỚP' : 'LỆCH — xem log'}). Sao lưu: ${m.backup || 'KHÔNG sao lưu được — xem log'}`); } catch (e) { console.error('⚠️ migrate v17:', e.message); }
+  try { const m = require('./game/migrateV20').run(); console.log(m.skipped ? '🏮 Đại Hoàn Thiện Nghề Nghiệp v20: đã migrate trước đó.' : m.aborted ? m.error : `🏮 Đại Hoàn Thiện Nghề Nghiệp v20: thêm ${m.tables.length} bảng mới, ${m.players} người chơi giữ nguyên (sao lưu ${m.backup}).`); } catch (e) { console.error('⚠️ migrate v20 (bot vẫn chạy — V20 chỉ thêm bảng):', e.message); }
   try { require('./game/admin17').applyEco(); } catch (e) { console.error('⚠️ áp hệ số kinh tế /quantri:', e.message); }   // v17.2: nạp hệ số EXP admin đã chỉnh
   await syncPixelEmoji();
 
