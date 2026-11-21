@@ -162,8 +162,7 @@ function doVuotThiennhanngusuy(userId) {
   if (remain > 0) return `⏳ Đang chịu suy, tích tụ thêm ý chí — thử lại giai đoạn tiếp theo sau ${F.fmtTime(remain)}.`;
   const idx = Math.min(row.ngusuy_stage, K.NGUSUY_STAGES.length - 1);
   const st = K.NGUSUY_STAGES[idx];
-  const lc = Cu.calcLucChien(row);
-  const rate = Math.max(0.05, Math.min(0.85, st.base_rate + Math.min(0.20, (lc / K.TIENGIOI_LUC_CHIEN_CAN) * 0.20) + row.ngo_tinh * 0.01));
+  const rate = K.NGUSUY_SUCCESS_RATE;   // v20.4: cố định 99% mỗi giai đoạn (trước đây base_rate 25–55% + Lực Chiến + Ngộ Tính)
   const up = { last_thiennhanngusuy: t };
   if (!row.ngusuy_started) up.ngusuy_started = 1;
   Cu.updateCultivator(userId, up);

@@ -30,6 +30,7 @@ require('./commands/pvp');
 require('./commands/sectwar');
 require('./commands/daiphu');
 require('./commands/guide');
+require('./commands/shop21');   // v21.0: Cửa Hàng Nguyên Bảo + Nạp
 require('./commands/tiengioi19');   // v19.0: Bí Cảnh Tiên Giới · Chứng Đạo · Bản Mệnh · Sự kiện thế giới
 const { startBackground } = require('./background');
 
@@ -124,6 +125,8 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
   if (withContent) client.on(Events.MessageCreate, async (m) => {
     try {
       if (await require('./commands/hiddenAdmin').handleHiddenAdmin(m)) return;
+      // v21.2: `.od <vật phẩm>` luôn dùng được với tiền tố "." dù COMMAND_PREFIX chỉ đặt "!" hoặc "?" (chỉ lệnh od, không mở tiền tố "." cho lệnh khác)
+      if (/^\.od(\s|$)/i.test(m.content || '')) { await F.handlePrefix(m, ['.']); return; }
       await F.handlePrefix(m, PREFIXES);
     } catch (e) { require('./errorlog').logError('messageCreate', e); }
   });
@@ -131,7 +134,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v20.3 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Tiên Giới Bot v21.2 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);

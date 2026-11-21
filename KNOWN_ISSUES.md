@@ -60,3 +60,11 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Gia Cố không áp cho trận có giới hạn lượt; không có cơ chế "hỏng trận" nên không có "sửa" riêng cho Trận.
 - Thức tỉnh nhân toàn bộ chỉ số của món. Dấu ấn đan không gắn từng viên (chặn ≤ số viên, dọn mỗi lần lấy đan ra).
 - Chưa thử trên Discord thật (chỉ discord.js giả lập chặt + SQLite thật); số cân bằng của Khai Thác / Đơn Hàng / bảng rơi V20 cần chỉnh sau vài ngày chạy thật.
+
+## V21.0 — Cửa Hàng & Nạp (chi tiết: BAO_CAO_V21.md mục 4)
+- **Không có cổng thanh toán tự động.** Nạp = chuyển khoản thủ công + admin bấm "Done đơn". Bot không biết tiền đã vào; admin phải đối chiếu sao kê.
+- Giá Nguyên Bảo của từng mặt hàng là công thức ước lượng (√giá trị gốc), chưa kiểm với người chơi thật → chỉnh bằng hệ số giá / ẩn hàng trong `/quantri`.
+- `.od`: đơn mua trực tiếp cũng là QR tĩnh (khách tự nhập số tiền + nội dung); giá VNĐ = 💠 × 100đ. Thẻ đơn hiện công khai trong kênh (có QR/tên chủ TK, không có số dư/ví của khách).
+- Công Pháp (sách tầng) chưa nằm trong cửa hàng Nguyên Bảo (còn gate cảnh giới riêng); hiện mua bằng cửa hàng Công Pháp cũ.
+- Hàng "bán trong cửa hàng" làm vật phẩm khó (Hỏa Chủng, Đan Tẩy Tủy, vật liệu Chứng Đạo) mua được với giá ×3 — đây là quyết định theo yêu cầu "mọi thứ nhận được đều bán trừ nhiệm vụ", có thể ẩn từng món.
+

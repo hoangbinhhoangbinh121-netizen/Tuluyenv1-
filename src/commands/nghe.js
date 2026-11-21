@@ -14,7 +14,7 @@ cmd('linhdien', 'Linh Điền: gieo, tưới, bón, thu hoạch Linh Dược', '
 cmd('khophanloai', 'Kho Đồ phân loại: vật phẩm theo danh mục & phẩm cấp, chi tiết, bán NPC', 'inv');
 cmd('npcthumua', 'NPC thu mua / bán: bán 1 món, theo số lượng, hàng loạt có xem trước', 'npc');
 
-defineCommand({ name: 'doichieuv17', description: '[Admin] Bảng đối chiếu V16→V17: tình trạng migration, tổng vật phẩm theo từng loại (chỉ đọc)', admin: true, noDefer: true,
+defineCommand({ name: 'doichieuv17', description: '[Admin] Bảng đối chiếu V16→V17: tình trạng migration, tổng vật phẩm theo từng loại (chỉ đọc)', admin: true, noDefer: true, prefixOnly: true,   // v21: nhường 1 chỗ slash cho /cuahang
   async run(ctx) {
     const { AttachmentBuilder, MessageFlags } = require('discord.js'); const M = require('../game/migrateV17'); const text = M.reportText();
     const p = { content: `📋 ${text.split('\n')[0].slice(0, 1800)}`, files: [new AttachmentBuilder(Buffer.from(text, 'utf8'), { name: 'doichieu_v17.txt' })] };

@@ -23,6 +23,16 @@ const FULL = (id, tier) => { const lcol = R.lenhCol(tier); D.run(`UPDATE cultiva
   const s2 = mk(802, 9, 22, 1); FULL(s2, 1); D.run('UPDATE cultivators SET thiennhanngusuy_passed = 0, ngusuy_stage = 2, ngusuy_started = 1, last_thiennhanngusuy = ?, tu_vi = 1e9 WHERE user_id = ?', now() - 13 * 3600, s2);
   ok(!/tích tụ thêm ý chí/.test(A.doVuotThiennhanngusuy(s2)), 'người đang chịu suy từ 13 giờ trước không còn bị khóa');
 
+  // ---- 1b) v20.4: tỉ lệ thành công MỖI giai đoạn Ngũ Suy = 99% (người yếu cũng vậy)
+  ok(K.NGUSUY_SUCCESS_RATE === 0.99, 'NGUSUY_SUCCESS_RATE mặc định 0.99');
+  let pass = 0; const N = 600;
+  for (let i = 0; i < N; i += 1) {
+    const w = mk(9000 + i, 9, 22, 1); FULL(w, 1);
+    D.run('UPDATE cultivators SET thiennhanngusuy_passed = 0, ngusuy_stage = 0, ngusuy_started = 0, last_thiennhanngusuy = 0, tu_vi = 1e9, ngo_tinh = 0 WHERE user_id = ?', w);
+    A.doVuotThiennhanngusuy(w); if (row(w).ngusuy_stage === 1) pass += 1;
+  }
+  ok(pass / N >= 0.97, `giai đoạn 1: ${pass}/${N} thành công (kỳ vọng ~99%)`);
+
   // ---- 2) Bí Cảnh Tiên Giới
   const a = mk(810, 12, 1, 1);                       // cảnh giới đủ (Thái Ất Kim Tiên) nhưng vẫn ở Linh Giới
   const why = BC.whyCannotEnter(row(a), 0);

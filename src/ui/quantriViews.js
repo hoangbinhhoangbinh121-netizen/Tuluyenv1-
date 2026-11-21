@@ -20,6 +20,7 @@ const NAV = [
   ['nv', 'Nhân Vật', '🧙', 'Cảnh giới, tu vi, Linh Thạch, hồi phục, miễn Ngũ Suy'],
   ['kt', 'Kinh Tế', '💰', 'Hệ số EXP, rơi đồ, giá NPC (chỉnh trực tiếp)'],
   ['sk', 'Sự Kiện & Thông Báo', '📣', 'Tăng tốc tu luyện, tăng rơi đồ, thông báo server'],
+  ['dn', 'Cửa Hàng & Đơn Nạp', '🏪', 'Done đơn nạp, tài khoản nhận tiền, giá, ẩn hàng, cộng Nguyên Bảo'],
   ['nk', 'Nhật Ký Admin', '📜', 'Các thao tác admin gần nhất'],
 ];
 const navRow = (uid, cur) => rowOf(new StringSelectMenuBuilder().setCustomId(cid(uid, 'nav')).setPlaceholder('Chọn mục quản trị…')
@@ -67,6 +68,23 @@ const MODALS = {
 // hai biểu mẫu sự kiện/thông báo cần client → xử lý riêng (xem modalRun)
 MODALS.evspeed = { view: 'sk', title: 'Sự kiện tăng tốc tu luyện', fields: [{ id: 'm', label: 'Hệ số 0.1–50 (hoặc "tat")', maxLength: 8, placeholder: '2' }, { id: 'p', label: 'Số phút (bỏ trống = đến khi tắt)', required: false, maxLength: 6 }, { id: 'n', label: 'Thông báo ra kênh thế giới? (co/khong)', required: false, maxLength: 5, placeholder: 'co' }] };
 MODALS.evdrop = { view: 'sk', title: 'Sự kiện tăng tỉ lệ rơi', fields: [{ id: 'm', label: 'Hệ số 0.1–5 (hoặc "tat")', maxLength: 8, placeholder: '2' }, { id: 'p', label: 'Số phút (bỏ trống = đến khi tắt)', required: false, maxLength: 6 }, { id: 'n', label: 'Thông báo ra kênh thế giới? (co/khong)', required: false, maxLength: 5, placeholder: 'co' }] };
+// v21.0: Cửa Hàng Nguyên Bảo + đơn nạp (mọi thao tác ghi Nhật Ký Admin)
+const S21 = () => require('../game/shop21');
+MODALS.bank = { view: 'dn', title: 'Tài khoản nhận tiền', fields: [
+  { id: 'a', label: 'Mã ngân hàng VietQR (MB, VCB, TCB, ACB…)', maxLength: 20, placeholder: 'MB' },
+  { id: 'b', label: 'Số tài khoản', maxLength: 30 },
+  { id: 'c', label: 'Tên chủ tài khoản (viết hoa, không dấu)', maxLength: 60, placeholder: 'NGUYEN VAN A' }], run: (a, g) => S21().setBank(a, g('a'), g('b'), g('c')).msg };
+MODALS.dcode = { view: 'dn', title: 'Done đơn theo mã', fields: [{ id: 'o', label: 'Mã đơn (số, hoặc TG12)', maxLength: 12, placeholder: 'TG12' }, { id: 'n', label: 'Ghi chú (tuỳ chọn)', required: false, maxLength: 100 }] };
+MODALS.dgrant = { view: 'dn', title: 'Cộng/trừ Nguyên Bảo', fields: [U, { id: 'n', label: 'Số Nguyên Bảo: 500 hoặc -200', maxLength: 10 }, { id: 'w', label: 'Lý do (tuỳ chọn)', required: false, maxLength: 80 }],
+  run: (a, g) => { const u = A.resolveUser(g('u')); if (u.err) return u.err; return S21().adminGrant(a, u.id, Number(String(g('n')).replace(/[^\d-]/g, '')) || 0, g('w')).msg; } };
+MODALS.dwal = { view: 'dn', title: 'Xem ví người chơi', fields: [U], run: (a, g) => {
+  const u = A.resolveUser(g('u')); if (u.err) return u.err; const w = S21().wallet(u.id); const os = S21().ordersOf(u.id, 5);
+  return `💠 <@${u.id}>: số dư **${fmtNum(w.nb)}** · đã nạp ${fmtNum(w.topped)} (${fmtNum(w.vnd)}đ) · đã tiêu ${fmtNum(w.spent)}${os.length ? `\nĐơn gần nhất: ${os.map((o) => `#${o.id} ${o.status}`).join(', ')}` : ''}`; } };
+MODALS.dprice = { view: 'dn', title: 'Giá & mở/đóng cửa hàng', fields: [
+  { id: 'a', label: 'Hệ số giá ×(0.1–20, mặc định 1)', required: false, maxLength: 8, placeholder: 'bỏ trống = giữ nguyên' },
+  { id: 'b', label: 'Cửa hàng: mo / dong (bỏ trống = giữ nguyên)', required: false, maxLength: 6 }],
+  run: (a, g) => { const out = []; if (String(g('a')).trim()) out.push(S21().setMult(a, g('a')).msg); const b = String(g('b')).trim().toLowerCase(); if (b) { if (/^(mo|mở|open|on|1)$/.test(b)) out.push(S21().setOpen(a, true).msg); else if (/^(dong|đóng|close|off|0)$/.test(b)) out.push(S21().setOpen(a, false).msg); else out.push('❌ Gõ `mo` hoặc `dong`.'); } return out.join('\n') || 'ℹ️ Không có gì thay đổi.'; } };
+MODALS.dhide = { view: 'dn', title: 'Ẩn / hiện mặt hàng', fields: [{ id: 'k', label: 'Tên hoặc mã (i:…, g:…, t:…, p:…)', maxLength: 60, placeholder: 'Truyền Thừa Ngọc Giản' }], run: (a, g) => { const e = S21().findEntry(g('k')); if (!e) return '❌ Không tìm thấy mặt hàng.'; return S21().toggleHide(a, e.key).msg; } };
 MODALS.ann = { view: 'sk', title: 'Thông báo toàn server', fields: [{ id: 't', label: 'Tiêu đề', maxLength: 80, placeholder: 'Bảo trì / Sự kiện mới…' }, { id: 'c', label: 'Nội dung', paragraph: true, maxLength: 1500 }] };
 
 async function announce(i, title, text) {
@@ -91,6 +109,12 @@ async function modalRun(act, admin, get, i) {
     const info = A.setEvDrop(admin, m, Math.max(0, Math.trunc(Number(get('p')) || 0)));
     const a = yes(get('n')) ? `\n${await announce(i, 'Tăng tỉ lệ rơi', `🎁 **Cơ duyên giáng thế!** Tỉ lệ rơi nguyên liệu tăng **×${info.mult}** ${mins(info.until)} (Bí Cảnh, Boss, Linh Thú…).`)}` : '';
     return `✅ Tăng tỉ lệ rơi **×${info.mult}** — ${mins(info.until)}. Trần rơi theo ngày/tuần/phẩm cấp vẫn áp dụng.${a}`;
+  }
+  if (act === 'dcode') {
+    const id = Number(String(get('o')).replace(/\D/g, '')); if (!id) return '❌ Nhập mã đơn.';
+    const r = S21().confirm(admin, id, get('n') || ''); if (!r.ok) return r.msg;
+    const dm = await require('./shop21Views').dm(i.client, r.order.user_id, { content: require('./shop21Views').doneDm(r.order) });
+    return `${r.msg}${dm ? '\n📨 Đã nhắn riêng cho người chơi.' : '\nℹ️ Không nhắn riêng được (họ tắt DM) — hãy báo họ.'}`;
   }
   if (act === 'ann') { const t = String(get('t')).trim(); const c = String(get('c')).trim(); if (!t || !c) return '❌ Cần cả tiêu đề và nội dung.'; const r = await announce(i, t.slice(0, 80), c); A.log(admin, 'thong_bao', '', `${t}: ${c}`.slice(0, 300)); return r; }
   return MODALS[act].run(admin, get);
@@ -141,9 +165,30 @@ function viewNk(uid) {
   e.setDescription(fit(rows.length ? listFit(rows.map(fmt), 3800) : 'Chưa có thao tác admin nào.', 4000));
   return { embeds: [e], components: [navRow(uid, 'nk'), rowOf(btn(cid(uid, 'rf', 'nk'), 'Làm mới', '🔄'), btn(cid(uid, 'exp'), 'Xuất .txt (200 dòng)', '📄'))] };
 }
-const VIEWS = { home: viewHome, vp: viewVp, nv: viewNv, kt: viewKt, sk: viewSk, nk: viewNk };
-function render(uid, view = 'home', note = '') {
-  const out = (VIEWS[view] || viewHome)(String(uid)); if (note) out.content = fit(note, 1900, ''); return out;
+const ORD_ST = { pending: '⏳ chờ', done: '✅ xong', cancelled: '🚫 huỷ', expired: '⌛ hết hạn' };
+function viewDn(uid, selId) {
+  const s = S21(); const st = s.stats(); const b = s.bank(); const e = new EmbedBuilder().setTitle('🏪 Cửa Hàng & Đơn Nạp').setColor(0xf1c40f);
+  e.setDescription(fit('**Done đơn** = xác nhận bạn đã nhận đủ tiền thật → bot cộng 💠 Nguyên Bảo cho người chơi (mỗi đơn chỉ cộng 1 lần). Bot **không tự biết** tiền đã vào tài khoản — hãy đối chiếu sao kê rồi mới bấm Done. Nội dung chuyển khoản của khách là mã `TG<số đơn>`.', 600));
+  const pend = s.pendingOrders(25);
+  const line = (o) => `**#${o.id}** · <@${o.user_id}> · ${o.kind === 'item' ? s.orderText(o) : `${s.vnd(o.vnd)} → ${fmtNum(o.nb)} 💠`}${o.claimed ? ' · **đã báo chuyển** ✅' : ''} · <t:${Math.floor(o.created_at)}:R>`;
+  e.addFields(
+    F('⏳ Đơn chờ xử lý', pend.length ? listFit(pend.slice(0, 10).map(line), 1000) + (pend.length > 10 ? `\n… còn ${pend.length - 10} đơn (chọn ở menu hoặc dùng "Done theo mã")` : '') : 'Không có đơn chờ.'),
+    F('💵 Doanh thu đã xác nhận', `Hôm nay: **${s.vnd(st.today.v)}** (${st.today.n} đơn)\n30 ngày: **${s.vnd(st.d30.v)}** (${st.d30.n} đơn)\nTổng: **${s.vnd(st.all.v)}** (${st.all.n} đơn)`, true),
+    F('⚙️ Cấu hình', `Cửa hàng: ${s.shopOn() ? '🟢 mở' : '🔴 đóng'}\nHệ số giá: **×${s.mult()}**\nNhận tiền: ${b.ready ? `**${b.id}** · ${b.acc} · ${b.name} (VietQR động, tự điền số tiền + nội dung)` : s.qrFile() ? `✅ **Mã QR tĩnh** (${s.QR_OWNER}) — khách tự nhập số tiền + nội dung` : '⚠️ **CHƯA CÀI** (khách chưa nạp được)'}\nLượt mua: ${fmtNum(st.buys)}`, true));
+  const comps = [navRow(uid, 'dn')];
+  if (pend.length) comps.push(rowOf(new StringSelectMenuBuilder().setCustomId(cid(uid, 'dsel')).setPlaceholder('Chọn đơn để xử lý…').addOptions(pend.map((o) => ({ label: `#${o.id} · ${s.vnd(o.vnd)}${o.claimed ? ' · đã báo chuyển' : ''}`.slice(0, 100), value: String(o.id), description: `User ${o.user_id}`.slice(0, 100), default: String(o.id) === String(selId) })))));
+  const o = selId ? s.order(selId) : null;
+  if (o && o.status === 'pending') {
+    e.addFields(F(`🧾 Đang chọn đơn #${o.id}`, `<@${o.user_id}> · ${o.kind === 'item' ? `**${s.orderText(o)}**` : `**${s.vnd(o.vnd)}** → **${fmtNum(o.nb)}** 💠`}\nNội dung CK phải là \`${s.code(o.id)}\` · ${o.claimed ? 'khách đã báo chuyển' : 'khách CHƯA báo chuyển'}`));
+    comps.push(rowOf(btn(cid(uid, 'dok', String(o.id)), `Done đơn #${o.id}`, '✅', ButtonStyle.Success), btn(cid(uid, 'dno', String(o.id)), 'Huỷ đơn', '🚫', ButtonStyle.Danger)));
+  }
+  comps.push(rowOf(btn(cid(uid, 'm', 'dcode'), 'Done theo mã', '✅', ButtonStyle.Success), btn(cid(uid, 'm', 'bank'), 'Tài khoản nhận tiền', '🏦', ButtonStyle.Primary), btn(cid(uid, 'm', 'dgrant'), 'Cộng/trừ 💠', '💠'), btn(cid(uid, 'm', 'dwal'), 'Xem ví', '👛'), btn(cid(uid, 'm', 'dprice'), 'Giá · Mở/đóng', '⚙️')));
+  comps.push(rowOf(btn(cid(uid, 'm', 'dhide'), 'Ẩn/hiện hàng', '🙈'), btn(cid(uid, 'rf', 'dn'), 'Làm mới', '🔄')));
+  return { embeds: [e], components: comps };
+}
+const VIEWS = { home: viewHome, vp: viewVp, nv: viewNv, kt: viewKt, sk: viewSk, nk: viewNk, dn: viewDn };
+function render(uid, view = 'home', note = '', arg = '') {
+  const out = (VIEWS[view] || viewHome)(String(uid), arg); if (note) out.content = fit(note, 1900, ''); return out;
 }
 const open = (i, uid, view = 'home') => i.reply({ ...render(uid, view), flags: EPHEMERAL });
 
@@ -164,6 +209,13 @@ registerStatic('qt', async (i, parts) => {
         return mi.reply({ content: fit(msg, 1900, '✅'), flags: EPHEMERAL });
       } });
     }
+    case 'dsel': return i.update(render(uid, 'dn', '', sel));
+    case 'dok': {
+      const r = S21().confirm(i.user.id, Number(arg)); if (!r.ok) return i.update(render(uid, 'dn', r.msg));
+      const dm = await require('./shop21Views').dm(i.client, r.order.user_id, { content: require('./shop21Views').doneDm(r.order) });
+      return i.update(render(uid, 'dn', `${r.msg}${dm ? '\n📨 Đã nhắn riêng cho người chơi.' : '\nℹ️ Không nhắn riêng được (họ tắt DM) — hãy báo họ.'}`));
+    }
+    case 'dno': { const r = S21().adminCancel(i.user.id, Number(arg)); if (r.ok) await require('./shop21Views').dm(i.client, r.order.user_id, { content: `🚫 **Đơn nạp #${r.order.id}** đã bị huỷ. Nếu bạn đã chuyển tiền, hãy liên hệ admin.` }); return i.update(render(uid, 'dn', r.msg)); }
     case 'off': { const r = A.setSpeedEvent(i.user.id, 'tat'); A.setEvDrop(i.user.id, 1, 0); return i.update(render(uid, 'sk', `🛑 Đã tắt mọi sự kiện${r.was ? ' (tăng tốc tu luyện)' : ''}.`)); }
     case 'exp': return i.reply({ content: '📄 Nhật ký admin (200 dòng gần nhất):', files: [new AttachmentBuilder(Buffer.from(A.logText(200), 'utf8'), { name: 'nhat_ky_admin.txt' })], flags: EPHEMERAL });
     default: return i.update(render(uid, 'home'));
