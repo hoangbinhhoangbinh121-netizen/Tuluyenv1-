@@ -71,7 +71,7 @@ for (const k of A19) {
 ok(E9.a('atk') === FB.a19_atk, 'chưa tải lên → dùng Unicode dự phòng');
 // emoji cũ KHÔNG bị đụng: các khóa pixel của bản trước vẫn nguyên (kiểm bằng số lượng + vài khóa mốc)
 for (const k of ['canhgioi_14', 'bc19_04', 'boss19', 'mob_canh', 'kiem', 'hp', 'bosstg']) ok(fs.existsSync(path.join(__dirname, '..', 'assets', 'emoji', `${k}.png`)), `emoji cũ ${k} còn nguyên`);
-ok(EM.ALL_KEYS.length === 511 + A19.length + 26, `tổng emoji = 511 cũ + ${A19.length} mới v19 + 26 mới v20 (${EM.ALL_KEYS.length})`);
+ok(EM.ALL_KEYS.length === 511 + A19.length + 26 + 31, `tổng emoji = 511 cũ + ${A19.length} mới v19 + 26 mới v20 + 31 chủng tộc v21.5 (${EM.ALL_KEYS.length})`);
 // giả lập đã tải lên → px() & nút dùng thẻ pixel
 let id = 700000000000000000n; for (const k of A19) EM.CUSTOM_EMOJI[`a19_${k}`] = `<:tg7_a19_${k}:${id++}>`;
 const t = E9.px('⚔️ **A** dùng **Đánh Thường**\n✨ **A** dùng **Thần Thông**\n💢 **X** −5\n⚠️ **Boss** đang tụ lực\n🛡️ **A** thủ thế\n☠️ **A** gục\n✨ lấp lánh');

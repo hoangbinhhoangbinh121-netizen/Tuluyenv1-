@@ -33,7 +33,8 @@ ok(S.price(exp, 2) > S.price(cheap, 2) * 5, 'đồ hiếm đắt hơn hẳn đ�
 ok(S.listGroup('', 'truyen thua').some((e) => e.key === 't:truyen_thua'), 'tìm không dấu "truyen thua"'); ok(S.listGroup('', 'ĐAN').length > 0, 'tìm có dấu');
 // giá tăng theo tầng: đồ giai đoạn 10 đắt hơn giai đoạn 1 nhưng KHÔNG đắt gấp triệu lần
 const hi = Math.max(...L.map((e) => S.price(e, 2))); const lo = Math.min(...L.map((e) => S.price(e, 2)));
-ok(hi > lo && hi / lo < 20000, `dải giá hợp lý (${lo}…${hi})`);
+// v21.6: Đan Tẩy Tủy ×30 theo yêu cầu admin (6.000 → 180.000) nên trần tỉ lệ nâng từ 20.000 lên 200.000
+ok(hi > lo && hi / lo < 200000, `dải giá hợp lý (${lo}…${hi})`);
 ok(S.PACKAGES.map((p) => p.vnd).join() === '10000,20000,50000,100000', 'đủ 4 gói 10k/20k/50k/100k');
 ok(S.PACKAGES.every((p, i, a) => i === 0 || S.pkgNb(p) / p.vnd >= S.pkgNb(a[i - 1]) / a[i - 1].vnd), 'gói lớn không lời kém gói nhỏ');
 

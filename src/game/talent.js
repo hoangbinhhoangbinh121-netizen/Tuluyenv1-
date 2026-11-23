@@ -257,6 +257,8 @@ function bundle(row) {
   for (const r of RESONANCES) if (r.test(p)) { add(out, null, r.fx); sources.push({ kind: 'Cộng hưởng', name: r.name, fx: r.fx }); }
   // 5b) v16: công pháp mới đang trang bị
   if (Object.keys(cpx).length) { add(out, null, cpx); sources.push({ kind: 'Công Pháp', name: 'Công Pháp V16 đang trang bị', fx: { ...cpx } }); }
+  // 5c) v21.5: Chủng Tộc (race_state) — cùng gói + cùng trần CAPS; chưa chọn tộc = không cộng gì (giữ nguyên V21.4)
+  try { const rf = require('./race21').fxOf(row); if (rf) { add(out, null, rf.fx); sources.push({ kind: 'Chủng Tộc', name: rf.label, fx: rf.fx }); } } catch (e) { /* bảng chưa có / DB tạm: bỏ qua, không làm hỏng chỉ số */ }
   // 6) độ tinh khiết: dùng trực tiếp ở tuluyenFactor / absorb — không cộng vào mọi chỉ số.
   const b = { sources, raw: { ...out } };
   for (const k of Object.keys(CAPS)) {

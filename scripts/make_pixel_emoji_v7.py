@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-make_pixel_emoji_v7.py — bộ emoji pixel ĐỒNG BỘ cho Tiên Giới Bot v7.0
+make_pixel_emoji_v7.py — bộ emoji pixel ĐỒNG BỘ cho Thiên Tông Bot v7.0
 
 Mọi icon: lưới 32x32, viền nâu đậm + bevel sáng/tối, phóng x4 (nearest) -> PNG 128x128 nền trong suốt.
 (Cùng chuẩn với 46 icon gốc của make_pixel_emoji.py; bản này vẽ thêm các icon còn thiếu và vẽ lại `bequan`

@@ -1,7 +1,7 @@
 'use strict';
 /**
  * LỚP ĐỒNG BỘ GIAO DIỆN — mọi tin nhắn bot gửi ra (tính năng cũ lẫn mới) đều đi qua đây để:
- *  • Embed cũ: đổi màu về bảng màu v7, thêm footer "✦ Tiên Giới Bot v18.2 · Thiên Đạo" + timestamp, ép giới hạn Discord.
+ *  • Embed cũ: đổi màu về bảng màu v7, thêm footer "✦ Thiên Tông Bot v21.4 · Thiên Đạo" + timestamp, ép giới hạn Discord.
  *  • Tin nhắn chữ thuần ("❌ …", "⏳ …", "✅ …") → Embed chuẩn (thành công/lỗi/cooldown/cảnh báo/thông tin) có mã lỗi E00x.
  *  • Mọi emoji tuỳ chỉnh cũ gắn cứng ID → emoji pixel hiện hành (không bao giờ hiện ":tên:" thô).
  *  • Bọc interaction: reply/editReply/followUp/update an toàn (không lỗi "đã trả lời"), tự báo "đang xử lý" nếu chậm >2,2s.
@@ -41,7 +41,7 @@ function skinEmbed(e) {
   if (d.fields) d.fields = d.fields.map((f) => ({ ...f, name: skinEmojiText(f.name), value: skinEmojiText(f.value) }));
   const old = d.footer && d.footer.text;
   if (!old) d.footer = { text: FOOTER_TEXT };
-  else if (!old.includes('Tiên Giới Bot')) d.footer = { ...d.footer, text: `${FOOTER_TEXT} · ${old}`.slice(0, 2048) };
+  else if (!old.includes('Thiên Tông Bot') && !old.includes('Tiên Giới Bot')) d.footer = { ...d.footer, text: `${FOOTER_TEXT} · ${old}`.slice(0, 2048) };
   if (!d.timestamp) d.timestamp = new Date().toISOString();
   return enforceLimits(eb);
 }
@@ -49,7 +49,7 @@ function skinEmbed(e) {
 /** Chuẩn hóa payload gửi đi. edit=true: cần xoá content/embeds cũ khi đổi sang embed. */
 function normalizePayload(payload, { edit = false } = {}) {
   let p = typeof payload === 'string' ? { content: payload } : { ...(payload || {}) };
-  if (p.skin === false) { delete p.skin; return p; }
+  if (p.skin === false) { delete p.skin; require('./validate').check(p, 'raw'); return p; }
   delete p.skin;
   if (typeof p.content === 'string') p.content = skinEmojiText(p.content);
   const hasEmbeds = Array.isArray(p.embeds) && p.embeds.length > 0;
@@ -60,6 +60,7 @@ function normalizePayload(payload, { edit = false } = {}) {
   } else if (hasEmbeds) {
     p.embeds = p.embeds.map(skinEmbed);
   }
+  require('./validate').check(p, 'send');   // v21.4: chặn lỗi component/embed trước khi lên Discord
   return p;
 }
 
@@ -70,7 +71,19 @@ function wrapInteraction(i) {
   i.__skinned = true;
   const acked = () => i.deferred || i.replied;
   const orig = {};
-  for (const k of ['reply', 'editReply', 'followUp', 'update', 'deferReply', 'deferUpdate', 'showModal']) if (typeof i[k] === 'function') orig[k] = i[k].bind(i);
+  // v21.6: DNS/mạng chập chờn (EAI_AGAIN…) ⇒ thử lại tối đa 2 lần, CHỈ với lỗi chắc chắn chưa gửi được yêu cầu (không sợ trả lời 2 lần) và chỉ khi còn trong hạn 3 giây của Discord.
+  const { isPreSend } = require('../errorlog'); const BACKOFF = [250, 700];
+  const retry = (fn) => async (...a) => {
+    for (let n = 0; ; n++) {
+      try { return await fn(...a); }
+      catch (e) {
+        const left = 2700 - (Date.now() - (i.createdTimestamp || Date.now()));
+        if (!isPreSend(e) || n >= BACKOFF.length || (!i.deferred && !i.replied && left < BACKOFF[n])) throw e;
+        await new Promise((r) => setTimeout(r, BACKOFF[n]));
+      }
+    }
+  };
+  for (const k of ['reply', 'editReply', 'followUp', 'update', 'deferReply', 'deferUpdate', 'showModal']) if (typeof i[k] === 'function') orig[k] = retry(i[k].bind(i));
   let timer = null;
   const stop = () => { if (timer) { clearTimeout(timer); timer = null; } };
   const noFlags = (p) => { const q = { ...p }; delete q.flags; delete q.ephemeral; return q; };

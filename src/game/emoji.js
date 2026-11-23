@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Hệ emoji PIXEL của Tiên Giới Bot v11.0.
+ * Hệ emoji PIXEL của Thiên Tông Bot (hệ emoji khởi tạo từ v11.0).
  *
  *  - Nguồn duy nhất: assets/emoji/<key>.png (128x128, vẽ bởi scripts/make_pixel_emoji_v7.py).
  *  - Lúc khởi động bot tự tải lên thành "Application Emoji" tên `tg7_<key>` (nếu chưa có) rồi dùng <:tg7_key:id>.
@@ -42,6 +42,14 @@ const LEGACY_ALIAS = {
  * `tg7_canhgioi_14_v18` → không bao giờ hiện nhầm tranh cũ, không phải xoá gì trên Discord, chạy lặp vẫn an toàn.
  */
 const REMOTE_REVISION = { canhgioi_14: 'v18' };
+/**
+ * v21.6: người chơi/admin vẽ lại 1 emoji (giữ nguyên tên file) ⇒ thêm vào `assets/emoji_revisions.json` dạng {"race_nhan": "b"} (hậu tố 1–6 ký tự a-z0-9).
+ * Bot sẽ tải ảnh mới lên với tên `tg7_<key>_<hậu tố>` (không phải xoá gì trên Discord). Đổi hậu tố mỗi lần vẽ lại tiếp (b → c → d…). File hỏng/thiếu = bỏ qua.
+ */
+try {
+  const rev = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'assets', 'emoji_revisions.json'), 'utf8'));
+  for (const [k, v] of Object.entries(rev || {})) if (/^[a-z0-9_]{1,40}$/.test(k) && /^[a-z0-9]{1,6}$/.test(String(v))) REMOTE_REVISION[k] = String(v);
+} catch (_) { /* không có file = không có bản vẽ lại */ }
 const remoteName = (key) => PREFIX + key + (REMOTE_REVISION[key] ? `_${REMOTE_REVISION[key]}` : '');
 
 const isPixel = (s) => typeof s === 'string' && s.includes(`:${PREFIX}`);
@@ -201,6 +209,6 @@ const stageEmoji = (realmIdx, stageIdx) => {
 };
 
 module.exports = {
-  E, BAR, CUSTOM_EMOJI, PREFIX, ALL_KEYS, syncPixelEmoji, continuePixelSyncInBackground, applyEmojiFallbacks,
+  E, BAR, CUSTOM_EMOJI, PREFIX, ALL_KEYS, remoteName, syncPixelEmoji, continuePixelSyncInBackground, applyEmojiFallbacks,
   toComponentEmoji, skinEmojiText, realmEmoji, stageEmoji, remoteName, FALLBACK,
 };

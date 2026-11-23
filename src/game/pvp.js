@@ -1,58 +1,50 @@
 'use strict';
 const HX = (id) => { try { const h = require('./fx19').hieuOf(id); return h ? ` 「${h}」` : ''; } catch (_) { return ''; } };   // v19.0: Đế Hiệu hiển thị khi PvP
-/** PvP theo hiệp: khiêu chiến (Chấp Nhận/Từ Chối) + mỗi hiệp 2 bên tự chọn hành động — port từ engine round-by-round */
-const crypto = require('node:crypto');
+/**
+ * PvP theo hiệp (v21.3): khiêu chiến (Chấp Nhận/Từ Chối) + mỗi hiệp 2 bên tự chọn hành động.
+ * Vòng đấu do game/combat21.js điều khiển: KHÔNG giới hạn hiệp; AFK = bỏ lượt (không tự đánh); hòa/đầu hàng/bế tắc có luật rõ;
+ * chốt trận 1 lần trong DB (v213_battles); nhật ký đầy đủ lưu lại; bot khởi động lại → trận đang dở bị huỷ (không ai mất gì).
+ */
 const { EmbedBuilder } = require('discord.js');
-const K = require('./constants');
-const R = require('./realm');
 const CD = require('./cooldowns');
 const Cu = require('./cultivator');
 const P = require('./pvpCore');
-const BAL = require('./balance');
-const T = require('./talent');
+const C21 = require('./combat21');
 const PetC = require('./petCombat');
 const F = require('./format');
 const { E } = require('./emoji');
 const { View, globalClickAllowed, EPHEMERAL } = require('../ui/kit');
-const { now, int, random, choice } = require('../util');
+const { now } = require('../util');
 
-const { ATTACK_NORMAL, PVP_ACTION_DEFEND, PVP_ACTION_KILLMOVE, PVP_ROUNDS } = P;
+const { ATTACK_NORMAL, PVP_ACTION_DEFEND, PVP_ACTION_KILLMOVE } = P;
 const SESSIONS = new Map();
 const BUSY = new Map();
 const sid = (x) => String(x);
 
 function buildSession(guildId, channelId, aId, bId) {
   aId = sid(aId); bId = sid(bId);
-  const a = Cu.getCultivator(aId); const b = Cu.getCultivator(bId);
-  const atkA = Cu.effectiveAtk(a); const defA = Cu.effectiveDef(a); const spdA = Cu.effectiveSpd(a);
-  const atkB = Cu.effectiveAtk(b); const defB = Cu.effectiveDef(b); const spdB = Cu.effectiveSpd(b);
-  const PW = BAL.pvpPowers(a, b, Cu, { foe: true }); const powerA = PW.powerA; const powerB = PW.powerB;
-  const selfBuff = PW.buffA; const enemyDebuff = PW.debuffA;
-  const buffNote = (selfBuff || enemyDebuff || PW.buffB || PW.debuffB) ? `\n🌀 Công pháp phát động: 🅰️ +${int(PW.buffA * 100)}%/-${int(PW.debuffA * 100)}% · 🅱️ +${int(PW.buffB * 100)}%/-${int(PW.debuffB * 100)}% (buff / debuff đối thủ).` : '';
-  const realmA = R.realmDisplay(a.realm_index, a.stage_index); const realmB = R.realmDisplay(b.realm_index, b.stage_index);
-  const [mAtkA, mAtkB] = P.statArrow(atkA, atkB); const [mDefA, mDefB] = P.statArrow(defA, defB);
-  const [mSpdA, mSpdB] = P.statArrow(spdA, spdB); const [mPowA, mPowB] = P.statArrow(powerA, powerB);
-  const header = `🅰️ <@${aId}>${HX(aId)} (${realmA}) — Công ${atkA}${mAtkA} | Thủ ${defA}${mDefA} | Tốc ${spdA}${mSpdA} | Lực Chiến ${powerA}${mPowA}\n🅱️ <@${bId}>${HX(bId)} (${realmB}) — Công ${atkB}${mAtkB} | Thủ ${defB}${mDefB} | Tốc ${spdB}${mSpdB} | Lực Chiến ${powerB}${mPowB}${buffNote}`;
-  const hpMax = 100;
-  const arena = PetC.buildArena(a, b);
-  const s = {
-    id: crypto.randomBytes(6).toString('hex'), guild_id: guildId, channel_id: channelId, a_id: aId, b_id: bId,
-    arena, mods: { A: PetC.mergeMods(T.combatMods(a), arena.A), B: PetC.mergeMods(T.combatMods(b), arena.B) }, atk: { A: atkA, B: atkB }, def_: { A: defA, B: defB }, spd: { A: spdA, B: spdB }, power: { A: powerA, B: powerB },
-    skills: { A: P.pvpActionListFor(a), B: P.pvpActionListFor(b) }, pet: { A: arena.A.pet ? arena.A.pet.name : '', B: arena.B.pet ? arena.B.pet.name : '' },
-    tag: { A: `<@${aId}>${HX(aId)}`, B: `<@${bId}>${HX(bId)}` }, hp_max: hpMax, hp_pool: { A: hpMax, B: hpMax }, round: 1,
-    actions: { A: null, B: null }, acted: { A: false, B: false }, resolving: false, round_token: 0, active_view: null,
-    round_blocks: [], battle_data_rounds: [], header, realm_line: `🅰️ <@${aId}>${HX(aId)}: ${realmA}\n🅱️ <@${bId}>${HX(bId)}: ${realmB}`,
-    rowA: a, rowB: b, stake_cap: Math.max(10, int(Math.min(a.tu_vi, b.tu_vi) * 0.05)), cur_hp_a: a.cur_hp, cur_hp_b: b.cur_hp, message: null, settled: false, created_at: now(),
-  };
+  const s = C21.createBattle(Cu.getCultivator(aId), Cu.getCultivator(bId), { guildId, channelId, mode: 'duel', now: now() });
+  Object.assign(s, { a_id: aId, b_id: bId, actions: { A: null, B: null }, acted: { A: false, B: false }, resolving: false, round_token: 0, active_view: null, message: null, settled: false, created_at: now() });
+  C21.record(s);
   SESSIONS.set(s.id, s); BUSY.set(aId, s.id); BUSY.set(bId, s.id);
   return s;
 }
+const FXE = require('./effectEngine');
+/** v21.6: hồi chiêu Sát Chiêu / Kỹ Năng Tộc + hiệu ứng đang có (rỗng nếu không có gì để hiện). */
+function fxLine(s) {
+  const out = [];
+  for (const k of ['A', 'B']) {
+    const bits = [];
+    if (s.cd && s.cd[k].kill > 0) bits.push(`Sát Chiêu hồi ${s.cd[k].kill}`);
+    if (s.cd && s.race && s.race[k] && s.cd[k].race > 0) bits.push(`Kỹ Năng Tộc hồi ${s.cd[k].race}`);
+    const d = s.fx ? FXE.describe(s.fx, k) : ''; if (d) bits.push(d);
+    if (bits.length) out.push(`${s.tag[k]}: ${bits.join(' · ')}`);
+  }
+  return out.length ? `\n🌀 ${out.join('  |  ')}` : '';
+}
 const statusLine = (s) => `${s.acted.A ? '✅' : '⏳'} ${s.tag.A} đã chọn  —  ${s.acted.B ? '✅' : '⏳'} ${s.tag.B} đã chọn`;
 function roundEmbed(s) {
-  const e = new EmbedBuilder().setTitle('⚔️ ĐẤU PHÁP').setDescription(s.header).setColor(0xf1c40f);
-  for (const [rnd, text] of s.round_blocks) e.addFields({ name: `⏱️ Hiệp ${rnd}/${PVP_ROUNDS}`, value: text, inline: false });
-  e.addFields({ name: `⏱️ Hiệp ${s.round}/${PVP_ROUNDS} — Chọn hành động`, value: `❤️ ${s.tag.A}: ${Math.max(0, s.hp_pool.A)}/${s.hp_max}  |  ${s.tag.B}: ${Math.max(0, s.hp_pool.B)}/${s.hp_max}\n${statusLine(s)}`, inline: false });
-  return e;
+  return C21.embed(s, { live: `❤️ ${s.tag.A}: ${Math.max(0, s.hp.A)}/${s.hp_max}  |  ${s.tag.B}: ${Math.max(0, s.hp.B)}/${s.hp_max}\n${statusLine(s)}${fxLine(s)}\n⏱️ ${P.PVP_ROUND_TIMEOUT}s — quá giờ = bỏ lượt (${s.policy.afkForfeit} lần liên tiếp = xử thua).` });
 }
 const sideOf = (s, uid) => (sid(uid) === s.a_id ? 'A' : sid(uid) === s.b_id ? 'B' : null);
 const eph = (i, c, x = {}) => i.reply({ content: c, flags: EPHEMERAL, ...x });
@@ -67,6 +59,10 @@ function cleanupSession(s) { BUSY.delete(s.a_id); BUSY.delete(s.b_id); SESSIONS.
 async function recordAction(s, side, action) {
   if (s.settled || s.acted[side]) return;
   s.actions[side] = action; s.acted[side] = true;
+  if (action === C21.SURRENDER) {                                  // đầu hàng: chốt ngay, không chờ đối thủ
+    if (!s.resolving) { s.resolving = true; for (const k of ['A', 'B']) if (!s.acted[k]) s.acted[k] = true; await resolveRound(s); }
+    return;
+  }
   if (s.acted.A && s.acted.B && !s.resolving) { s.resolving = true; await resolveRound(s); return; }
   if (s.message) { try { await s.message.edit({ embeds: [roundEmbed(s)] }); } catch (_) { /* bỏ qua */ } }
 }
@@ -87,6 +83,16 @@ function skillChoiceView(s, side, userId, token) {
   return v;
 }
 
+function surrenderView(s, side, userId, token) {
+  const v = new View({ ownerId: userId, timeout: 30 });
+  v.button({ key: 'yes', label: 'Xác nhận đầu hàng', emoji: E.tuchoi, style: 'red' }, async (i) => {
+    if (s.settled || s.round_token !== token || s.acted[side]) return i.update({ content: '⌛ Đã muộn — hiệp này đã qua hoặc bạn đã chọn hành động.', components: [] });
+    await i.update({ content: '🏳️ Bạn đã đầu hàng.', components: [] });
+    await recordAction(s, side, C21.SURRENDER);
+  });
+  return v;
+}
+
 function roundView(s) {
   const token = s.round_token;
   const v = new View({ ownerId: null, checkOwner: false, timeout: P.PVP_ROUND_TIMEOUT });
@@ -95,6 +101,7 @@ function roundView(s) {
     if (!side) { eph(i, 'Đây không phải trận đấu pháp của bạn.'); return null; }
     if (s.settled) { eph(i, 'Trận đấu pháp này đã kết thúc.'); return null; }
     if (s.acted[side]) { eph(i, 'Bạn đã chọn hành động ở hiệp này rồi, vui lòng chờ đối thủ.'); return null; }
+    if (s.round_token !== token) { eph(i, '⌛ Nút này thuộc hiệp cũ, không được tính.'); return null; }
     if (!globalClickAllowed(i.user.id)) { eph(i, '⚠️ Bạn đang bấm quá nhanh, vui lòng chờ chút rồi thử lại.'); return null; }
     return side;
   };
@@ -109,11 +116,32 @@ function roundView(s) {
     await i.reply({ content: '📖 Chọn 1 trong 4 chiêu Công Pháp đang trang bị:', components: skillChoiceView(s, side, i.user.id, token).components(), flags: EPHEMERAL });
   });
   v.button({ key: 'def', label: 'Phòng Thủ', emoji: E.phongngu, style: 'grey' }, act(PVP_ACTION_DEFEND, '🛡️'));
-  v.button({ key: 'kill', label: 'Sát Chiêu', emoji: E.satchieu, style: 'danger' }, act(PVP_ACTION_KILLMOVE, '💢'));
+  v.button({ key: 'kill', label: 'Sát Chiêu', emoji: E.satchieu, style: 'danger' }, async (i) => {
+    const side = guard(i); if (!side) return;
+    const cd = (s.cd && s.cd[side] && s.cd[side].kill) || 0;                                  // v21.6 (F-2): Sát Chiêu có hồi chiêu
+    if (cd > 0) return eph(i, `💢 Sát Chiêu còn hồi **${cd}** hiệp — hãy chọn hành động khác.`);
+    await eph(i, `💢 Bạn chọn **${PVP_ACTION_KILLMOVE}**. Đang chờ đối thủ...`);
+    await recordAction(s, side, PVP_ACTION_KILLMOVE);
+  });
+  if (s.race && (s.race.A || s.race.B)) {                                                       // v21.6: kỹ năng chủ động của Chủng Tộc (ai có thì nút hiện, bấm kiểm tra theo bên)
+    v.button({ key: 'race', label: 'Kỹ Năng Tộc', emoji: E.race_awaken, style: 'blurple', row: 1 }, async (i) => {
+      const side = guard(i); if (!side) return;
+      const rs = s.race[side];
+      if (!rs) return eph(i, '🧬 Bạn chưa mở khoá kỹ năng tộc (cần Thức Tỉnh ≥ 1 ở /race).');
+      const cd = (s.cd && s.cd[side] && s.cd[side].race) || 0;
+      if (cd > 0) return eph(i, `${rs.action} còn hồi **${cd}** hiệp — hãy chọn hành động khác.`);
+      await eph(i, `🧬 Bạn chọn **${rs.action}**. Đang chờ đối thủ...`);
+      await recordAction(s, side, rs.action);
+    });
+  }
+  v.button({ key: 'sur', label: 'Đầu Hàng', emoji: E.tuchoi, style: 'grey' }, async (i) => {
+    const side = guard(i); if (!side) return;
+    await i.reply({ content: '🏳️ Đầu hàng = **thua trận** (mất tu vi cược như thua thường). Xác nhận?', components: surrenderView(s, side, i.user.id, token).components(), flags: EPHEMERAL });
+  });
   v.onTimeout = async () => {
     if (s.round_token !== token || s.settled || s.resolving) return;
     s.resolving = true;
-    for (const side of ['A', 'B']) if (!s.acted[side]) { s.actions[side] = ATTACK_NORMAL; s.acted[side] = true; }
+    for (const side of ['A', 'B']) if (!s.acted[side]) { s.actions[side] = null; s.acted[side] = true; }       // AFK = bỏ lượt (KHÔNG tự đánh thường)
     await resolveRound(s);
   };
   return v;
@@ -124,70 +152,44 @@ async function resolveRound(s) {
   catch (e) {
     console.error(`⚠️ Lỗi khi resolve hiệp PvP (session ${s.id}):`, e);
     if (!s.settled) {
-      s.settled = true; cleanupSession(s);
+      s.settled = true; cleanupSession(s); C21.abort(s.id, 'error');
       if (s.active_view) { try { s.active_view.stop(); } catch (_) { /* bỏ qua */ } }
-      if (s.message) { try { await s.message.edit({ content: '❌ Có lỗi xảy ra khi xử lý hiệp đấu, trận này đã bị huỷ. Vui lòng khiêu chiến lại. Nếu còn lặp lại hãy báo admin.', embeds: [], components: [] }); } catch (_) { /* bỏ qua */ } }
+      if (s.message) { try { await s.message.edit({ content: '❌ Có lỗi xảy ra khi xử lý hiệp đấu, trận này đã bị huỷ (không ai mất gì). Vui lòng khiêu chiến lại. Nếu còn lặp lại hãy báo admin.', embeds: [], components: [] }); } catch (_) { /* bỏ qua */ } }
     }
   }
 }
 
 async function resolveRoundImpl(s) {
-  const hp = s.hp_pool; const rnd = s.round; const block = []; const recs = [];
-  const sa = s.spd.A; const sb = s.spd.B;
-  const first = sa === sb ? choice(['A', 'B']) : (sa > sb ? 'A' : 'B');
-  const second = first === 'A' ? 'B' : 'A';
-  for (const [ak, dk] of [[first, second], [second, first]]) {
-    if (hp[ak] <= 0 || hp[dk] <= 0) continue;
-    const action = s.actions[ak];
-    if (action === PVP_ACTION_DEFEND) {
-      block.push(`${s.tag[ak]} thi triển **${PVP_ACTION_DEFEND}**, không ra đòn hiệp này.`);
-      block.push(...PetC.idle(s.arena, ak, hp));
-      recs.push({ attacker: s.tag[ak], target: s.tag[dk], selected_action: PVP_ACTION_DEFEND, dodge: false, damage: null, is_crit: false, counter_damage: null, effect: null, effect_duration: null, spirit_beast_triggered: null, heal_amount: null, hp_a: hp.A, hp_b: hp.B });
-      continue;
-    }
-    const r = P.roundAction(s.tag[ak], s.tag[dk], s.atk[ak], s.def_[dk], s.power[ak], s.power[dk], s.skills[ak], s.pet[ak], hp, dk, action, s.actions[dk] === PVP_ACTION_DEFEND, action === PVP_ACTION_KILLMOVE, { att: s.mods[ak], def: s.mods[dk], pet: { arena: s.arena } });
-    block.push(...r.lines); recs.push(r.record);
-  }
-  block.push(`❤️ ${s.tag.A}: ${Math.max(0, hp.A)}/${s.hp_max}  |  ${s.tag.B}: ${Math.max(0, hp.B)}/${s.hp_max}`);
-  s.round_blocks.push([rnd, P.fitBlock(block)]);
-  s.battle_data_rounds.push({ round: rnd, actions: recs, hp_a_after: Math.max(0, hp.A), hp_b_after: Math.max(0, hp.B) });
-  if (!(hp.A <= 0 || hp.B <= 0 || rnd >= PVP_ROUNDS)) {
-    s.round += 1; s.actions = { A: null, B: null }; s.acted = { A: false, B: false }; s.resolving = false; s.round_token += 1;
+  const { verdict } = C21.playRound(s, s.actions);
+  if (!verdict.over) {
+    s.actions = { A: null, B: null }; s.acted = { A: false, B: false }; s.resolving = false; s.round_token += 1;
     const nv = roundView(s);
     if (s.message) { try { await s.message.edit({ embeds: [roundEmbed(s)], components: nv.components() }); } catch (_) { /* bỏ qua */ } }
     swapActiveView(s, nv);
     return;
   }
-  await finishSession(s);
+  await finishSession(s, verdict);
 }
 
-async function finishSession(s) {
+async function finishSession(s, verdict) {
   if (s.settled) return;
   s.settled = true;
   if (s.active_view) { try { s.active_view.stop(); } catch (_) { /* bỏ qua */ } s.active_view = null; }
-  const hp = s.hp_pool; const pA = s.power.A; const pB = s.power.B;
-  let aWins;
-  if (hp.A !== hp.B) aWins = hp.A > hp.B; else if (pA !== pB) aWins = pA > pB; else aWins = random() < 0.5;
-  const winnerId = aWins ? s.a_id : s.b_id;
-  const loserNewHp = aWins ? Math.max(1, int((s.cur_hp_b || 0) * 0.85)) : Math.max(1, int((s.cur_hp_a || 0) * 0.85));
-  const real = P.settlePvpAtomic(s.a_id, s.b_id, winnerId, BAL.pvpStake(s.rowA, s.rowB, aWins), loserNewHp, s.round_blocks.length, now());
+  const real = P.settleBattle(s, verdict, now());
   cleanupSession(s);
-  const petSettle = real === null ? { A: '', B: '' } : PetC.settle(s.arena, aWins ? 'A' : 'B');
   const m = s.message;
-  if (real === null) {
-    if (m) { try { await m.edit({ content: '⏳ Một trong hai bên vừa đấu pháp ở nơi khác trước đó rất gần đây, trận này không được tính.', embeds: [], components: [] }); } catch (_) { /* bỏ qua */ } }
+  if (real === null || real === 'dup') {
+    if (real === null) C21.abort(s.id, 'cooldown');
+    if (m) { try { await m.edit({ content: '⏳ Một trong hai bên vừa đấu pháp ở nơi khác trước đó rất gần đây, trận này không được tính (không ai mất gì).', embeds: [], components: [] }); } catch (_) { /* bỏ qua */ } }
     return;
   }
-  const resultLine = aWins
-    ? `${E.cup} ${s.tag.A} chiến thắng đấu pháp! ${real > 0 ? `Đoạt được **${real}** tu vi từ đối thủ.` : 'Đối thủ không còn tu vi để đoạt.'}`
-    : `💥 ${s.tag.B} chiến thắng đấu pháp! ${s.tag.A} ${real > 0 ? `mất **${real}** tu vi.` : 'nhưng không mất tu vi (đã cạn).'}`;
-  const emb = new EmbedBuilder().setTitle('⚔️ ĐẤU PHÁP — KẾT THÚC').setDescription(s.header).setColor(aWins ? 0xf1c40f : 0xe74c3c);
-  for (const [rnd, text] of s.round_blocks) emb.addFields({ name: `⏱️ Hiệp ${rnd}/${PVP_ROUNDS}`, value: text, inline: false });
-  emb.addFields({ name: `${E.cup} Kết Quả`, value: `${resultLine}\n${s.realm_line}`, inline: false });
+  const petSettle = PetC.settle(s.arena, verdict.result === 'draw' ? 'D' : verdict.result);
+  const extra = [{ name: '🧾 Mã trận', value: `\`${s.id}\` — xem nhật ký đầy đủ: \`/lichsupvp\``, inline: false }];
   const petNotes = [petSettle.A && `🅰️ ${petSettle.A}`, petSettle.B && `🅱️ ${petSettle.B}`].filter(Boolean).join('\n');
-  if (petNotes) emb.addFields({ name: '🐾 Linh Thú', value: petNotes.slice(0, 1000), inline: false });
+  if (petNotes) extra.push({ name: '🐾 Linh Thú', value: petNotes.slice(0, 1000), inline: false });
+  const emb = C21.embed(s, { title: '⚔️ ĐẤU PHÁP — KẾT THÚC', verdict, extra, real });
   if (m) { try { await m.edit({ embeds: [emb], components: [] }); } catch (_) { /* bỏ qua */ } }
-  if (process.env.GEMINI_API_KEY && m) {
+  if (process.env.GEMINI_API_KEY && m && s.round <= P.PVP_ROUNDS && verdict.result !== 'draw') {
     const s4a = P.pad4(s.skills.A.slice(1)); const s4b = P.pad4(s.skills.B.slice(1));
     const ra = Cu.getCultivator(s.a_id); const rb = Cu.getCultivator(s.b_id);
     const ctx = {
@@ -195,11 +197,25 @@ async function finishSession(s) {
       ally_spirit_beast: PetC.describe(s.arena.A), enemy_spirit_beast: PetC.describe(s.arena.B),
       ally_skill_1: s4a[0], ally_skill_2: s4a[1], ally_skill_3: s4a[2], ally_skill_4: s4a[3],
       enemy_skill_1: s4b[0], enemy_skill_2: s4b[1], enemy_skill_3: s4b[2], enemy_skill_4: s4b[3],
-      battle_data: JSON.stringify({ ally_tag: s.tag.A, enemy_tag: s.tag.B, ally_max_hp: s.hp_max, enemy_max_hp: s.hp_max, rounds: s.battle_data_rounds, winner: aWins ? s.tag.A : s.tag.B }),
+      battle_data: JSON.stringify({ ally_tag: s.tag.A, enemy_tag: s.tag.B, ally_max_hp: s.hp_max, enemy_max_hp: s.hp_max, rounds: s.recs, winner: verdict.result === 'A' ? s.tag.A : s.tag.B }), _rounds: s.round,
     };
     try { const fe = await P.narratePvpViaAi(ctx, emb); await m.edit({ embeds: [fe], components: [] }); }
-    catch (e) { console.error('⚠️ Lỗi AI narrate PvP (đã settle DB, giữ embed Python):', e.message); }
+    catch (e) { console.error('⚠️ Lỗi AI narrate PvP (đã settle DB, giữ embed nhật ký):', e.message); }
   }
+}
+
+/** Khởi động lại bot: huỷ mọi trận 'active' còn sót (chưa chốt → không ai mất/được gì) + báo vào tin nhắn trận nếu sửa được. */
+async function recoverStale(client) {
+  let rows = [];
+  try { rows = C21.abortStale(); } catch (e) { console.warn('⚠️ recoverStale:', e.message); return 0; }
+  for (const r of rows) {
+    if (!client || !r.channel_id || !r.message_id || r.message_id === '0') continue;
+    try {
+      const ch = await client.channels.fetch(r.channel_id); const msg = ch && await ch.messages.fetch(r.message_id);
+      if (msg) await msg.edit({ content: '🔄 Bot vừa khởi động lại nên trận đấu pháp này **bị huỷ** — không ai mất hay được tu vi. Hãy khiêu chiến lại.', embeds: [], components: [] });
+    } catch (_) { /* tin nhắn đã xoá / không có quyền */ }
+  }
+  return rows.length;
 }
 
 // ---------- khiêu chiến ----------
@@ -252,8 +268,9 @@ function challengeView(cId, tId) {
       const rv = roundView(s);
       await i.update({ content: null, embeds: [roundEmbed(s)], components: rv.components() });
       s.message = await i.fetchReply();
+      try { if (s.message && s.message.id) C21.setMessage(s.id, s.message.id); } catch (_) { /* chỉ phục vụ báo khi khởi động lại */ }
       swapActiveView(s, rv);
-    } catch (e) { if (!s.settled) { s.settled = true; cleanupSession(s); } throw e; }
+    } catch (e) { if (!s.settled) { s.settled = true; cleanupSession(s); C21.abort(s.id, 'error'); } throw e; }
     v.stop();
   });
   v.button({ key: 'no', label: 'Từ Chối', emoji: E.tuchoi, style: 'red' }, async (i) => {
@@ -278,4 +295,4 @@ async function sendChallenge(cId, tId, send) {
   } catch (e) { BUSY.delete(sid(cId)); BUSY.delete(sid(tId)); throw e; }
 }
 
-module.exports = { sendChallenge, challengePrecheck, SESSIONS, BUSY, _test: { buildSession, recordAction, roundView } };
+module.exports = { sendChallenge, challengePrecheck, recoverStale, SESSIONS, BUSY, _test: { buildSession, recordAction, roundView, resolveRound, finishSession } };

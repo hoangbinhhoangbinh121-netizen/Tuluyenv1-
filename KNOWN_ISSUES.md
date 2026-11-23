@@ -68,3 +68,36 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Công Pháp (sách tầng) chưa nằm trong cửa hàng Nguyên Bảo (còn gate cảnh giới riêng); hiện mua bằng cửa hàng Công Pháp cũ.
 - Hàng "bán trong cửa hàng" làm vật phẩm khó (Hỏa Chủng, Đan Tẩy Tủy, vật liệu Chứng Đạo) mua được với giá ×3 — đây là quyết định theo yêu cầu "mọi thứ nhận được đều bán trừ nhiệm vụ", có thể ẩn từng món.
 
+
+## V21.3 — còn hạn chế / chờ duyệt (chi tiết: BAO_CAO_V21_3.md, docs/audit_v21_3/06)
+- Chưa có hệ chủng tộc/huyết mạch cho người chơi (không có trong game, cần thiết kế); chưa có EffectEngine (buff tạm có thời hạn/stacking); Snapshot là adapter chỉ-đọc, `Cu.effective*` vẫn là hàm gốc.
+- PvP: thanh sinh mệnh vẫn chuẩn hoá 100 (đổi HP thật = quyết định cân bằng). Restart giữa trận = HUỶ trận (không ai mất gì), chưa khôi phục tiếp tục. Chính sách AFK/bế tắc là mặc định đề xuất (`pvp_afk_forfeit=2`, `pvp_stalemate_rounds=15`, `pvp_safety_rounds=300` trong bot_settings).
+- Lời kể AI (Gemini) chỉ áp dụng khi trận ≤5 hiệp và có kết quả thắng/thua; trận dài dùng nhật ký có sẵn.
+- Linh Thạch vẫn được ghi trực tiếp ở trade/sectwar/ascension/cultivator (chưa gom EconomyEngine).
+- Chưa thử trên Discord thật: chỉ có mock discord.js + SQLite thật.
+
+## V21.4 — phát hiện chưa xử lý (chi tiết: docs/audit_v21_3/07)
+- F-1: 6 hiệu ứng ngẫu nhiên trong PvP (Trúng Độc, Choáng Váng, Xuất Huyết, Băng Phong, Thiêu Đốt, Suy Nhược) CHỈ hiện trong nhật ký, không có tác dụng thật → sửa đúng bằng EffectEngine (V21.6) hoặc bỏ dòng.
+- F-2: "Sát Chiêu" không hồi chiêu/không tiêu hao, ≈×2.25 sát thương so với Đánh Thường mọi hiệp → cần quyết định thiết kế.
+- Linh Thạch ghi qua ~33 file (`Cu.updateCultivator`), một phần là đọc-rồi-ghi không nguyên tử; `economy.js` đã là module Pháp Bảo nên EconomyEngine phải đặt tên khác.
+- Chưa thử trên Discord thật (xem DISCORD_STAGING_CHECKLIST.md). Handler >3s trên Discord: NOT TESTED.
+
+## V21.5 — Chủng Tộc: còn thiếu / chờ duyệt (chi tiết: BAO_CAO_V21_5.md, docs/audit_v21_3/10)
+- ~~Chưa có kỹ năng chủng tộc chủ động~~ → đã có ở V21.6 (xem mục V21.6). Ban đầu chỉ có nội tại + huyết mạch + thức tỉnh + tiến hóa.
+- **Yêu Tộc × Linh Thú** chưa có tương tác riêng (v14 quy định Linh Thú không cộng chỉ số người chơi — cần quyết định thiết kế).
+- Emoji chủng tộc: đang dùng Unicode dự phòng (🧑 🐉 🔥 😈 ✨ 🦊), CHƯA có pixel art; key dự kiến `race_nhan`…`race_yeu` (khi có ảnh, `E['race_<id>']` tự được dùng).
+- Trong PvP hiện tại (thanh sinh mệnh chuẩn hoá 100) các hiệu ứng `hp` và `regen` KHÔNG có tác dụng → Long Tộc / Phượng Tộc / nhánh hồi phục yếu hơn trong PvP so với PvE; sẽ cân lại khi có HP PvP thật (V21.7).
+- Số liệu cân bằng (nội tại, chi phí, mốc cảnh giới) là ĐỀ XUẤT đã benchmark trong engine PvP, chưa qua người chơi thật; toàn bộ nằm ở `src/data/race21.js`.
+- Chi phí chủng tộc chỉ bằng Linh Thạch (không vật phẩm mới); chưa có sổ cái Linh Thạch (`race_history.ledger_ref` để trống đến V21.7).
+- Slash: `/dungluong` (admin) chuyển sang tiền tố `!dungluong` để nhường chỗ `/chungtoc` (giữ đúng 100 lệnh slash).
+
+## V21.6 — Hiệu ứng / kỹ năng tộc / StatEngine: còn thiếu / chờ duyệt (chi tiết: BAO_CAO_V21_6.md, docs/audit_v21_3/11)
+- **Chênh lệch có tộc ↔ chưa chọn tộc**: tộc Viên Mãn thắng người chưa chọn tộc ~73–80% (V21.5 đã 55–62%). Cần quyết định thiết kế (giữ / kỹ năng chung cho người chưa chọn tộc / giảm sức kỹ năng).
+- Số liệu hiệu ứng & kỹ năng tộc là ĐỀ XUẤT đã benchmark trong engine PvP (vòng tròn 6 tộc 44–53%), chưa qua người chơi thật; toàn bộ ở `src/data/effects21.js`.
+- Kỹ năng tộc **chỉ dùng trong PvP** (Boss/Bí Cảnh/Chứng Đạo/Tông Chiến chưa có — V22.0 Combat Kernel).
+- `cpfx.battleState` (guard/dodge/weak theo đòn) và EffectEngine còn chồng chức năng; hai lớp nhân với nhau (trần giảm sát thương 60% ở EffectEngine). Gộp ở V22.0.
+- Sinh lực PvP vẫn chuẩn hoá 100 (F-3) nên `hp`/`regen` của tộc vẫn vô tác dụng trong PvP — V21.7.
+- Trạng thái hiệu ứng nằm trong bộ nhớ trận (`toJSON/fromJSON` đã sẵn); restart giữa trận vẫn huỷ trận (không mất gì) — khôi phục ở V21.7.
+- Lỗi mạng/DNS tạm thời: bot tự thử lại **chỉ** khi gửi tin (reply/followUp/…) và chỉ với lỗi chắc chắn chưa gửi được (`EAI_AGAIN`, `ENOTFOUND`, `ECONNREFUSED`…). Nếu host mất mạng kéo dài, người chơi vẫn không nhận được phản hồi — cần kiểm tra mạng của host (VibeHost). Không test được trên mạng thật.
+- Emoji chủng tộc (31 cái) là bản tạm tự vẽ bằng code; chờ bạn vẽ lại (xem docs 12). Emoji vẽ lại cần ghi hậu tố vào `assets/emoji_revisions.json`.
+- Discord thật: **NOT TESTED** (chỉ mock discord.js + SQLite thật).

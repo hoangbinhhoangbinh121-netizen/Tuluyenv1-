@@ -5,7 +5,8 @@ const P = require('../game/pvpCore');
 const Cu = require('../game/cultivator');
 const D = require('../db');
 const { E } = require('../game/emoji');
-const { buildHistoryEmbed, buildStatsEmbed } = require('../ui/pvpViews');
+const { buildHistoryEmbed, buildStatsEmbed, battleLogPanel } = require('../ui/pvpViews');
+const C21 = require('../game/combat21');
 
 defineCommand({
   name: 'dauphap', description: 'Đấu pháp với người chơi khác', needsCultivator: true,
@@ -30,12 +31,19 @@ defineCommand({
   },
 });
 defineCommand({
-  name: 'lichsupvp', description: 'Xem 5 trận đấu pháp gần nhất của bạn hoặc người khác',
-  options: [{ name: 'thanh_vien', type: 'user', description: 'Thành viên (bỏ trống = bạn)' }],
+  name: 'lichsupvp', description: 'Xem các trận đấu pháp gần nhất, hoặc nhật ký đầy đủ của 1 trận (mã trận)',
+  options: [{ name: 'ma_tran', type: 'string', description: 'Mã trận (có trong lịch sử / cuối trận) để xem nhật ký đầy đủ' }, { name: 'thanh_vien', type: 'user', description: 'Thành viên (bỏ trống = bạn)' }],
   run(c) {
+    const mm = c.args.ma_tran ? /^<@!?(\d{15,})>$|^(\d{15,})$/.exec(String(c.args.ma_tran).trim()) : null;       // dùng tiền tố: `?lichsupvp @ai_đó` rơi vào ô đầu
+    if (mm && !c.args.thanh_vien) c.args.thanh_vien = { id: mm[1] || mm[2], username: mm[1] || mm[2] };
+    if (c.args.ma_tran && !mm) {
+      const id = String(c.args.ma_tran).trim().toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 16);
+      return c.send(battleLogPanel(id, 0, 0, c.user.id));
+    }
     const t = c.args.thanh_vien || c.user;
-    const rows = D.all('SELECT winner_id, loser_id, stake, ended_at FROM pvp_history WHERE winner_id = ? OR loser_id = ? ORDER BY ended_at DESC LIMIT 5', t.id, t.id);
-    if (!rows.length) return c.send(`ℹ️ <@${t.id}> chưa có trận đấu pháp nào được ghi nhận.`);
-    return c.send({ embeds: [buildHistoryEmbed(t, rows)] });
+    const rows = D.all('SELECT winner_id, loser_id, stake, ended_at FROM pvp_history WHERE winner_id = ? OR loser_id = ? ORDER BY ended_at DESC LIMIT 8', t.id, t.id);
+    const rows213 = C21.recent(t.id, 8);
+    if (!rows.length && !rows213.length) return c.send(`ℹ️ <@${t.id}> chưa có trận đấu pháp nào được ghi nhận.`);
+    return c.send({ embeds: [buildHistoryEmbed(t, rows, rows213)] });
   },
 });

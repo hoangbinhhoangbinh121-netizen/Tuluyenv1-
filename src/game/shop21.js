@@ -78,6 +78,9 @@ const QMULT = [1, 0.7, 1, 1.6, 2.8, 5];   // Hạ / Trung / Thượng / Cực / 
 /** Công thức giá: tăng theo căn bậc hai của giá trị gốc (để đồ ở giai đoạn 10 không đắt gấp triệu lần đồ giai đoạn 1). */
 const nbFromBase = (base) => Math.max(1, Math.ceil(2 * Math.sqrt(Math.max(0, base) / 1000)));
 
+/** v21.5: Đan Tẩy Tủy (Trọng Sinh + Nửa Tác Dụng) giá Nguyên Bảo ×30 theo yêu cầu admin (giá cũ: 6.000 / 4.245 💠). Công thức √ giữ nguyên, hệ số này nhân thêm. */
+const PRICE_MULT = { dan_tay_tuy_ts: 30, dan_tay_tuy_nua: 30 };
+
 let CACHE = null;
 function build() {
   if (CACHE) return CACHE;
@@ -85,7 +88,7 @@ function build() {
   for (const it of I.ITEMS) {
     if (it.is_quest_item || !GROUP_BY[it.cat]) continue;
     const special = !it.can_sell;   // hàng "không bán lại NPC" (Đan Tẩy Tủy, vật liệu Chứng Đạo…) → giá ×3 vì chỉ rơi từ nội dung khó
-    list.push({ key: `i:${it.id}`, kind: 'inv', ref: it.id, name: it.name, group: it.cat, rarity: it.rarity || 1, hasQ: !!it.quality, base: nbFromBase(it.base_value) * (special ? 3 : 1), desc: it.desc || '' });
+    list.push({ key: `i:${it.id}`, kind: 'inv', ref: it.id, name: it.name, group: it.cat, rarity: it.rarity || 1, hasQ: !!it.quality, base: nbFromBase(it.base_value) * (special ? 3 : 1) * (PRICE_MULT[it.id] || 1), desc: it.desc || '' });
   }
   try {
     const TO = require('./talentOps');
@@ -297,7 +300,7 @@ function stats() {
   return { today: sum(day), d30: sum(t - 30 * DAY), all: sum(0), pending: pendingCount(), buys: D.get('SELECT COUNT(*) AS n, COALESCE(SUM(cost),0) AS c FROM v21_buys').n };
 }
 
-module.exports = {
+module.exports = { PRICE_MULT,
   PACKAGES, pkgNb, pkgOf, vnd, ORDER_TTL, MAX_PENDING, MAX_QTY, GROUPS, GROUP_BY, QMULT,
   bank, setBank, qrUrl, qrFile, payReady, ownerName, QR_OWNER, code, mult, shopOn, setMult, setOpen, nbFromBase,
   build, entry, price, defaultQ, listGroup, countGroup, isHidden, toggleHide, findEntry,

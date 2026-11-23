@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Cập nhật bot từ file zip mới, GIỮ NGUYÊN token (.env), database (data/), logs/, node_modules/.
-# Dùng (chạy trong thư mục bot):   bash scripts/redeploy.sh duong/dan/tien-gioi-bot-v7.zip
-#   hoặc:                          npm run redeploy -- duong/dan/tien-gioi-bot-v7.zip
+# Dùng (chạy trong thư mục bot):   bash scripts/redeploy.sh duong/dan/thien-tong-bot-v21_3.zip
+#   hoặc:                          npm run redeploy -- duong/dan/thien-tong-bot-v21_3.zip
 # Biến tuỳ chọn: PM2_NAME=ten-process (mặc định tự dò)  ·  NO_RESTART=1 (chỉ giải nén + cài gói)
 set -euo pipefail
 ZIP="${1:-}"; [ -f "$ZIP" ] || { echo "Cách dùng: bash scripts/redeploy.sh <file.zip>"; exit 1; }

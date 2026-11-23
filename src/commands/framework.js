@@ -62,7 +62,10 @@ function prefixCtx(message, tokens, def) {
   return {
     message, user: message.author, guild: message.guild, channel: message.channel, args,
     attachments: [...message.attachments.values()],
-    send: (p) => message.reply(normalizePayload(p)),
+    send: async (p) => {                                                  // v21.6: DNS chập chờn (EAI_AGAIN…) ⇒ thử lại 2 lần (chỉ với lỗi chắc chắn chưa gửi được)
+      const { isPreSend } = require('../errorlog'); const q = normalizePayload(p);
+      for (let n = 0; ; n++) { try { return await message.reply(q); } catch (e) { if (!isPreSend(e) || n >= 2) throw e; await new Promise((r) => setTimeout(r, [300, 900][n])); } }
+    },
   };
 }
 

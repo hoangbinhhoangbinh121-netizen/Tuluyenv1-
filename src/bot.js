@@ -13,6 +13,7 @@ require('./commands/treoquan');
 require('./commands/baotri');
 require('./commands/chuoi');
 require('./commands/talent');
+require('./commands/race');   // v21.5 /chungtoc
 require('./commands/adminTuChat');
 require('./commands/guideTalent');
 require('./commands/admin');
@@ -68,6 +69,7 @@ function installErrorReporter(client) {
   require('./errorlog').setReporter(async (code, where, msg) => {
     const gap = chId ? 3000 : 5 * 60 * 1000;      // kênh: 3 giây · nhắn riêng chủ bot: 5 phút (khỏi bị ngập tin)
     if (Date.now() - last < gap) return; last = Date.now();
+    if (code === 'mang') return;
     const text = `⚠️ **Lỗi \`${code}\`** tại \`${where}\`\n\`\`\`\n${String(msg).slice(0, 1500)}\n\`\`\`\nGõ \`/loigannhat\` để xem thêm. Nếu lỗi \`database or disk is full\`: gõ \`/dungluong\`.`;
     try {
       if (chId) { const ch = await client.channels.fetch(chId); await ch.send({ content: text }); }
@@ -82,11 +84,15 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
   if (USE_MEMBERS) intents.push(GatewayIntentBits.GuildMembers);
   const client = new Client({ intents, partials: [Partials.Channel] });
 
+  client.on(Events.Error, (e) => require('./errorlog').logError('discord.js client', e));            // v21.6: không để lỗi mạng của gateway làm sập tiến trình
+  client.on(Events.ShardError, (e) => require('./errorlog').logError('gateway shard', e));
   client.once(Events.ClientReady, async (c) => {
     console.log(`🤖 Đăng nhập: ${c.user.tag}`);
     await applyEmojiFallbacks(c);
     continuePixelSyncInBackground();
     installErrorReporter(c);
+    try { const n = await require('./game/pvp').recoverStale(c); if (n) console.log(`⚔️ PvP: huỷ ${n} trận đang dở do khởi động lại (không ai mất gì).`); } catch (e) { console.warn('⚠️ PvP recoverStale:', e.message); }   // v21.3
+    try { const B19 = require('./game/bicanh19'); B19.sweepLobbies(); B19.sweepStale(); setInterval(() => { try { B19.sweepLobbies(); B19.sweepStale(); } catch (e) { console.warn('⚠️ bc19 sweep:', e.message); } }, 5 * 60 * 1000).unref(); } catch (e) { console.warn('⚠️ bc19 sweep init:', e.message); }   // v21.4: dọn phòng chờ/lần vào treo → không ai bị kẹt
     try { if (require('./game/maintenance').isOn()) { c.user.setPresence({ status: 'dnd', activities: [{ name: '🛠️ Đang bảo trì' }] }); console.log('🛠️ Bot đang ở chế độ BẢO TRÌ (admin gõ /baotri để tắt).'); } } catch (_) { /* bỏ qua */ }
     await detectOwner(c);
     try { await registerSlash(c); } catch (e) { console.error('❌ Đăng ký slash lỗi:', e.message, '— kiểm tra bot đã được mời với quyền "applications.commands" (và GUILD_ID nếu có đặt).'); }
@@ -134,7 +140,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Tiên Giới Bot v21.2 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Thiên Tông Bot v21.6.1 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);
@@ -156,7 +162,7 @@ async function main() {
   try { require('./game/admin17').applyEco(); } catch (e) { console.error('⚠️ áp hệ số kinh tế /quantri:', e.message); }   // v17.2: nạp hệ số EXP admin đã chỉnh
   await syncPixelEmoji();
 
-  process.on('unhandledRejection', (e) => console.error('⚠️ unhandledRejection:', e));
+  process.on('unhandledRejection', (e) => { const L = require('./errorlog'); if (L.isNetwork(e)) L.logError('unhandledRejection', e); else console.error('⚠️ unhandledRejection:', e); });
   const shutdown = () => { try { D.closeDb(); } catch (_) { /* bỏ qua */ } process.exit(0); };
   process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);
 

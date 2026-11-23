@@ -18,6 +18,7 @@ function error(text, code) {
 }
 const cooldown = (text) => base('Đang trong thời gian chờ', COLORS.WARNING, 'sk_thoigian', text, { footer: `E005 · ${ERRORS.E005}` });
 const expired = (text = 'Menu này đã hết hạn — hãy gõ lại lệnh để mở menu mới.') => base('Tương tác đã hết hạn', COLORS.WARNING, 'sk_thoigian', text, { footer: `E007 · ${ERRORS.E007}` });
-const systemError = (code) => base('Lỗi hệ thống', COLORS.DANGER, 'tuchoi', `Có lỗi xảy ra khi xử lý. Vui lòng thử lại; nếu còn lặp lại hãy báo admin kèm mã \`${code}\`.`, { footer: `E010 · ${ERRORS.E010} · ${code}` });
+const netNotice = () => base('Mạng đang chập chờn', COLORS.WARNING, 'sk_thoigian', '🌐 Kết nối tới Discord vừa bị gián đoạn tạm thời (không phải lỗi của bạn, dữ liệu **không bị mất**). Vui lòng chờ vài giây rồi gõ lại lệnh.', { footer: 'NET · Mạng/DNS tạm thời' });
+const systemError = (code) => code === 'mang' ? netNotice() : base('Lỗi hệ thống', COLORS.DANGER, 'tuchoi', `Có lỗi xảy ra khi xử lý. Vui lòng thử lại; nếu còn lặp lại hãy báo admin kèm mã \`${code}\`.`, { footer: `E010 · ${ERRORS.E010} · ${code}` });
 
 module.exports = { success, info, warning, error, cooldown, expired, systemError, ERRORS };

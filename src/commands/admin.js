@@ -59,7 +59,7 @@ defineCommand({
 });
 
 defineCommand({
-  name: 'dungluong', description: '[Admin] Xem dung lượng DB / bản sao lưu / ổ đĩa và dọn bản sao lưu thừa', admin: true,
+  name: 'dungluong', description: '[Admin] Xem dung lượng DB / bản sao lưu / ổ đĩa và dọn bản sao lưu thừa', admin: true, prefixOnly: true,   // v21.5: nhường slot cho /chungtoc
   async run(ctx) {
     const G = require('../db/diskguard');
     const before = G.report();
@@ -198,13 +198,15 @@ defineCommand({
     const list = getRecent();
     const st = require('../errorlog').getStale();   // v14.5: lượt bấm hết hạn (10062) — không tính là lỗi code
     const staleNote = st.count ? `\n⏱️ Có **${st.count}** lượt bấm bị hết hạn (bot trả lời >3s, lần cuối <t:${Math.trunc(st.last / 1000)}:R>) — do host/mạng chậm hoặc vòng lặp bị chặn; xem console để biết "🐢 Vòng lặp bị chặn".` : '';
-    if (!list.length) return ctx.send(`✅ Chưa ghi nhận lỗi nào kể từ lần khởi động gần nhất.${staleNote}`);
+    const nt = require('../errorlog').getNet();   // v21.6: lỗi mạng/DNS tạm thời — không phải lỗi code
+    const netNote = nt.count ? `\n🌐 Có **${nt.count}** lần mạng/DNS chập chờn (${nt.lastCode}, lần cuối <t:${Math.trunc(nt.last / 1000)}:R>) — do host/mạng, không phải lỗi game; bot tự thử lại khi gửi tin. Nếu liên tục: kiểm tra mạng của host (VibeHost) hoặc khởi động lại.` : '';
+    if (!list.length) return ctx.send(`✅ Chưa ghi nhận lỗi nào kể từ lần khởi động gần nhất.${staleNote}${netNote}`);
     const code = (ctx.args.ma_loi || '').trim().toLowerCase();
     if (code) {
       const e = list.find((x) => x.code === code);
       return ctx.send(e ? `**[${e.code}]** ${e.where}\n\`\`\`\n${e.msg.slice(0, 1700)}\n\`\`\`` : '❌ Không có lỗi mang mã này (chỉ giữ 20 lỗi gần nhất).');
     }
-    return ctx.send(`🧾 **${list.length} lỗi gần nhất** (mới nhất trước):\n` + list.slice(0, 10).map((e) => `• \`${e.code}\` — ${e.where} — <t:${Math.trunc(e.at / 1000)}:R>`).join('\n') + staleNote + '\nDùng `/loigannhat ma_loi:<mã>` để xem chi tiết. File đầy đủ: `logs/error.log`.');
+    return ctx.send(`🧾 **${list.length} lỗi gần nhất** (mới nhất trước):\n` + list.slice(0, 10).map((e) => `• \`${e.code}\` — ${e.where} — <t:${Math.trunc(e.at / 1000)}:R>`).join('\n') + staleNote + netNote + '\nDùng `/loigannhat ma_loi:<mã>` để xem chi tiết. File đầy đủ: `logs/error.log`.');
   },
 });
 

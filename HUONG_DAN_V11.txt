@@ -1,4 +1,4 @@
-TIÊN GIỚI BOT v11.0 — HƯỚNG DẪN & GHI CHÚ THAY ĐỔI
+THIÊN TÔNG BOT (trước đây Tiên Giới Bot) — v11.0 — HƯỚNG DẪN & GHI CHÚ THAY ĐỔI
 ==================================================
 
 V11.0 so với v7: (a) index.js tự kiểm tra và cài lại thư viện khi discord.js thiếu file (lỗi WebhookClient);

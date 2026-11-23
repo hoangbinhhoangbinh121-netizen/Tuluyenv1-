@@ -41,6 +41,7 @@ function buildStatusEmbed(user, row0) {
   f('🔥 Lực Chiến', `${F.emojiProgressBar(lucChien, lucChienMoc, F.EMOJI_BAR_LUCCHIEN)}\n${lucChien} (mốc: ${lucChienMoc})`, false);
   f(`${E.linhcan} Linh Căn`, row.linh_can);
   f(`${E.thechat} Thể Chất`, row.the_chat);
+  { const rs = require('../game/race21').shortOf(row); f('🧬 Chủng Tộc', rs || 'Chưa chọn — dùng `/chungtoc`'); }   // v21.5
   const cpTiers = Cu.equippedCongphapTiers(row);
   f(`${E.congphap} Công Pháp (${cpTiers.length}/${K.CONGPHAP_MAX_EQUIP_SLOTS})`, row.cong_phap || 'Chưa chọn');
   const pbTier = Cu.equippedPhapbaoTier(row);

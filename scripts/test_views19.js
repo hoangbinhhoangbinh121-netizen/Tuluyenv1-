@@ -14,6 +14,7 @@ const mk = (id, realm, stage = 0, extra = '') => { Cu.createCultivator(id); D.ru
 /** Kiểm giới hạn payload Discord. */
 function check(p, tag) {
   ok(p && typeof p === 'object', `${tag}: payload`);
+  { const probs = require('../src/ui/validate').validatePayload(p); ok(!probs.length, `${tag}: payload hợp lệ Discord (v21.4) ${JSON.stringify(probs)}`); }
   const comps = (p.components || []).map((r) => (r.toJSON ? r.toJSON() : r)); ok(comps.length <= 5, `${tag}: ≤5 hàng`);
   for (const r of comps) { ok(r.components.length >= 1 && r.components.length <= 5, `${tag}: hàng 1–5 thành phần`); for (const c of r.components) ok(!c.custom_id || c.custom_id.length <= 100, `${tag}: customId ≤100`); }
   for (const e of p.embeds || []) { const j = e.toJSON ? e.toJSON() : e; let total = (j.title || '').length + (j.description || '').length + (j.footer ? j.footer.text.length : 0); ok((j.title || '').length <= 256 && (j.description || '').length <= 4096, `${tag}: title/desc`); ok((j.fields || []).length <= 25, `${tag}: ≤25 field`); for (const f of j.fields || []) { ok(f.name.length > 0 && f.name.length <= 256 && f.value.length > 0 && f.value.length <= 1024, `${tag}: field "${f.name.slice(0, 30)}" ${f.value.length}`); total += f.name.length + f.value.length; } ok(total <= 6000, `${tag}: tổng embed ≤6000 (${total})`); }

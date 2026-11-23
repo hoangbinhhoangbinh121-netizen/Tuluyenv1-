@@ -467,8 +467,25 @@ function whyCannotEnter(row, idx) {
   if (entriesToday(row.user_id, idx) >= CFG.ENTRIES_PER_DAY) return `Hôm nay bạn đã vào **${bc.name}** đủ ${CFG.ENTRIES_PER_DAY} lần.`;
   return null;
 }
+/** v21.4: người chơi bị kẹt trong PHÒNG CHỜ cũ (đội chưa bắt đầu) thì tự rời/đóng để lập hoặc vào đội mới. Không đụng lần thám hiểm đang chạy. */
+function releaseLobbies(userId) {
+  const uid = String(userId);
+  const rows = D.all("SELECT r.run_id, r.leader FROM bc19_members m JOIN bc19_runs r ON r.run_id = m.run_id WHERE m.user_id = ? AND r.status = 'lobby'", uid);
+  for (const r of rows) {
+    if (r.leader === uid) D.run("UPDATE bc19_runs SET status = 'abandoned', updated_at = ? WHERE run_id = ?", now(), r.run_id);
+    else D.run('DELETE FROM bc19_members WHERE run_id = ? AND user_id = ?', r.run_id, uid);
+  }
+  return rows.length;
+}
+/** Phòng chờ bỏ quên quá lâu (mặc định 30 phút không ai bấm) → đóng, để không ai bị kẹt. */
+function sweepLobbies(ttl = 1800) {
+  const rows = D.all("SELECT run_id FROM bc19_runs WHERE status = 'lobby' AND updated_at < ?", now() - ttl);
+  for (const r of rows) D.run("UPDATE bc19_runs SET status = 'abandoned' WHERE run_id = ?", r.run_id);
+  return rows.length;
+}
 /** Tạo phòng chờ (đội trưởng tự động là thành viên). */
 function createLobby(userId, idx, { channelId = null, solo = false, name = null } = {}) {
+  releaseLobbies(userId);
   const row = Cu.getCultivator(userId); const bad = whyCannotEnter(row, idx); if (bad) return { ok: false, error: bad };
   return D.transaction(() => {
     const t = now(); const st = { lobby: true, bc: idx, names: { [String(userId)]: name || String(userId) } };
@@ -484,6 +501,7 @@ function join(runId, userId, name = null) {
   const members = D.all('SELECT user_id FROM bc19_members WHERE run_id = ?', runId);
   if (members.some((x) => x.user_id === String(userId))) return { ok: false, error: 'Bạn đã ở trong đội.' };
   if (members.length >= 5) return { ok: false, error: 'Đội đã đủ 5 người.' };
+  releaseLobbies(userId);                                                 // v21.4: đang kẹt ở phòng chờ khác thì tự rời
   const row = Cu.getCultivator(userId); const bad = whyCannotEnter(row, r.bc_idx); if (bad) return { ok: false, error: bad };
   D.run('INSERT INTO bc19_members (run_id, user_id) VALUES (?,?)', runId, String(userId));
   const st = parse(r); st.names = st.names || {}; st.names[String(userId)] = name || String(userId); save(runId, st);
@@ -700,5 +718,5 @@ function progOf(uid) {
 module.exports = {
   bossPower, expectedDrop,
   CFG, ACT, SIG, ACH, FLOOR_TU, FLOOR_LT, LT_BASE, bcOf, REALM_NAME, sigOf, snapMember, newState, step, nextFloor, autoPick, canAct, spawnEnemy, alive, kindName,
-  whyCannotEnter, createLobby, join, leave, startRun, load, act, next, retreat, auto, activeRunId, sweepStale, entriesToday, progOf, recordBest, payFloor, rollMember, save, rowOf,
+  whyCannotEnter, createLobby, join, leave, startRun, load, act, next, retreat, auto, activeRunId, sweepStale, sweepLobbies, releaseLobbies, entriesToday, progOf, recordBest, payFloor, rollMember, save, rowOf,
 };

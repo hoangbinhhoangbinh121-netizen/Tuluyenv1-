@@ -60,7 +60,7 @@ function lobbyView(runId) {
   const emb = new EmbedBuilder().setColor(0x3498db).setTitle(`${E9.k('doi19', '👥')} Phòng chờ — ${bc.name}`)
     .setDescription(`Yêu cầu: **${K.REALMS[bc.realm].name}** trở lên · Đội trưởng: <@${L.run.leader}>\nBoss có HP ×${(1 + BC.CFG.PARTY_HP * Math.max(0, members.length - 1)).toFixed(2)} theo số người; sát thương Boss tăng chậm hơn HP.\n\n**Thành viên (${members.length}/5):**\n${members.map((u, i) => `${i === 0 ? E9.a('crown', '👑') : '•'} ${names[u] || u} <@${u}>`).join('\n')}`)
     .setFooter({ text: 'Bấm Tham Gia để vào đội · đội trưởng bấm Bắt Đầu khi đủ người (2–5)' });
-  return { embeds: [emb], components: [rowOf(btn(`b19|j|${runId}`, 'Tham Gia', E9.aComp('join', '🤝'), SUCCESS), btn(`b19|l|${runId}`, 'Rời Đội', E9.aComp('leave', '🚪'), GRAY), btn(`b19|s|${runId}`, 'Bắt Đầu', E9.aComp('start', '▶️'), PRIMARY, members.length < 2), btn(`b19|l|${runId}`, 'Hủy Phòng', E9.aComp('cancel', '✖️'), DANGER, true))] };
+  return { embeds: [emb], components: [rowOf(btn(`b19|j|${runId}`, 'Tham Gia', E9.aComp('join', '🤝'), SUCCESS), btn(`b19|l|${runId}`, 'Rời Đội', E9.aComp('leave', '🚪'), GRAY), btn(`b19|s|${runId}`, 'Bắt Đầu', E9.aComp('start', '▶️'), PRIMARY, members.length < 2), btn(`b19|x|${runId}`, 'Hủy Phòng', E9.aComp('cancel', '✖️'), DANGER))] };
 }
 const cdLabel = (m) => [m.cd.tuyet > 0 ? `${E9.a('tuyet', '🌠')}${m.cd.tuyet}` : '', m.cd.bi > 0 ? `${E9.a('bi', '☠️')}${m.cd.bi}` : '', m.cd.sk > 0 ? `${E9.a('sk', '📖')}${m.cd.sk}` : '', m.cd.rest > 0 ? `${E9.a('rest', '🧘')}${m.cd.rest}` : ''].filter(Boolean).join(' ');
 function runView(runId, note = '') {
@@ -120,6 +120,11 @@ registerStatic('b19', async (i, parts) => {
   const runId = Number(a); if (!runId) return;
   if (kind === 'j') { const r = BC.join(runId, i.user.id, nameOf(i)); if (!r.ok) return deny(i, `❌ ${r.error}`); return showRun(i, runId); }
   if (kind === 'l') { const r = BC.leave(runId, i.user.id); if (!r.ok) return deny(i, `❌ ${r.error}`); if (r.closed) return i.update({ content: '🚪 Phòng chờ đã đóng.', embeds: [], components: [] }); return showRun(i, runId); }
+  if (kind === 'x') {   // v21.4: Hủy Phòng — chỉ đội trưởng (trước đây trùng custom_id với Rời Đội nên Discord từ chối cả tin nhắn)
+    const L = BC.load(runId); if (!L || L.run.status !== 'lobby') return deny(i, '❌ Phòng chờ không còn tồn tại.');
+    if (L.run.leader !== String(i.user.id)) return deny(i, '❌ Chỉ đội trưởng mới hủy được phòng.');
+    BC.leave(runId, i.user.id); return i.update({ content: '✖️ Phòng chờ đã bị hủy.', embeds: [], components: [] });
+  }
   if (kind === 's') { const r = BC.startRun(runId, i.user.id); if (!r.ok) return deny(i, `❌ ${r.error}`); return showRun(i, runId); }
   if (kind !== 'r') return;
   const act = b;

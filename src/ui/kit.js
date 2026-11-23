@@ -95,7 +95,9 @@ class View {
       if (!rows.has(it.row)) rows.set(it.row, []);
       rows.get(it.row).push(it.builder);
     }
-    return [...rows.entries()].sort((a, b) => a[0] - b[0]).map(([, arr]) => new ActionRowBuilder().addComponents(...arr));
+    const out = [...rows.entries()].sort((a, b) => a[0] - b[0]).map(([, arr]) => new ActionRowBuilder().addComponents(...arr));
+    require('./validate').check({ components: out }, `View ${this.id}`);   // v21.4: custom_id trùng / quá hàng / quá nút → báo ngay (strict trong test)
+    return out;
   }
   disableAll() { for (const it of this.items) it.builder.setDisabled(true); }
   find(key) { return this.items.find((i) => i.key === key); }
@@ -113,7 +115,7 @@ async function routeComponent(interaction) {
   const sh = staticHandlers.get(cid.slice(0, idx));
   if (sh) {
     try { await sh(interaction, cid.slice(idx + 1).split('|')); }
-    catch (e) { const code = logError('nút tĩnh', e); if (code === 'het-han') return true; await safeReply(interaction, { content: `❌ Có lỗi xảy ra (mã lỗi \`${code}\`), vui lòng thử lại.`, flags: EPHEMERAL }); }
+    catch (e) { const code = logError('nút tĩnh', e); if (code === 'het-han') return true; await safeReply(interaction, { content: code === 'mang' ? '🌐 Mạng đang chập chờn (dữ liệu không mất) — chờ vài giây rồi thử lại.' : `❌ Có lỗi xảy ra (mã lỗi \`${code}\`), vui lòng thử lại.`, flags: EPHEMERAL }); }
     return true;
   }
   const view = registry.get(cid.slice(0, idx));
@@ -122,7 +124,7 @@ async function routeComponent(interaction) {
     return true;
   }
   const item = view.find(cid.slice(idx + 1));
-  if (!item) return true;
+  if (!item) { await safeReply(interaction, { content: '⌛ Nút này không còn hiệu lực — hãy mở lại menu.', flags: EPHEMERAL }); return true; }   // v21.4: trước đây im lặng → Discord hiện "ứng dụng không phản hồi"
   if (view.checkOwner && view.ownerId !== null && String(interaction.user.id) !== view.ownerId) {
     await safeReply(interaction, { content: '❌ Đây không phải menu của bạn — hãy gõ `/tutien` để mở menu riêng của mình.', flags: EPHEMERAL });
     return true;
