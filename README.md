@@ -1,5 +1,7 @@
 # Thiên Tông Bot v21.6 — Node.js + discord.js + SQLite (trước đây: "Tiên Giới Bot")
 
+> **v21.6.2** — Sửa "menu/biểu mẫu toàn báo hết hạn": (1) lỗi mạng khi đăng nhập (`EAI_AGAIN`…) không còn làm bot thoát → host khởi động lại liên tục (bot chờ + thử lại); (2) chặn crash do lỗi không bắt được (`uncaughtException`); (3) biểu mẫu `/quantri` là form tĩnh — còn dùng được sau khi bot khởi động lại; (4) thông báo nói rõ "bot vừa khởi động lại <lúc>"; `/loigannhat` hiện mốc bot chạy liên tục. Xem `BAO_CAO_V21_6_2.md`.
+>
 > **v21.6.1** — Thay 31 emoji chủng tộc bằng bản **bạn tự vẽ** (cắt từ bảng ảnh bạn gửi — không kèm zip vì dung lượng — bằng `scripts/build_race_emoji_from_sheet_v21_7.py`); `assets/emoji_revisions.json` đặt hậu tố `b` cho 31 khoá để bot tải ảnh mới lên Discord (tên `tg7_<key>_b`). Mọi thứ khác giữ nguyên v21.6.
 >
 > **v21.6** — **Hiệu ứng thật + Kỹ năng Chủng Tộc + sửa lỗi mạng**: EffectEngine (độc/chảy máu/thiêu đốt trừ sinh lực, choáng mất lượt, băng phong, suy nhược… trước đây chỉ hiện chữ trong nhật ký PvP), Sát Chiêu có hồi chiêu 3 hiệp, mỗi tộc có 1 kỹ năng chủ động trong PvP (nút **Kỹ Năng Tộc**), StatEngine chồng hiệu ứng lên chỉ số; lỗi DNS/mạng tạm thời (`EAI_AGAIN`…) không còn sinh "mã lỗi" giả — bot tự thử lại; Đan Tẩy Tủy ×30 giá; 31 emoji chủng tộc + `assets/emoji_revisions.json` để thay emoji vẽ lại. Xem `BAO_CAO_V21_6.md`, `docs/audit_v21_3/11_EFFECT_ENGINE_V21_6.md`, `docs/audit_v21_3/12_EMOJI_GHI_CHU_VE_LAI_V21_5.md`. Công tắc: `pvp_effects_mode` (`real`/`log`), `pvp_killmove_cd` (mặc định 3, `0` = tắt).

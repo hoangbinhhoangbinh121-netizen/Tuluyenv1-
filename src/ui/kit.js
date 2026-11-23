@@ -120,7 +120,7 @@ async function routeComponent(interaction) {
   }
   const view = registry.get(cid.slice(0, idx));
   if (!view) {
-    await safeReply(interaction, { content: '⌛ Menu này đã hết hạn (hoặc bot vừa khởi động lại) — hãy gõ `/tutien` để mở menu mới.', flags: EPHEMERAL });
+    await safeReply(interaction, { content: `⌛ Menu này không còn (${whyGone()}) — hãy gõ \`/tutien\` để mở menu mới.`, flags: EPHEMERAL });
     return true;
   }
   const item = view.find(cid.slice(idx + 1));
@@ -153,6 +153,11 @@ async function safeReply(interaction, payload) {
   } catch (e) { return null; }
 }
 
+/** v21.6.1: mốc khởi động của tiến trình bot + câu giải thích vì sao menu/biểu mẫu cũ "hết hạn" (menu nằm trong bộ nhớ ⇒ khởi động lại là mất). */
+const BOOT_AT = Math.trunc((Date.now() - process.uptime() * 1000) / 1000);
+const restartedRecently = () => process.uptime() < 3 * 3600;
+const whyGone = () => (restartedRecently() ? `bot vừa khởi động lại <t:${BOOT_AT}:R>` : 'menu quá cũ (tối đa 15 phút không bấm) hoặc bot đã khởi động lại');
+
 // ---------- Modal ----------
 const modals = new Map(); // customId -> {handler, expires}
 function showModal(interaction, { title, fields, onSubmit }) {
@@ -168,9 +173,30 @@ function showModal(interaction, { title, fields, onSubmit }) {
   modals.set(id, { handler: onSubmit, owner: String(interaction.user.id), exp: Date.now() + 15 * 60 * 1000 });
   return interaction.showModal(m);
 }
+/** Biểu mẫu TĨNH (sống sót qua restart): customId = "<prefix>|<đối số…>", handler(interaction, parts, get). */
+const staticModals = new Map();
+const registerStaticModal = (prefix, handler) => staticModals.set(prefix, handler);
+function buildModal(customId, title, fields) {
+  const m = new ModalBuilder().setCustomId(customId).setTitle(String(title).slice(0, 45));
+  for (const f of fields) {
+    const ti = new TextInputBuilder().setCustomId(f.id).setLabel(String(f.label).slice(0, 45))
+      .setStyle(f.paragraph ? TextInputStyle.Paragraph : TextInputStyle.Short)
+      .setRequired(f.required !== false).setMaxLength(f.maxLength || 400);
+    if (f.placeholder) ti.setPlaceholder(String(f.placeholder).slice(0, 100));
+    m.addComponents(new ActionRowBuilder().addComponents(ti));
+  }
+  return m;
+}
+const showStaticModal = (interaction, { customId, title, fields }) => interaction.showModal(buildModal(String(customId).slice(0, 100), title, fields));
 async function routeModal(interaction) {
+  const cidm = String(interaction.customId || ''); const pi = cidm.indexOf('|');
+  if (pi > 0 && staticModals.has(cidm.slice(0, pi))) {
+    try { await staticModals.get(cidm.slice(0, pi))(interaction, cidm.slice(pi + 1).split('|'), (id) => interaction.fields.getTextInputValue(id)); }
+    catch (e) { const code = logError('biểu mẫu tĩnh', e); if (code === 'het-han') return true; await safeReply(interaction, { embeds: [require('./notifications').systemError(code)], flags: EPHEMERAL }); }
+    return true;
+  }
   const m = modals.get(interaction.customId);
-  if (!m) { await safeReply(interaction, { content: '⌛ Biểu mẫu này đã hết hạn — hãy mở lại từ menu.', flags: EPHEMERAL }); return true; }
+  if (!m) { await safeReply(interaction, { content: `⌛ Biểu mẫu này không còn (${whyGone()}) — hãy mở lại từ menu.`, flags: EPHEMERAL }); return true; }
   modals.delete(interaction.customId);
   try { await m.handler(interaction, (id) => interaction.fields.getTextInputValue(id)); }
   catch (e) { const code = logError('modal', e); await safeReply(interaction, { embeds: [require('./notifications').systemError(code)], flags: EPHEMERAL }); }
@@ -178,4 +204,4 @@ async function routeModal(interaction) {
 }
 setInterval(() => { const t = Date.now(); for (const [k, v] of modals) if (v.exp < t) modals.delete(k); }, 60000).unref();
 
-module.exports = { _registry: registry, registerStatic, View, routeComponent, routeModal, showModal, safeReply, globalClickAllowed, tryUserLock, EPHEMERAL };
+module.exports = { _registry: registry, registerStatic, registerStaticModal, showStaticModal, whyGone, BOOT_AT, View, routeComponent, routeModal, showModal, safeReply, globalClickAllowed, tryUserLock, EPHEMERAL };

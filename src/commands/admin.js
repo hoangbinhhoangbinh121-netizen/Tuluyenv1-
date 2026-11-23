@@ -199,7 +199,8 @@ defineCommand({
     const st = require('../errorlog').getStale();   // v14.5: lượt bấm hết hạn (10062) — không tính là lỗi code
     const staleNote = st.count ? `\n⏱️ Có **${st.count}** lượt bấm bị hết hạn (bot trả lời >3s, lần cuối <t:${Math.trunc(st.last / 1000)}:R>) — do host/mạng chậm hoặc vòng lặp bị chặn; xem console để biết "🐢 Vòng lặp bị chặn".` : '';
     const nt = require('../errorlog').getNet();   // v21.6: lỗi mạng/DNS tạm thời — không phải lỗi code
-    const netNote = nt.count ? `\n🌐 Có **${nt.count}** lần mạng/DNS chập chờn (${nt.lastCode}, lần cuối <t:${Math.trunc(nt.last / 1000)}:R>) — do host/mạng, không phải lỗi game; bot tự thử lại khi gửi tin. Nếu liên tục: kiểm tra mạng của host (VibeHost) hoặc khởi động lại.` : '';
+    const upNote = `\n🕒 Bot chạy liên tục từ <t:${require('../ui/kit').BOOT_AT}:R> (khởi động lại = mọi menu/biểu mẫu cũ báo "không còn").`;
+    const netNote = upNote + (nt.count ? `\n🌐 Có **${nt.count}** lần mạng/DNS chập chờn (${nt.lastCode}, lần cuối <t:${Math.trunc(nt.last / 1000)}:R>) — do host/mạng, không phải lỗi game; bot tự thử lại khi gửi tin. Nếu liên tục: kiểm tra mạng của host (VibeHost) hoặc khởi động lại.` : '');
     if (!list.length) return ctx.send(`✅ Chưa ghi nhận lỗi nào kể từ lần khởi động gần nhất.${staleNote}${netNote}`);
     const code = (ctx.args.ma_loi || '').trim().toLowerCase();
     if (code) {

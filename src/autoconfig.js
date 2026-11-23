@@ -91,4 +91,20 @@ async function loginCascade({ build, steps, login, isIntentError, warn = console
   throw lastErr;
 }
 
-module.exports = { DEFAULTS, BACKUP_FIXED, applyDefaults, detectOwnerId, registerSlashAuto, loginCascade };
+/**
+ * v21.6.1: chạy `attemptFn()` và thử lại khi gặp lỗi MẠNG (isNetwork) — chờ 5·n giây (tối đa 60), tối đa `max` lần; lỗi khác hoặc hết lần ⇒ ném lại.
+ * Dùng cho đăng nhập Discord: trước đây lỗi DNS thoáng qua (EAI_AGAIN) làm bot thoát → host khởi động lại → mọi menu/biểu mẫu đang mở báo "hết hạn".
+ */
+async function retryOnNetwork(attemptFn, { isNetwork, max = 60, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), warn = console.warn } = {}) {
+  for (let attempt = 1; ; attempt++) {
+    try { return await attemptFn(attempt); }
+    catch (e) {
+      if (!isNetwork(e) || attempt >= max) throw e;
+      const wait = Math.min(60, 5 * attempt);
+      warn(`🌐 Chưa kết nối được Discord (${e.code || String(e.message || e).slice(0, 60)}) — thử lại lần ${attempt + 1} sau ${wait} giây (bot KHÔNG thoát).`);
+      await sleep(wait * 1000);
+    }
+  }
+}
+
+module.exports = { retryOnNetwork, DEFAULTS, BACKUP_FIXED, applyDefaults, detectOwnerId, registerSlashAuto, loginCascade };

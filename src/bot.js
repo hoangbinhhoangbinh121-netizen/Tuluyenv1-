@@ -140,7 +140,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Thiên Tông Bot v21.6.1 (${BOT_VERSION}) — Node ${process.version}`);
+  console.log(`🌸 Thiên Tông Bot v21.6.2 (${BOT_VERSION}) — Node ${process.version}`);
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);
@@ -163,6 +163,13 @@ async function main() {
   await syncPixelEmoji();
 
   process.on('unhandledRejection', (e) => { const L = require('./errorlog'); if (L.isNetwork(e)) L.logError('unhandledRejection', e); else console.error('⚠️ unhandledRejection:', e); });
+  // v21.6.1: lỗi bất ngờ (kể cả lỗi mạng ném ra từ bộ đếm giờ/sự kiện) KHÔNG được làm sập tiến trình — sập = host khởi động lại = mọi menu/biểu mẫu đang mở báo "hết hạn".
+  const crashes = []; process.on('uncaughtException', (e) => {
+    const L = require('./errorlog'); const now = Date.now(); crashes.push(now); while (crashes.length && now - crashes[0] > 60000) crashes.shift();
+    if (L.isNetwork(e)) { L.logError('uncaughtException', e); return; }
+    const code = L.logError('uncaughtException', e); console.error(`🛑 Lỗi không bắt được (mã ${code}) — bot vẫn chạy tiếp:`, e);
+    if (crashes.length > 8) { console.error('🚨 Hơn 8 lỗi không bắt được trong 60 giây — thoát để host khởi động lại sạch.'); process.exit(1); }
+  });
   const shutdown = () => { try { D.closeDb(); } catch (_) { /* bỏ qua */ } process.exit(0); };
   process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);
 
@@ -173,12 +180,14 @@ async function main() {
   if (USE_PREFIX) steps.push({ content: true, members: false });
   if (USE_MEMBERS) steps.push({ content: false, members: true });
   steps.push({ content: false, members: false });
+  let step;
   try {
-    const { step } = await AC.loginCascade({
+    // v21.6.1: lỗi MẠNG khi đăng nhập (DNS `EAI_AGAIN`, mất mạng thoáng qua…) ⇒ chờ rồi thử lại, KHÔNG thoát (trước đây thoát → host khởi động lại liên tục).
+    ({ step } = await AC.retryOnNetwork(() => AC.loginCascade({
       build: buildClient, steps, login: (c) => c.login(TOKEN),
       isIntentError: (e) => /disallowed intents|used disallowed|4014/i.test(String(e && e.message || e)),
       warn: (m) => console.warn(m),
-    });
+    }), { isNetwork: require('./errorlog').isNetwork }));
     if (USE_PREFIX && !step.content) {
       console.warn('⚠️ Chưa bật "Message Content Intent" (Developer Portal → Bot → Privileged Gateway Intents) → bot chạy bằng lệnh SLASH (/); lệnh "?" và "!" tạm không dùng được.');
     }

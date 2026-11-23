@@ -6,7 +6,7 @@
  */
 const { ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder } = require('discord.js');
 const { EmbedBuilder, fit, listFit, optEmoji, btn, rowOf } = require('./petViews');
-const { registerStatic, showModal, EPHEMERAL } = require('./kit');
+const { registerStatic, registerStaticModal, showStaticModal, EPHEMERAL } = require('./kit');
 const A = require('../game/admin17');
 const ST = require('../game/settings');
 const K = require('../game/constants');
@@ -202,12 +202,7 @@ registerStatic('qt', async (i, parts) => {
     case 'rf': return i.update(render(uid, arg || 'home'));
     case 'm': {
       const def = MODALS[arg]; if (!def) return i.update(render(uid, 'home'));
-      return showModal(i, { title: def.title, fields: def.fields, onSubmit: async (mi, get) => {
-        let msg; try { msg = await modalRun(arg, mi.user.id, get, mi); } catch (e) { msg = `❌ Lỗi: ${e.message}`; }
-        const panel = render(uid, def.view, msg);
-        if (typeof mi.isFromMessage === 'function' && mi.isFromMessage() && typeof mi.update === 'function') { try { return await mi.update(panel); } catch (_) { /* rơi xuống reply */ } }
-        return mi.reply({ content: fit(msg, 1900, '✅'), flags: EPHEMERAL });
-      } });
+      return showStaticModal(i, { customId: `qm|${uid}|${arg}`, title: def.title, fields: def.fields });      // v21.6.1: form tĩnh — còn dùng được sau khi bot khởi động lại
     }
     case 'dsel': return i.update(render(uid, 'dn', '', sel));
     case 'dok': {
@@ -220,6 +215,17 @@ registerStatic('qt', async (i, parts) => {
     case 'exp': return i.reply({ content: '📄 Nhật ký admin (200 dòng gần nhất):', files: [new AttachmentBuilder(Buffer.from(A.logText(200), 'utf8'), { name: 'nhat_ky_admin.txt' })], flags: EPHEMERAL });
     default: return i.update(render(uid, 'home'));
   }
+});
+
+/** Nhận form /quantri (customId "qm|<uid>|<tên form>") — không phụ thuộc bộ nhớ nên không bao giờ "hết hạn" vì khởi động lại. */
+registerStaticModal('qm', async (mi, parts, get) => {
+  const [uid, arg] = parts; const def = MODALS[arg];
+  if (String(mi.user.id) !== String(uid) || !isAdmin(mi.user.id)) return mi.reply({ content: '❌ Biểu mẫu này chỉ dành cho admin được chỉ định — gõ `/quantri` để mở lại.', flags: EPHEMERAL });
+  if (!def) return mi.reply({ content: '⌛ Biểu mẫu này không còn trong phiên bản hiện tại — gõ `/quantri` để mở lại.', flags: EPHEMERAL });
+  let msg; try { msg = await modalRun(arg, mi.user.id, get, mi); } catch (e) { msg = `❌ Lỗi: ${e.message}`; }
+  const panel = render(uid, def.view, msg);
+  if (typeof mi.isFromMessage === 'function' && mi.isFromMessage() && typeof mi.update === 'function') { try { return await mi.update(panel); } catch (_) { /* rơi xuống reply */ } }
+  return mi.reply({ content: fit(msg, 1900, '✅'), flags: EPHEMERAL });
 });
 
 module.exports = { render, open, MODALS, NAV };

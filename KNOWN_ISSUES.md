@@ -101,3 +101,8 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Lỗi mạng/DNS tạm thời: bot tự thử lại **chỉ** khi gửi tin (reply/followUp/…) và chỉ với lỗi chắc chắn chưa gửi được (`EAI_AGAIN`, `ENOTFOUND`, `ECONNREFUSED`…). Nếu host mất mạng kéo dài, người chơi vẫn không nhận được phản hồi — cần kiểm tra mạng của host (VibeHost). Không test được trên mạng thật.
 - Emoji chủng tộc (31 cái) là bản tạm tự vẽ bằng code; chờ bạn vẽ lại (xem docs 12). Emoji vẽ lại cần ghi hậu tố vào `assets/emoji_revisions.json`.
 - Discord thật: **NOT TESTED** (chỉ mock discord.js + SQLite thật).
+
+## V21.6.2 — menu / biểu mẫu "hết hạn"
+- Menu (`View`) và biểu mẫu động (`showModal`) vẫn nằm **trong bộ nhớ** (mỗi menu sống tối đa 15 phút không bấm; khởi động lại bot = mất hết). Chỉ `/quantri` (nút + biểu mẫu), nút tĩnh (Tông Chiến, ...) sống sót qua restart. Các biểu mẫu còn lại (kho đồ, shop tìm kiếm, tông môn, đại phủ, linh thú…) vẫn là loại động. Chuyển dần sang tĩnh ở các đợt sau.
+- Nguyên nhân gốc chưa xác nhận trên host thật: giả thuyết là bot bị khởi động lại (đăng nhập lỗi DNS → thoát; lỗi không bắt được → sập). Sau khi cài V21.6.2, gõ `/loigannhat` xem dòng "Bot chạy liên tục từ …": nếu mốc luôn rất gần thì host vẫn đang khởi động lại bot vì lý do khác (hết RAM, tự restart theo lịch…).
+

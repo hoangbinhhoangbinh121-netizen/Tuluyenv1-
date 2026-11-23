@@ -29,10 +29,10 @@ const click = async (uid, cidKey, comps, values) => { const id = cids(comps).fin
   i = await route(B, go); ok(calls === 1 && /không phải menu của bạn/.test(txt(i)), '2. người khác bấm → từ chối, handler không chạy');
   await sleep(450); i = await route(A, go); i = await route(A, go); ok(calls === 2 && /quá nhanh/.test(txt(i)), '7. bấm đúp <0,4s → lần 2 bị chặn, handler chỉ chạy 1 lần thêm');
   await sleep(450); boom = true; i = await route(A, go); ok(i.routed === true && /mã lỗi|lỗi/i.test(txt(i)), '10. handler ném lỗi → trả thông báo lỗi, không sập'); boom = false;
-  v.stop(); await sleep(450); i = await route(A, go); ok(/hết hạn/.test(txt(i)) && calls === 3, '3/4. view đã stop/hết hạn → báo hết hạn, handler không chạy');
-  const v2 = mkView(A, 0.05); const go2 = cids(v2.components())[0]; await sleep(120); i = await route(A, go2); ok(/hết hạn/.test(txt(i)), '3. hết hạn theo timeout thật');
+  v.stop(); await sleep(450); i = await route(A, go); ok(/hết hạn|không còn/.test(txt(i)) && calls === 3, '3/4. view đã stop/hết hạn → báo hết hạn, handler không chạy');
+  const v2 = mkView(A, 0.05); const go2 = cids(v2.components())[0]; await sleep(120); i = await route(A, go2); ok(/hết hạn|không còn/.test(txt(i)), '3. hết hạn theo timeout thật');
   i = await route(A, 'chuoi-khong-co-gach-doc'); ok(i.routed === false && i.log.length === 0, '5. customId sai định dạng → bỏ qua (false), không lỗi');
-  i = await route(A, 'zzzzzz|abc'); ok(/hết hạn/.test(txt(i)), '6. customId không còn tồn tại → báo hết hạn (không im lặng)');
+  i = await route(A, 'zzzzzz|abc'); ok(/hết hạn|không còn/.test(txt(i)), '6. customId không còn tồn tại → báo hết hạn (không im lặng)');
   const v3 = mkView(A); await sleep(450); i = await route(A, `${v3.id}|khong_co_key`); ok(i.log.length === 1 && /không còn hiệu lực/.test(txt(i)), '6b. view còn nhưng nút không tồn tại → có phản hồi (trước v21.4: im lặng)');
   // hai người bấm cùng lúc vào menu công khai (ownerId null)
   let hits = 0; const pub = new kit.View({ ownerId: null, checkOwner: false, timeout: 5 }); pub.button({ key: 'p', label: 'p' }, async (i2) => { hits += 1; await i2.reply({ content: 'ok' }); }); const pid = cids(pub.components())[0];
