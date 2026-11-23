@@ -65,11 +65,12 @@ function normalizePayload(payload, { edit = false } = {}) {
 }
 
 // ---------------------------------------------------------------- bọc interaction
-const WATCHDOG_MS = 2200;
+const WATCHDOG_MS = 1800;   // v21.6.3: sớm hơn để còn dư biên trước mốc 3 giây của Discord (host chậm)
 function wrapInteraction(i) {
   if (!i || i.__skinned) return i;
   i.__skinned = true;
   const acked = () => i.deferred || i.replied;
+  let ackKind = null;   // v21.6.3: 'update' (deferUpdate: sửa chính tin nhắn gốc) | 'reply' (deferReply: tin mới)
   const orig = {};
   // v21.6: DNS/mạng chập chờn (EAI_AGAIN…) ⇒ thử lại tối đa 2 lần, CHỈ với lỗi chắc chắn chưa gửi được yêu cầu (không sợ trả lời 2 lần) và chỉ khi còn trong hạn 3 giây của Discord.
   const { isPreSend } = require('../errorlog'); const BACKOFF = [250, 700];
@@ -90,7 +91,11 @@ function wrapInteraction(i) {
 
   if (orig.reply) i.reply = async (p) => {
     stop(); const q = normalizePayload(p);
-    if (i.deferred && !i.replied) return orig.editReply(noFlags(normalizePayload(p, { edit: true })));
+    if (i.deferred && !i.replied) {
+      // v21.6.3: đã deferUpdate (nút/menu/modal từ tin nhắn) mà handler muốn reply → gửi tin MỚI, tuyệt đối không ghi đè bảng gốc.
+      if (ackKind === 'update') return orig.followUp(q);
+      return orig.editReply(noFlags(normalizePayload(p, { edit: true })));
+    }
     if (i.replied) return orig.followUp(q);
     return orig.reply(q);
   };
@@ -105,14 +110,25 @@ function wrapInteraction(i) {
     if (acked()) return orig.editReply(noFlags(q));
     return orig.update(q);
   };
-  if (orig.deferReply) i.deferReply = async (o) => { stop(); if (acked()) return null; return orig.deferReply(o); };
-  if (orig.deferUpdate) i.deferUpdate = async () => { stop(); if (acked()) return null; return orig.deferUpdate(); };
+  if (orig.deferReply) i.deferReply = async (o) => { stop(); if (acked()) return null; const r = await orig.deferReply(o); ackKind = 'reply'; return r; };
+  if (orig.deferUpdate) i.deferUpdate = async () => { stop(); if (acked()) return null; const r = await orig.deferUpdate(); ackKind = 'update'; return r; };
   if (orig.showModal) i.showModal = async (m) => { stop(); return orig.showModal(m); };
 
-  // Chậm >2,2s mà chưa phản hồi → báo "đang xử lý" để Discord không hiện "ứng dụng không phản hồi".
-  if (orig.deferReply && typeof i.isChatInputCommand === 'function') {
-    timer = setTimeout(() => { timer = null; if (!acked()) orig.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => {}); }, WATCHDOG_MS);
-    timer.unref?.();
+  // Chậm >1,8s mà chưa phản hồi → ack tự động để Discord không báo 10062 / "ứng dụng không phản hồi".
+  // v21.6.3: trước đây MỌI loại interaction đều bị deferReply (kể cả nút/menu) → sau đó i.update() bị đổi thành editReply lên tin "đang xử lý"
+  // thay vì sửa bảng gốc. Nay: nút/menu/modal-từ-tin-nhắn → deferUpdate; lệnh slash/modal độc lập → deferReply ephemeral.
+  {
+    const is = (m) => typeof i[m] === 'function' && i[m]();
+    const wantUpdate = is('isMessageComponent') || (is('isModalSubmit') && is('isFromMessage'));
+    const doAck = wantUpdate ? orig.deferUpdate : orig.deferReply;
+    if (doAck) {
+      timer = setTimeout(() => {
+        timer = null; if (acked()) return;
+        ackKind = wantUpdate ? 'update' : 'reply';
+        (wantUpdate ? doAck() : doAck({ flags: MessageFlags.Ephemeral })).catch(() => { /* quá hạn thật sự → logError ở tầng route sẽ đếm */ });
+      }, WATCHDOG_MS);
+      timer.unref?.();
+    }
   }
   return i;
 }

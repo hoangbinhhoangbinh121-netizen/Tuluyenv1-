@@ -206,11 +206,12 @@ registerStatic('qt', async (i, parts) => {
     }
     case 'dsel': return i.update(render(uid, 'dn', '', sel));
     case 'dok': {
+      await i.deferUpdate?.();   // v21.6.3: ack ngay — bước nhắn DM bên dưới đi qua mạng, có thể >3s
       const r = S21().confirm(i.user.id, Number(arg)); if (!r.ok) return i.update(render(uid, 'dn', r.msg));
       const dm = await require('./shop21Views').dm(i.client, r.order.user_id, { content: require('./shop21Views').doneDm(r.order) });
       return i.update(render(uid, 'dn', `${r.msg}${dm ? '\n📨 Đã nhắn riêng cho người chơi.' : '\nℹ️ Không nhắn riêng được (họ tắt DM) — hãy báo họ.'}`));
     }
-    case 'dno': { const r = S21().adminCancel(i.user.id, Number(arg)); if (r.ok) await require('./shop21Views').dm(i.client, r.order.user_id, { content: `🚫 **Đơn nạp #${r.order.id}** đã bị huỷ. Nếu bạn đã chuyển tiền, hãy liên hệ admin.` }); return i.update(render(uid, 'dn', r.msg)); }
+    case 'dno': { await i.deferUpdate?.(); const r = S21().adminCancel(i.user.id, Number(arg)); if (r.ok) await require('./shop21Views').dm(i.client, r.order.user_id, { content: `🚫 **Đơn nạp #${r.order.id}** đã bị huỷ. Nếu bạn đã chuyển tiền, hãy liên hệ admin.` }); return i.update(render(uid, 'dn', r.msg)); }
     case 'off': { const r = A.setSpeedEvent(i.user.id, 'tat'); A.setEvDrop(i.user.id, 1, 0); return i.update(render(uid, 'sk', `🛑 Đã tắt mọi sự kiện${r.was ? ' (tăng tốc tu luyện)' : ''}.`)); }
     case 'exp': return i.reply({ content: '📄 Nhật ký admin (200 dòng gần nhất):', files: [new AttachmentBuilder(Buffer.from(A.logText(200), 'utf8'), { name: 'nhat_ky_admin.txt' })], flags: EPHEMERAL });
     default: return i.update(render(uid, 'home'));
@@ -222,9 +223,11 @@ registerStaticModal('qm', async (mi, parts, get) => {
   const [uid, arg] = parts; const def = MODALS[arg];
   if (String(mi.user.id) !== String(uid) || !isAdmin(mi.user.id)) return mi.reply({ content: '❌ Biểu mẫu này chỉ dành cho admin được chỉ định — gõ `/quantri` để mở lại.', flags: EPHEMERAL });
   if (!def) return mi.reply({ content: '⌛ Biểu mẫu này không còn trong phiên bản hiện tại — gõ `/quantri` để mở lại.', flags: EPHEMERAL });
+  const fromMsg = typeof mi.isFromMessage === 'function' && mi.isFromMessage();
+  try { if (fromMsg) await mi.deferUpdate(); else await mi.deferReply({ flags: EPHEMERAL }); } catch (_) { /* hết hạn thật sự → bỏ qua, lát nữa safeReply nuốt */ }   // v21.6.3: ack trước khi chạy form
   let msg; try { msg = await modalRun(arg, mi.user.id, get, mi); } catch (e) { msg = `❌ Lỗi: ${e.message}`; }
   const panel = render(uid, def.view, msg);
-  if (typeof mi.isFromMessage === 'function' && mi.isFromMessage() && typeof mi.update === 'function') { try { return await mi.update(panel); } catch (_) { /* rơi xuống reply */ } }
+  if (fromMsg && typeof mi.update === 'function') { try { return await mi.update(panel); } catch (_) { /* rơi xuống reply */ } }
   return mi.reply({ content: fit(msg, 1900, '✅'), flags: EPHEMERAL });
 });
 
