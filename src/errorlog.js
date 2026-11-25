@@ -13,6 +13,10 @@ let reporter = null;   // (code, where, msg) => void — bot.js gắn để gử
 const stale = { count: 0, last: 0 };
 const isStale = (err) => !!err && (err.code === 10062 || err.code === 40060 || /Unknown interaction|already been acknowledged/i.test(String(err.message || '')));
 const getStale = () => ({ ...stale });
+/** v21.6.3: 40060 "đã phản hồi rồi" khi chính bot này CHƯA phản hồi = có BẢN BOT KHÁC (cùng token) đã trả lời trước. Đếm riêng + cảnh báo to nếu lặp lại. */
+const dup = { count: 0, last: 0, recent: [], warnAt: 0 };
+const isDupAck = (err) => !!err && (err.code === 40060 || /already been acknowledged/i.test(String(err.message || '')));
+const getDup = () => ({ count: dup.count, last: dup.last });
 
 /**
  * v21.6: lỗi MẠNG TẠM THỜI (DNS `EAI_AGAIN`, `ENOTFOUND`, ECONNRESET, timeout, "fetch failed"…) — do host/mạng chập chờn, KHÔNG phải lỗi code/game.
@@ -36,7 +40,14 @@ const getNet = () => ({ ...net });
 function logError(where, err) {
   if (isStale(err)) {            // không sinh mã lỗi/không báo vào kênh admin → tránh spam; chỉ đếm + cảnh báo gọn
     stale.count += 1; stale.last = Date.now();
-    console.warn(`⏱️ Lượt bấm hết hạn tại ${where} (${err.code || ''} ${String(err.message || '').slice(0, 40)}) — bot trả lời chậm >3s. Tổng ${stale.count} lần từ lúc khởi động.`);
+    if (isDupAck(err)) {
+      dup.count += 1; dup.last = Date.now(); dup.recent.push(dup.last); dup.recent = dup.recent.filter((t) => dup.last - t < 600000);
+      if (dup.recent.length >= 2 && dup.last - dup.warnAt > 600000) {
+        dup.warnAt = dup.last;
+        console.warn(`🚨 ${dup.recent.length} lần "đã có phản hồi trước" (40060) trong 10 phút tại ${where} — rất có thể ĐANG CÓ BẢN BOT KHÁC chạy cùng DISCORD_TOKEN (host cũ, Termux, server VibeHost thứ hai…). Hai bản cùng chạy sẽ trả lời xen kẽ và làm menu/biểu mẫu báo "hết hạn". Gõ !phienban vài lần để so sánh mã bản (ID) / phiên bản; muốn dứt điểm: Reset Token ở Developer Portal rồi chỉ dán token mới vào ĐÚNG MỘT nơi.`);
+      }
+    }
+    console.warn(`⏱️ Lượt bấm hết hạn tại ${where} (${err.code || ''} ${String(err.message || '').slice(0, 40)}) — bot trả lời chậm >3s HOẶC đã có bản bot khác (cùng token) trả lời trước. Tổng ${stale.count} lần từ lúc khởi động.`);
     return 'het-han';
   }
   if (isNetwork(err)) {
@@ -62,4 +73,4 @@ function logError(where, err) {
 }
 const setReporter = (fn) => { reporter = fn; };
 const getRecent = () => recent.slice().reverse();
-module.exports = { logError, getRecent, setReporter, isStale, getStale, isNetwork, isPreSend, getNet, LOG_FILE };
+module.exports = { getDup, isDupAck, logError, getRecent, setReporter, isStale, getStale, isNetwork, isPreSend, getNet, LOG_FILE };

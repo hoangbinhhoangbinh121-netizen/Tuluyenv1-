@@ -110,7 +110,8 @@ const CUR = { linh_thach: 'Linh Thạch', linh_tinh: 'Linh Tinh' };
 function currency(admin, userText, col, text) {
   const u = resolveUser(userText); if (u.err) return u.err; if (!CUR[col]) return '❌ Loại tiền không hợp lệ.';
   const nv = rel(u.row[col] || 0, text); if (nv === null) return '❌ Nhập số (vd 1000000), +số / −số để cộng trừ.';
-  Cu.updateCultivator(u.id, { [col]: nv }); log(admin, `dat_${col}`, u.id, `${u.row[col] || 0} → ${nv}`);
+  D.transaction(() => { Cu.updateCultivator(u.id, { [col]: nv }); require('./ledger').note(u.id, nv - (u.row[col] || 0), { currency: col, reason: 'admin', ref: `admin ${admin}`, key: require('./ledger').nonce('admin') }); });
+  log(admin, `dat_${col}`, u.id, `${u.row[col] || 0} → ${nv}`);
   return `💰 ${CUR[col]} của <@${u.id}>: ${fmtNum(u.row[col] || 0)} → **${fmtNum(nv)}**.`;
 }
 /** v19.6: miễn Thiên Nhân Ngũ Suy — cho người chơi vượt cả 5 giai đoạn ngay (đúng như thắng thật: cộng % thuộc tính vĩnh viễn + danh hiệu). Đã vượt rồi thì không cộng lần 2. */

@@ -71,6 +71,8 @@ function acceptOffer(fromId, toId) {
     if (lt || wlt) {
       D.run('UPDATE cultivators SET linh_thach = linh_thach - ? + ? WHERE user_id = ?', lt, wlt, fromId);
       D.run('UPDATE cultivators SET linh_thach = linh_thach - ? + ? WHERE user_id = ?', wlt, lt, toId);
+      const LG = require('./ledger'); const tk = `trade:${fromId}:${toId}:${offer.created_at}`;
+      LG.note(fromId, wlt - lt, { reason: 'giao dịch', ref: `với ${toId}`, key: `${tk}:f` }); LG.note(toId, lt - wlt, { reason: 'giao dịch', ref: `với ${fromId}`, key: `${tk}:t` });
     }
     if (dd || wdd) {
       D.run('UPDATE cultivators SET dan_duoc = COALESCE(dan_duoc, 0) - ? + ? WHERE user_id = ?', dd, wdd, fromId);

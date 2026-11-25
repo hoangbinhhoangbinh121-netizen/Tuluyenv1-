@@ -101,6 +101,7 @@ const NOERR = (fn, m) => { try { fn(); ok(true, m); } catch (e) { assert.fail(`$
 
   // ---------------------------------------------------------------- 6) restart: huỷ trận dở, không ai mất gì
   D.run('UPDATE cultivators SET last_pvp = 0'); s = Pvp._test.buildSession('g1', 'c1', A, B); s.message = mkMsg(); C21.setMessage(s.id, '555');
+  Pvp.SESSIONS.clear(); Pvp.BUSY.clear(); require('../src/game/settings').set('pvp_resume_window', '0');   // v21.7: mô phỏng tiến trình mới + tắt khôi phục → hành vi huỷ cũ
   const tr = [tuvi(A), tuvi(B)]; const cnt = await Pvp.recoverStale({ channels: { fetch: async () => ({ messages: { fetch: async () => ({ edit: async () => {} }) } }) } });
   ok(cnt >= 1, 'recoverStale huỷ trận active'); ok(D.get('SELECT status, reason FROM v213_battles WHERE id = ?', s.id).reason === 'restart', 'lý do restart'); ok(tuvi(A) === tr[0] && tuvi(B) === tr[1], 'huỷ do restart: tu vi không đổi'); ok(await Pvp.recoverStale(null) === 0, 'chạy lại không huỷ gì thêm');
   Pvp.SESSIONS.clear(); Pvp.BUSY.clear();

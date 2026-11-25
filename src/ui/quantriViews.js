@@ -8,6 +8,7 @@ const { ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder } = require('dis
 const { EmbedBuilder, fit, listFit, optEmoji, btn, rowOf } = require('./petViews');
 const { registerStatic, registerStaticModal, showStaticModal, EPHEMERAL } = require('./kit');
 const A = require('../game/admin17');
+const G21 = require('../game/adminGift21');   // v21.6.4: tặng & EXP
 const ST = require('../game/settings');
 const K = require('../game/constants');
 const { fmtNum, now } = require('../util');
@@ -17,6 +18,7 @@ const cid = (uid, act, arg = '') => `qt|${uid}|${act}|${arg}`.replace(/\|+$/, ''
 const NAV = [
   ['home', 'Tổng Quan', '🛠️', 'Trạng thái bot, kinh tế, sự kiện'],
   ['vp', 'Vật Phẩm & Nghề', '🎒', 'Cho/thu vật phẩm, trang bị, cấp nghề, lò chế'],
+  ['tg', 'Tặng & EXP', '🎁', 'Cộng EXP mọi hệ thống, tặng Pháp Bảo / Công Pháp / Đan Dược / Trang bị'],
   ['nv', 'Nhân Vật', '🧙', 'Cảnh giới, tu vi, Linh Thạch, hồi phục, miễn Ngũ Suy'],
   ['kt', 'Kinh Tế', '💰', 'Hệ số EXP, rơi đồ, giá NPC (chỉnh trực tiếp)'],
   ['sk', 'Sự Kiện & Thông Báo', '📣', 'Tăng tốc tu luyện, tăng rơi đồ, thông báo server'],
@@ -33,7 +35,7 @@ const U = { id: 'u', label: 'Người chơi (ID hoặc @nhắc)', placeholder: '
 const MODALS = {
   give: { view: 'vp', title: 'Cho vật phẩm V17', fields: [U, { id: 't', label: 'Vật phẩm', paragraph: true, maxLength: 400, placeholder: 'Thanh Linh Thảo x5, Tụ Khí Đan (Thượng Phẩm) x2' }], run: (a, g) => A.items(a, g('u'), g('t'), 1) },
   take: { view: 'vp', title: 'Thu vật phẩm V17', fields: [U, { id: 't', label: 'Vật phẩm', paragraph: true, maxLength: 400, placeholder: 'Thanh Linh Thảo x5' }], run: (a, g) => A.items(a, g('u'), g('t'), -1) },
-  gear: { view: 'vp', title: 'Cho trang bị', fields: [U, { id: 't', label: 'Trang bị (tên hoặc mã)', maxLength: 80, placeholder: 'Thanh Phong Kiếm' }, { id: 'q', label: 'Phẩm chất 1–5 (mặc định 3)', required: false, maxLength: 1, placeholder: '3' }], run: (a, g) => A.gear(a, g('u'), g('t'), g('q')) },
+  gear: { view: 'vp', title: 'Cho trang bị', fields: [U, { id: 't', label: 'Trang bị: Tên x số, … hoặc tatca', paragraph: true, maxLength: 400, placeholder: 'Thanh Phong Kiếm x2, Hộ Tâm Giáp' }, { id: 'q', label: 'Phẩm chất 1–5 (mặc định 3)', required: false, maxLength: 1, placeholder: '3' }], run: (a, g) => G21.gearMany(a, g('u'), g('t'), g('q')) },
   prof: { view: 'vp', title: 'Đặt cấp nghề', fields: [U, { id: 'p', label: 'Nghề', maxLength: 30, placeholder: 'Đan Sư / Luyện Khí Sư / Trận Pháp Sư / Linh Thực Sư' }, { id: 'l', label: 'Cấp 1–9', maxLength: 1, placeholder: '5' }, { id: 'e', label: 'EXP nghề (bỏ trống = đúng ngưỡng cấp)', required: false, maxLength: 12 }], run: (a, g) => A.profLevel(a, g('u'), g('p'), g('l'), g('e')) },
   jobs: { view: 'vp', title: 'Hoàn tất lò chế đang chạy', fields: [U], run: (a, g) => A.finishJobs(a, g('u')) },
   realm: { view: 'nv', title: 'Đặt cảnh giới', fields: [U, { id: 'r', label: 'Cảnh giới (số 0–28 hoặc tên)', maxLength: 30, placeholder: 'Độ Kiếp  hoặc  9' }, { id: 's', label: 'Tầng (bắt đầu từ 1)', required: false, maxLength: 3, placeholder: '1' }], run: (a, g) => A.realm(a, g('u'), g('r'), g('s')) },
@@ -66,6 +68,12 @@ const MODALS = {
   reset: { view: 'kt', title: 'Về mặc định toàn bộ kinh tế', fields: [{ id: 'a', label: 'Gõ DONGY để xác nhận', maxLength: 10 }], run: (a, g) => { if (String(g('a')).trim().toUpperCase() !== 'DONGY') return '❌ Chưa xác nhận (cần gõ đúng DONGY) — không có gì thay đổi.'; A.ecoReset(a); return '↩️ Đã đưa mọi hệ số kinh tế & sự kiện rơi đồ về mặc định.'; } },
 };
 // hai biểu mẫu sự kiện/thông báo cần client → xử lý riêng (xem modalRun)
+MODALS.expg = { view: 'tg', title: 'Cộng EXP một người', fields: [U, { id: 's', label: 'Hệ thống (xem hướng dẫn bên dưới)', maxLength: 30, placeholder: 'all  /  tuvi  /  nghe  /  Đan Sư  /  thu …' }, { id: 'n', label: 'Số EXP', maxLength: 14, placeholder: '50000' }], run: (a, g) => G21.expGrant(a, g('u'), g('s'), g('n')) };
+MODALS.expall = { view: 'tg', title: 'Cộng EXP TOÀN SERVER', fields: [{ id: 's', label: 'Hệ thống (all / tuvi / nghe / thu …)', maxLength: 30, placeholder: 'all' }, { id: 'n', label: 'Số EXP mỗi người', maxLength: 14, placeholder: '10000' }, { id: 'c', label: 'Gõ DONGY để xác nhận', maxLength: 10 }], run: (a, g) => G21.expAll(a, g('s'), g('n'), g('c')) };
+MODALS.pb = { view: 'tg', title: 'Pháp Bảo', fields: [U, { id: 't', label: 'Pháp Bảo: tầng 1–5, tên, hoặc tatca', maxLength: 40, placeholder: '3  /  Bàn Cổ Phủ  /  tatca' }, { id: 'm', label: 'Chế độ: tang · thu · trangbi (mặc định tang)', required: false, maxLength: 10, placeholder: 'tang' }], run: (a, g) => G21.phapBao(a, g('u'), g('t'), g('m')) };
+MODALS.cp = { view: 'tg', title: 'Tặng Công Pháp', fields: [U, { id: 'b', label: 'Công pháp: mã, tên, hoặc tatca', maxLength: 60, placeholder: '1039  /  Hồng Mông Công  /  tatca' }, { id: 'l', label: 'Cấp tối thiểu 1–100 (bỏ trống = giữ nguyên)', required: false, maxLength: 3 }], run: (a, g) => G21.congPhap(a, g('u'), g('b'), g('l')) };
+MODALS.dan = { view: 'tg', title: 'Tặng Đan Dược', fields: [U, { id: 't', label: 'Đan: Tên (Phẩm) x số, … hoặc tatca x số', paragraph: true, maxLength: 400, placeholder: 'Tụ Khí Đan (Thượng Phẩm) x5  /  tatca (Cực Phẩm) x2' }], run: (a, g) => G21.danDuoc(a, g('u'), g('t')) };
+MODALS.giveall = { view: 'tg', title: 'Tặng vật phẩm TOÀN SERVER', fields: [{ id: 't', label: 'Vật phẩm: Tên (Phẩm) x số, …', paragraph: true, maxLength: 400, placeholder: 'Tụ Khí Đan (Thượng Phẩm) x3' }, { id: 'c', label: 'Gõ DONGY để xác nhận', maxLength: 10 }], run: (a, g) => G21.giveAll(a, g('t'), g('c')) };
 MODALS.evspeed = { view: 'sk', title: 'Sự kiện tăng tốc tu luyện', fields: [{ id: 'm', label: 'Hệ số 0.1–50 (hoặc "tat")', maxLength: 8, placeholder: '2' }, { id: 'p', label: 'Số phút (bỏ trống = đến khi tắt)', required: false, maxLength: 6 }, { id: 'n', label: 'Thông báo ra kênh thế giới? (co/khong)', required: false, maxLength: 5, placeholder: 'co' }] };
 MODALS.evdrop = { view: 'sk', title: 'Sự kiện tăng tỉ lệ rơi', fields: [{ id: 'm', label: 'Hệ số 0.1–5 (hoặc "tat")', maxLength: 8, placeholder: '2' }, { id: 'p', label: 'Số phút (bỏ trống = đến khi tắt)', required: false, maxLength: 6 }, { id: 'n', label: 'Thông báo ra kênh thế giới? (co/khong)', required: false, maxLength: 5, placeholder: 'co' }] };
 // v21.0: Cửa Hàng Nguyên Bảo + đơn nạp (mọi thao tác ghi Nhật Ký Admin)
@@ -139,6 +147,17 @@ function viewVp(uid) {
   e.addFields(F('🎓 Nghề', Object.values(require('../data/craft_v17').PROFS).map((p) => `${p.icon} ${p.name}`).join(' · ')), F('🛡️ Trang bị', Object.values(require('../data/craft_v17').GEAR).map((g) => g.name).join(' · ')));
   return { embeds: [e], components: [navRow(uid, 'vp'), rowOf(btn(cid(uid, 'm', 'give'), 'Cho vật phẩm', '🎁', ButtonStyle.Success), btn(cid(uid, 'm', 'take'), 'Thu vật phẩm', '🧺', ButtonStyle.Danger), btn(cid(uid, 'm', 'gear'), 'Cho trang bị', '🛡️'), btn(cid(uid, 'm', 'prof'), 'Đặt cấp nghề', '🎓'), btn(cid(uid, 'm', 'jobs'), 'Hoàn tất lò', '⏩'))] };
 }
+function viewTg(uid) {
+  const e = new EmbedBuilder().setTitle('🎁 Tặng & EXP').setColor(0xd35400);
+  e.setDescription(fit('Mọi thao tác đi qua lớp game sẵn có và ghi **Nhật Ký Admin**. Người chơi: dán **ID** hoặc @nhắc tên.\n• **Cộng EXP**: chọn hệ thống hoặc `all` (mọi hệ thống người đó có).\n• Thao tác **TOÀN SERVER** bắt buộc gõ `DONGY`.', 700));
+  e.addFields(
+    F('📈 Hệ thống EXP', ['✨ `tuvi` · 🎓 `nghe` (hoặc tên nghề)', '🐾 `thu` · 🏯 `tongmon` · `conghien`', '📖 `benmenh` · 🔥 `dihoa` · 💞 `daolu`', '⭐ `all` = tất cả'].join('\n'), true),
+    F('🔮 Pháp Bảo', K.PHAP_BAO_TIER_DEF.map((t) => `${t.tier}·${t.name}`).join('\n'), true),
+    F('📝 Cú pháp', '• Đan/vật phẩm: `Tên (Thượng Phẩm) x5`\n• Tất cả đan: `tatca (Cực Phẩm) x2`\n• Trang bị: `Tên x2, Tên khác` hoặc `tatca`\n• Pháp bảo: `3`, tên hoặc `tatca` + chế độ `tang`/`thu`/`trangbi`\n• Công pháp: mã (1039), tên hoặc `tatca`', false));
+  return { embeds: [e], components: [navRow(uid, 'tg'),
+    rowOf(btn(cid(uid, 'm', 'expg'), 'Cộng EXP', '📈', ButtonStyle.Success), btn(cid(uid, 'm', 'pb'), 'Pháp Bảo', '🔮', ButtonStyle.Primary), btn(cid(uid, 'm', 'cp'), 'Công Pháp', '📜', ButtonStyle.Primary), btn(cid(uid, 'm', 'dan'), 'Đan Dược', '💊', ButtonStyle.Primary), btn(cid(uid, 'm', 'gear'), 'Trang bị', '🛡️', ButtonStyle.Primary)),
+    rowOf(btn(cid(uid, 'm', 'give'), 'Cho vật phẩm', '🎁'), btn(cid(uid, 'm', 'expall'), 'EXP toàn server', '🌐', ButtonStyle.Danger), btn(cid(uid, 'm', 'giveall'), 'Tặng toàn server', '🌐', ButtonStyle.Danger))] };
+}
 function viewNv(uid) {
   const e = new EmbedBuilder().setTitle('🧙 Nhân Vật').setColor(0x8e44ad);
   e.setDescription(fit('Chỉnh dữ liệu một người chơi. Đặt cảnh giới cao sẽ **tự nâng bậc thế giới** cho khớp (Linh Giới >Hóa Thần, Tiên Giới >Độ Kiếp) và giữ nguyên tu vi hiện có.\n• Tu vi / Linh Thạch / Linh Tinh: nhập số để đặt, `+số` hoặc `-số` để cộng trừ; tu vi còn nhận `full`.\n• Hồi phục: đầy Sinh Mệnh + xoá thời gian dưỡng thương sau đột phá hụt.', 900));
@@ -186,7 +205,7 @@ function viewDn(uid, selId) {
   comps.push(rowOf(btn(cid(uid, 'm', 'dhide'), 'Ẩn/hiện hàng', '🙈'), btn(cid(uid, 'rf', 'dn'), 'Làm mới', '🔄')));
   return { embeds: [e], components: comps };
 }
-const VIEWS = { home: viewHome, vp: viewVp, nv: viewNv, kt: viewKt, sk: viewSk, nk: viewNk, dn: viewDn };
+const VIEWS = { home: viewHome, vp: viewVp, tg: viewTg, nv: viewNv, kt: viewKt, sk: viewSk, nk: viewNk, dn: viewDn };
 function render(uid, view = 'home', note = '', arg = '') {
   const out = (VIEWS[view] || viewHome)(String(uid), arg); if (note) out.content = fit(note, 1900, ''); return out;
 }

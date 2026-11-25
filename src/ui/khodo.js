@@ -20,8 +20,8 @@ function buildKhodoEmbed(user, row) {
   f(`${E.linhgioilenh} ${R.linhgioilenhLabel(row)}`, row[R.lenhCol(row.world_tier)]);
   f(`${E.linhphu} ${R.linhphuLabel(row)}`, `${row[R.phuCol(row.world_tier)]}/${K.PHITHANG_LINH_PHU_CAN}`);
   f(`${E.ruong} Rương Thần Bí`, row.ruong_than_bi || 0); f(`${E.vebicanhdacbiet} Vé Bí Cảnh Đặc Biệt`, row.ve_bicanh_dac_biet || 0);
-  f(`${E.taytuydan} Đan Tẩy Tủy Trọng Sinh`, `${row.dan_taytuy_trongsinh || 0} (dùng miễn phí trước, hết mới trừ ${fmtNum(K.TAYTUY_LINH_THACH_COST)} ${E.linhthach})`);
-  f(`${E.taytuydan} Đan Tẩy Tủy Nửa Tác Dụng`, `${row.dan_taytuy_nuaban || 0} (chỉ reroll ${E.linhcan} Linh Căn, miễn phí trước, hết mới trừ ${fmtNum(K.TAYTUY_NUABAN_LINH_THACH_COST)} ${E.linhthach})`);
+  f(`${E.taytuydan} Đan Tẩy Tủy Trọng Sinh`, `${row.dan_taytuy_trongsinh || 0} (dùng miễn phí trước, hết mới trừ ${fmtNum(K.TAYTUY_LINH_TINH_COST)} ${E.linhtinh})`);
+  f(`${E.taytuydan} Đan Tẩy Tủy Nửa Tác Dụng`, `${row.dan_taytuy_nuaban || 0} (chỉ reroll ${E.linhcan} Linh Căn, miễn phí trước, hết mới trừ ${fmtNum(K.TAYTUY_NUABAN_LINH_TINH_COST)} ${E.linhtinh})`);
   f(`${E.phagioidan} Đan Dược Phá Giới`, `${row.dan_pha_gioi || 0} (mỗi viên bỏ tối đa 5 phút chờ, mua ${fmtNum(K.DAN_PHA_GIOI_COST_LINH_THACH)} ${E.linhthach} hoặc luyện chế)`);
   f(`${E.linhduocdacbiet} Linh Dược Đặc Biệt`, `${row.linh_duoc_dac_biet || 0} (nguyên liệu luyện Đan Dược Phá Giới, cần ${K.DAN_PHA_GIOI_CRAFT_COST}/viên — rơi từ Bí Cảnh)`);
   if (row.realm_index >= 6 || row.world_tier >= 1) {

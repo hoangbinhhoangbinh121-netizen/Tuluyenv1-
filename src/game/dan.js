@@ -140,22 +140,22 @@ function doCanDanGiamDotpha(userId) {
 function doTaytuyReroll(userId) {
   const row = Cu.getCultivator(userId);
   const hasFree = (row.dan_taytuy_trongsinh || 0) > 0;
-  if (!hasFree && row.linh_thach < K.TAYTUY_LINH_THACH_COST) return `❌ Cần **${fmtNum(K.TAYTUY_LINH_THACH_COST)}** ${E.linhthach} Linh Thạch (hoặc 1 viên ${E.taytuydan} Đan Tẩy Tủy Trọng Sinh có sẵn trong Kho Đồ) để luyện — hiện có ${fmtNum(row.linh_thach)}.`;
+  if (!hasFree && (row.linh_tinh || 0) < K.TAYTUY_LINH_TINH_COST) return `❌ Cần **${fmtNum(K.TAYTUY_LINH_TINH_COST)}** ${E.linhtinh} Linh Tinh (hoặc 1 viên ${E.taytuydan} Đan Tẩy Tủy Trọng Sinh có sẵn trong Kho Đồ) để luyện — hiện có ${fmtNum(row.linh_tinh || 0)}.`;
   const oldLc = row.linh_can; const oldTc = row.the_chat;
   const newLc = R.rollWeighted(K.LINH_CAN); const newTc = R.rollWeighted(K.THE_CHAT);
   const updates = { linh_can: newLc.name, the_chat: newTc.name, ...T.tcFields(newTc.name), ...T.lcFields(newLc.name) };   // v13.6: hồ sơ thức tỉnh/tiến hóa đặt lại theo phẩm cấp mới
   let costLine;
   if (hasFree) { updates.dan_taytuy_trongsinh = row.dan_taytuy_trongsinh - 1; costLine = `Đã dùng **1** ${E.taytuydan} Đan Tẩy Tủy Trọng Sinh có sẵn (miễn phí, còn lại ${updates.dan_taytuy_trongsinh}).`; }
-  else { updates.linh_thach = new Delta(-K.TAYTUY_LINH_THACH_COST); costLine = `-${fmtNum(K.TAYTUY_LINH_THACH_COST)} ${E.linhthach} Linh Thạch.`; }
-  if (!Cu.updateCultivator(userId, updates, hasFree ? null : { linh_thach: K.TAYTUY_LINH_THACH_COST })) return Cu.MSG_BALANCE_CHANGED;
+  else { updates.linh_tinh = new Delta(-K.TAYTUY_LINH_TINH_COST); costLine = `-${fmtNum(K.TAYTUY_LINH_TINH_COST)} ${E.linhtinh} Linh Tinh.`; }
+  if (!Cu.updateCultivator(userId, updates, hasFree ? null : { linh_tinh: K.TAYTUY_LINH_TINH_COST })) return Cu.MSG_BALANCE_CHANGED;
   return `${E.taytuydan} **ĐAN TẨY TỦY TRỌNG SINH** phát huy tác dụng — toàn bộ tư chất được tái sinh!\n${E.linhcan} Linh Căn: ${oldLc} → **${newLc.name}** (x${newLc.mult})\n${E.thechat} Thể Chất: ${oldTc} → **${newTc.name}** (x${newTc.mult})\n⚠️ Hồ sơ Thức Tỉnh / Tiến Hóa của phẩm cấp cũ đã được đặt lại; Linh Căn mới có hành và độ tinh khiết mới.\n${costLine}`;
 }
 function doTaytuyNuabanReroll(userId, stat = 'linh_can') {
   if (stat !== 'linh_can' && stat !== 'the_chat') stat = 'linh_can';
   const row = Cu.getCultivator(userId);
   const hasFree = (row.dan_taytuy_nuaban || 0) > 0;
-  const price = K.TAYTUY_NUABAN_LINH_THACH_COST;
-  if (!hasFree && row.linh_thach < price) return `❌ Cần **${fmtNum(price)}** ${E.linhthach} Linh Thạch (hoặc 1 viên ${E.taytuydan} Đan Tẩy Tủy Nửa Tác Dụng có sẵn trong Kho Đồ) để luyện — hiện có ${fmtNum(row.linh_thach)}.`;
+  const price = K.TAYTUY_NUABAN_LINH_TINH_COST;
+  if (!hasFree && (row.linh_tinh || 0) < price) return `❌ Cần **${fmtNum(price)}** ${E.linhtinh} Linh Tinh (hoặc 1 viên ${E.taytuydan} Đan Tẩy Tủy Nửa Tác Dụng có sẵn trong Kho Đồ) để luyện — hiện có ${fmtNum(row.linh_tinh || 0)}.`;
   let updates; let statLine; let keptLine;
   if (stat === 'linh_can') {
     const nv = R.rollWeighted(K.LINH_CAN); updates = { linh_can: nv.name, ...T.lcFields(nv.name) };
@@ -166,8 +166,8 @@ function doTaytuyNuabanReroll(userId, stat = 'linh_can') {
   }
   let costLine;
   if (hasFree) { updates.dan_taytuy_nuaban = row.dan_taytuy_nuaban - 1; costLine = `Đã dùng **1** ${E.taytuydan} Đan Tẩy Tủy Nửa Tác Dụng có sẵn (miễn phí, còn lại ${updates.dan_taytuy_nuaban}).`; }
-  else { updates.linh_thach = new Delta(-price); costLine = `-${fmtNum(price)} ${E.linhthach} Linh Thạch.`; }
-  if (!Cu.updateCultivator(userId, updates, hasFree ? null : { linh_thach: price })) return Cu.MSG_BALANCE_CHANGED;
+  else { updates.linh_tinh = new Delta(-price); costLine = `-${fmtNum(price)} ${E.linhtinh} Linh Tinh.`; }
+  if (!Cu.updateCultivator(userId, updates, hasFree ? null : { linh_tinh: price })) return Cu.MSG_BALANCE_CHANGED;
   return `${E.taytuydan} **ĐAN TẨY TỦY NỬA TÁC DỤNG** phát huy tác dụng!\n${statLine}\n${keptLine}\n${costLine}`;
 }
 
@@ -176,9 +176,9 @@ function getDanDuocUses(row) {
   const uses = [];
   if (row.dan_phuong_quality > 0 && (row.dan_duoc || 0) > 0) uses.push({ key: 'tangtuvi', label: `Tăng Tu Vi ngay (${row.dan_duoc} viên)`, desc: 'Cắn 1 Đan Dược, nhận ngay 60~120 tu vi' });
   if ((row.dan_pha_gioi || 0) > 0) uses.push({ key: 'phagioi', label: `Bỏ 5 phút chờ Đột Phá (${row.dan_pha_gioi} viên)`, desc: 'Cắn 1 Đan Dược Phá Giới, bỏ tối đa 5 phút cooldown Đột Phá thất bại' });
-  if ((row.dan_taytuy_trongsinh || 0) > 0 || row.linh_thach >= K.TAYTUY_LINH_THACH_COST)
+  if ((row.dan_taytuy_trongsinh || 0) > 0 || (row.linh_tinh || 0) >= K.TAYTUY_LINH_TINH_COST)
     uses.push({ key: 'taytuytrongsinh', label: `Tẩy Tủy Trọng Sinh — reroll Linh Căn+Thể Chất (${row.dan_taytuy_trongsinh || 0} viên)`, desc: 'Cắn 1 Đan Tẩy Tủy Trọng Sinh, roll lại CẢ Linh Căn lẫn Thể Chất' });
-  if ((row.dan_taytuy_nuaban || 0) > 0 || row.linh_thach >= K.TAYTUY_NUABAN_LINH_THACH_COST)
+  if ((row.dan_taytuy_nuaban || 0) > 0 || (row.linh_tinh || 0) >= K.TAYTUY_NUABAN_LINH_TINH_COST)
     uses.push({ key: 'taytuynuaban', label: `Tẩy Tủy Nửa Tác Dụng — chọn 1 chỉ số (${row.dan_taytuy_nuaban || 0} viên)`, desc: 'Cắn 1 Đan Tẩy Tủy Nửa Tác Dụng, TỰ CHỌN reroll Linh Căn HOẶC Thể Chất' });
   return uses;
 }

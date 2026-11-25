@@ -70,6 +70,60 @@ defineCommand({
 });
 
 defineCommand({
+  name: 'socai', description: '[Admin] Xem Sổ Cái tiền tệ (Linh Thạch/Linh Tinh) của 1 người chơi — 15 dòng gần nhất', admin: true, prefixOnly: true,
+  options: [{ name: 'thanh_vien', type: 'user', description: 'Người chơi' }, { name: 'id', type: 'string', description: 'Hoặc ID Discord' }],
+  async run(ctx) {
+    const raw = ctx.args.thanh_vien ? ctx.args.thanh_vien.id : String(ctx.args.id || '').replace(/[^\d]/g, ''); const LG = require('../game/ledger');
+    if (!raw || !require('../game/cultivator').getCultivator(raw)) return ctx.send('❌ Cú pháp: `!socai @người` hoặc `!socai <ID>` (người này phải đã tu tiên).');
+    const rows = LG.recent(raw, 15); const sm = LG.summary(raw); const f = (n) => Number(n).toLocaleString('vi-VN');
+    return ctx.send([`📒 **Sổ Cái** <@${raw}> — ${f(sm.count)} dòng (Linh Thạch: +${f(sm.in)} / −${f(sm.out)}).`, '_Chỉ gồm các dòng tiền đã nối vào sổ: đổi tộc, NPC mua/bán, bán trang bị, giao dịch, admin._',
+      ...(rows.length ? rows.map((r) => `\`#${r.entry_id}\` <t:${r.created_at}:d> ${r.delta > 0 ? '🟢 +' : '🔴 '}${f(r.delta)} ${r.currency === 'linh_tinh' ? 'LTinh' : 'LT'} → ${f(r.balance_after)} · ${r.reason}${r.ref ? ` (${r.ref})` : ''}`) : ['(chưa có dòng nào)'])].join('\n').slice(0, 1900));
+  },
+});
+
+defineCommand({
+  name: 'kernel', description: '[Admin] Combat Kernel V22.0: bật/tắt hiệu ứng + kỹ năng tộc cho Boss / Bí Cảnh / Chứng Đạo / Tông Chiến', admin: true, prefixOnly: true,
+  options: [{ name: 'he_thong', type: 'string', description: 'boss | bicanh | chungdao | tongchien | all | foe | race | cd_<hệ thống> (bỏ trống = xem)' }, { name: 'gia_tri', type: 'string', description: 'kernel | legacy (với all: on|off · foe: 0–50 · race: on|off)' }],
+  async run(ctx) {
+    const ST = require('../game/settings'); const KN = require('../game/combatKernel'); const k = String(ctx.args.he_thong || '').trim().toLowerCase(); const v = String(ctx.args.gia_tri || '').trim().toLowerCase();
+    const show = () => [`🧩 **Combat Kernel V22.0** (đổi: \`!kernel <hệ thống> kernel|legacy\`)`, ...KN.SYSTEMS.map((x) => `• ${KN.SYS_NAME[x]} (\`${x}\`): **${KN.mode(x)}**`),
+      `• Cắt khẩn cấp \`all\`: **${ST.get('kernel_all', 'on')}** (off = mọi hệ thống về legacy)`, `• \`foe\` (Thiêu Đốt/độc lên kẻ địch PvE = % một đòn điển hình): **${KN.foePct()}**`, `• \`race\` (kỹ năng tộc tự phát): **${ST.get('kernel_race_auto', 'on')}**`, `• Hồi chiêu kỹ năng tộc nhân (\`cd_<hệ thống>\`): ${KN.SYSTEMS.map((x) => `${x} ×${KN.cdMult(x)}`).join(' · ')}`].join('\n');
+    if (!k) return ctx.send(show());
+    if (KN.SYSTEMS.includes(k)) { if (!['kernel', 'legacy'].includes(v)) return ctx.send('❌ Giá trị: `kernel` hoặc `legacy`.'); ST.set(`kernel_${k}`, v); return ctx.send(`✅ ${KN.SYS_NAME[k]} = **${v}** (áp dụng ngay cho lượt đánh kế tiếp; trận đang dở giữ hiệu ứng đã có).`); }
+    if (k === 'all') { if (!['on', 'off'].includes(v)) return ctx.send('❌ Giá trị: `on` hoặc `off`.'); ST.set('kernel_all', v); return ctx.send(`✅ kernel_all = **${v}**.`); }
+    if (k.startsWith('cd_') && KN.SYSTEMS.includes(k.slice(3))) { if (!/^\d+$/.test(v) || Number(v) < 1 || Number(v) > 100) return ctx.send('❌ Giá trị: số nguyên 1–100.'); ST.set(`kernel_${k}`, v); return ctx.send(`✅ Hồi chiêu kỹ năng tộc ở ${KN.SYS_NAME[k.slice(3)]} = ×**${v}**.`); }
+    if (k === 'race') { if (!['on', 'off'].includes(v)) return ctx.send('❌ Giá trị: `on` hoặc `off`.'); ST.set('kernel_race_auto', v); return ctx.send(`✅ kỹ năng tộc tự phát = **${v}**.`); }
+    if (k === 'foe') { if (!/^\d+$/.test(v) || Number(v) > 50) return ctx.send('❌ Giá trị: số nguyên 0–50.'); ST.set('kernel_foe_dot_pct', v); return ctx.send(`✅ kernel_foe_dot_pct = **${v}**.`); }
+    return ctx.send(`❌ Không hợp lệ.\n${show()}`);
+  },
+});
+
+const PVP_KEYS = { pvp_hp_mode: ['real', 'norm'], pvp_hp_exp_pct: [5, 100], pvp_hp_lo_pct: [30, 100], pvp_hp_hi_pct: [100, 300], pvp_regen_permille: [0, 100], pvp_resume_window: [0, 86400], pvp_effects_mode: ['real', 'log'], pvp_killmove_cd: [0, 10] };
+defineCommand({
+  name: 'pvpset', description: '[Admin] Xem / đổi cấu hình PvP: HP thật, hồi phục, cửa sổ khôi phục trận, hiệu ứng, hồi chiêu Sát Chiêu', admin: true, prefixOnly: true,
+  options: [{ name: 'khoa', type: 'string', description: 'Tên cấu hình (bỏ trống = xem tất cả)' }, { name: 'gia_tri', type: 'string', description: 'Giá trị mới' }],
+  async run(ctx) {
+    const ST = require('../game/settings'); const k = String(ctx.args.khoa || '').trim(); const v = String(ctx.args.gia_tri || '').trim();
+    const show = () => Object.entries(PVP_KEYS).map(([key, r]) => `• \`${key}\` = **${ST.get(key, '(mặc định)')}** _(${typeof r[0] === 'string' ? r.join(' | ') : `${r[0]}–${r[1]}`})_`).join('\n');
+    if (!k) return ctx.send(`⚙️ **Cấu hình PvP** (đổi: \`!pvpset <khoá> <giá trị>\`)\n${show()}`);
+    const r = PVP_KEYS[k]; if (!r) return ctx.send(`❌ Khoá không hợp lệ. Có: ${Object.keys(PVP_KEYS).map((x) => `\`${x}\``).join(', ')}`);
+    if (!v) return ctx.send(`❌ Thiếu giá trị. Hiện tại \`${k}\` = **${ST.get(k, '(mặc định)')}**.`);
+    if (typeof r[0] === 'string' ? !r.includes(v) : !(/^\d+$/.test(v) && Number(v) >= r[0] && Number(v) <= r[1])) return ctx.send(`❌ Giá trị phải ${typeof r[0] === 'string' ? `là ${r.join(' hoặc ')}` : `từ ${r[0]} đến ${r[1]}`}.`);
+    ST.set(k, v); return ctx.send(`✅ \`${k}\` = **${v}** (áp dụng cho trận mới).`);
+  },
+});
+
+defineCommand({
+  name: 'phienban', description: '[Admin] Xem mã bản (ID), phiên bản, host của bot đang trả lời — để phát hiện 2 bản bot chạy cùng token', admin: true, prefixOnly: true,
+  async run(ctx) {
+    const I = require('../instance').info(); const dup = require('../errorlog').getDup();
+    return ctx.send([`🆔 **Bản bot đang trả lời:** \`${I.id}\` · phiên bản **v${I.version}**`, `🖥️ Host \`${I.host}\` · PID ${I.pid} · Node ${I.node} · RAM ${I.rssMb} MB`, `🕒 Chạy liên tục từ <t:${I.bootAt}:R>`,
+      dup.count ? `🚨 Đã gặp **${dup.count}** lần "đã có bản khác trả lời trước" (40060), lần cuối <t:${Math.trunc(dup.last / 1000)}:R>.` : '✅ Chưa thấy dấu hiệu bản khác cùng trả lời.',
+      '👉 Gõ lệnh này **3–4 lần liên tiếp**: nếu ra **nhiều tin trả lời** hoặc **ID / phiên bản khác nhau** ⇒ đang có bản bot khác chạy cùng token. Cách dứt điểm: Developer Portal → Bot → **Reset Token**, rồi chỉ dán token mới vào MỘT nơi (VibeHost).'].join('\n'));
+  },
+});
+
+defineCommand({
   name: 'restore_db', description: '[Admin] Khôi phục database từ file .db đính kèm, hoặc bản sao lưu gần nhất', admin: true,
   options: [{ name: 'file', type: 'attachment', description: 'File .db cần khôi phục (bỏ trống = bản sao lưu gần nhất)' }],
   async run(ctx) {
@@ -199,7 +253,8 @@ defineCommand({
     const st = require('../errorlog').getStale();   // v14.5: lượt bấm hết hạn (10062) — không tính là lỗi code
     const staleNote = st.count ? `\n⏱️ Có **${st.count}** lượt bấm bị hết hạn (bot trả lời >3s, lần cuối <t:${Math.trunc(st.last / 1000)}:R>) — do host/mạng chậm hoặc vòng lặp bị chặn; xem console để biết "🐢 Vòng lặp bị chặn".` : '';
     const nt = require('../errorlog').getNet();   // v21.6: lỗi mạng/DNS tạm thời — không phải lỗi code
-    const upNote = `\n🕒 Bot chạy liên tục từ <t:${require('../ui/kit').BOOT_AT}:R> (khởi động lại = mọi menu/biểu mẫu cũ báo "không còn").`;
+    const dupN = require('../errorlog').getDup(); const dupNote = dupN.count ? `\n🚨 **${dupN.count}** lần "đã có bản bot khác trả lời trước" (40060) — nghi đang chạy 2 bản bot cùng token, gõ \`!phienban\` nhiều lần để kiểm tra.` : '';
+    const upNote = dupNote + `\n🕒 Bot chạy liên tục từ <t:${require('../ui/kit').BOOT_AT}:R> (khởi động lại = mọi menu/biểu mẫu cũ báo "không còn").`;
     const netNote = upNote + (nt.count ? `\n🌐 Có **${nt.count}** lần mạng/DNS chập chờn (${nt.lastCode}, lần cuối <t:${Math.trunc(nt.last / 1000)}:R>) — do host/mạng, không phải lỗi game; bot tự thử lại khi gửi tin. Nếu liên tục: kiểm tra mạng của host (VibeHost) hoặc khởi động lại.` : '');
     if (!list.length) return ctx.send(`✅ Chưa ghi nhận lỗi nào kể từ lần khởi động gần nhất.${staleNote}${netNote}`);
     const code = (ctx.args.ma_loi || '').trim().toLowerCase();

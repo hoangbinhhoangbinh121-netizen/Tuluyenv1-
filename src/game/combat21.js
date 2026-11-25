@@ -21,6 +21,7 @@ const SS = require('./stat21');
 const FXE = require('./effectEngine');
 const SE = require('./statEngine');
 const RS = require('./raceSkill21');
+const HB = require('./hpbar');
 const { LEGACY_NAME, KILLMOVE_CD } = require('../data/effects21');
 const D = require('../db');
 const { E } = require('./emoji');
@@ -33,8 +34,12 @@ const num = (k, d, lo, hi) => { const v = Number(ST.get(k, String(d))); return N
 const policy = () => ({
   afkForfeit: num('pvp_afk_forfeit', 2, 1, 10), stalemate: num('pvp_stalemate_rounds', 15, 5, 100), safety: num('pvp_safety_rounds', 300, 50, 1000),
   killCd: num('pvp_killmove_cd', KILLMOVE_CD, 0, 10),                       // v21.6 (F-2): Sát Chiêu hồi chiêu — 0 = tắt (hành vi cũ)
+  hpMode: String(ST.get('pvp_hp_mode', 'real')) === 'norm' ? 'norm' : 'real',                       // v21.7 (F-3): 'real' = trần thanh theo HP thật (có giới hạn) · 'norm' = chuẩn hoá 100 như cũ
+  hpExp: num('pvp_hp_exp_pct', 15, 5, 100) / 100, hpLo: num('pvp_hp_lo_pct', 85, 30, 100) / 100, hpHi: num('pvp_hp_hi_pct', 120, 100, 300) / 100,
+  regenPm: num('pvp_regen_permille', 10, 0, 100),                                                    // hồi phục mỗi hiệp = ‰ trần thanh × chỉ số `regen` (chủng tộc/thể chất/linh căn)
   effectsMode: String(ST.get('pvp_effects_mode', 'real')) === 'log' ? 'log' : 'real',   // v21.6 (F-1): 'real' = hiệu ứng có tác dụng; 'log' = chỉ ghi nhật ký như cũ
 });
+const fmtHp = (n) => { n = Math.round(Number(n) || 0); return n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `${(n / 1e3).toFixed(1)}k` : String(n); };
 const HX = (id) => { try { const h = require('./fx19').hieuOf(id); return h ? ` 「${h}」` : ''; } catch (_) { return ''; } };
 
 function createBattle(a, b, o = {}) {
@@ -49,9 +54,13 @@ function createBattle(a, b, o = {}) {
   const realmA = R.realmDisplay(a.realm_index, a.stage_index); const realmB = R.realmDisplay(b.realm_index, b.stage_index);
   const [mAtkA, mAtkB] = P.statArrow(atkA, atkB); const [mDefA, mDefB] = P.statArrow(defA, defB);
   const [mSpdA, mSpdB] = P.statArrow(spdA, spdB); const [mPowA, mPowB] = P.statArrow(powerA, powerB);
-  const header = `🅰️ <@${aId}>${HX(aId)} (${realmA}) — Công ${atkA}${mAtkA} | Thủ ${defA}${mDefA} | Tốc ${spdA}${mSpdA} | Lực Chiến ${powerA}${mPowA}\n🅱️ <@${bId}>${HX(bId)} (${realmB}) — Công ${atkB}${mAtkB} | Thủ ${defB}${mDefB} | Tốc ${spdB}${mSpdB} | Lực Chiến ${powerB}${mPowB}${buffNote}`;
+  const pol = policy();
+  const cap = HB.bars(sa.maxHp, sb.maxHp, { mode: pol.hpMode, exp: pol.hpExp, lo: pol.hpLo, hi: pol.hpHi });   // v21.7: trần thanh mỗi bên (norm → 100/100)
+  const hpMax = 100; const hpPool = HB.attach({ A: cap.A, B: cap.B }, cap);
+  const regen = { A: Math.max(0, Math.min(1.5, T.bundle(a).regen || 0)), B: Math.max(0, Math.min(1.5, T.bundle(b).regen || 0)) };
+  const hpNote = pol.hpMode === 'real' ? `\n❤️ Sinh lực thật: 🅰️ ${fmtHp(sa.maxHp)} · 🅱️ ${fmtHp(sb.maxHp)} (thanh ${cap.A} / ${cap.B})` : '';
+  const header = `🅰️ <@${aId}>${HX(aId)} (${realmA}) — Công ${atkA}${mAtkA} | Thủ ${defA}${mDefA} | Tốc ${spdA}${mSpdA} | Lực Chiến ${powerA}${mPowA}\n🅱️ <@${bId}>${HX(bId)} (${realmB}) — Công ${atkB}${mAtkB} | Thủ ${defB}${mDefB} | Tốc ${spdB}${mSpdB} | Lực Chiến ${powerB}${mPowB}${buffNote}${hpNote}`;
   const arena = PetC.buildArena(a, b);
-  const hpMax = 100;                                            // thanh sinh mệnh chuẩn hoá 100 (thiết kế v12.3). Đổi sang HP thật = quyết định cân bằng, chưa làm (xem KNOWN_ISSUES)
   const tag = { A: `<@${aId}>${HX(aId)}`, B: `<@${bId}>${HX(bId)}` };
   return {
     id: o.id || require('node:crypto').randomBytes(6).toString('hex'), mode: o.mode || 'duel', guild_id: o.guildId || '', channel_id: o.channelId || '',
@@ -60,14 +69,15 @@ function createBattle(a, b, o = {}) {
     skills: { A: P.pvpActionListFor(a), B: P.pvpActionListFor(b) }, pet: { A: arena.A.pet ? arena.A.pet.name : '', B: arena.B.pet ? arena.B.pet.name : '' },
     arena, mods: { A: PetC.mergeMods(T.combatMods(a), arena.A), B: PetC.mergeMods(T.combatMods(b), arena.B) },
     tag, header, realm_line: `🅰️ <@${aId}>${HX(aId)}: ${realmA}\n🅱️ <@${bId}>${HX(bId)}: ${realmB}`,
-    hp_max: hpMax, hp: { A: hpMax, B: hpMax }, cur_hp: { A: a.cur_hp, B: b.cur_hp }, round: 0,
-    afk: { A: 0, B: 0 }, low: { A: hpMax, B: hpMax }, idle: 0, surrendered: null,
+    hp_max: hpMax, hp: hpPool, hp_cap: cap, regen, regen_carry: { A: 0, B: 0 }, cur_hp: { A: a.cur_hp, B: b.cur_hp }, round: 0,
+    afk: { A: 0, B: 0 }, low: { A: cap.A, B: cap.B }, idle: 0, surrendered: null,
     fx: FXE.createStore(), cd: { A: { kill: 0, race: 0 }, B: { kill: 0, race: 0 } }, race: { A: RS.forRow(a), B: RS.forRow(b) },
     totals: { A: { dealt: 0, taken: 0, heal: 0, crit: 0, dodge: 0, afk: 0 }, B: { dealt: 0, taken: 0, heal: 0, crit: 0, dodge: 0, afk: 0 } },
-    log: [], recs: [], policy: policy(), started_at: o.now || require('../util').now(),
+    log: [], recs: [], policy: pol, started_at: o.now || require('../util').now(),
   };
 }
 
+const hpLine = (b) => `❤️ ${b.tag.A}: ${Math.max(0, b.hp.A)}/${HB.cap(b.hp, 'A')}  |  ${b.tag.B}: ${Math.max(0, b.hp.B)}/${HB.cap(b.hp, 'B')}`;
 /** Chơi 1 hiệp. actions = { A, B } ∈ { chuỗi hành động | null (AFK) | SURRENDER }. Trả { block, verdict }. */
 function playRound(b, actions) {
   const P = require('./pvpCore');
@@ -126,10 +136,18 @@ function playRound(b, actions) {
       if (rc.dodge) b.totals[dk].dodge += 1;
     }
     if (real) FXE.endRound(b.fx);
+    if (b.policy.hpMode === 'real' && b.policy.regenPm > 0) {              // v21.7: hồi phục theo hiệp (chỉ số `regen`) — trước đây vô tác dụng trong PvP
+      for (const s of ['A', 'B']) {
+        if (hp[s] <= 0 || !b.regen[s]) continue; const c = HB.cap(hp, s);
+        if (hp[s] >= c) { b.regen_carry[s] = 0; continue; }
+        b.regen_carry[s] += c * (b.policy.regenPm / 1000) * b.regen[s]; const whole = Math.floor(b.regen_carry[s]); b.regen_carry[s] -= whole;
+        const h = Math.min(c - hp[s], whole); if (h > 0) { hp[s] += h; b.totals[s].heal += h; block.push(`🌿 ${b.tag[s]} hồi phục tự nhiên **${h}** sinh lực.`); }
+      }
+    }
     for (const s of ['A', 'B']) { if (b.cd[s].kill > 0) b.cd[s].kill -= 1; if (b.cd[s].race > 0) b.cd[s].race -= 1; }
     if (real) { const fxl = ['A', 'B'].map((s) => { const d = FXE.describe(b.fx, s); return d ? `${s === 'A' ? '🅰️' : '🅱️'} ${d}` : ''; }).filter(Boolean); if (fxl.length) block.push(`🌀 Hiệu ứng: ${fxl.join(' | ')}`); }
   }
-  block.push(`❤️ ${b.tag.A}: ${Math.max(0, hp.A)}/${b.hp_max}  |  ${b.tag.B}: ${Math.max(0, hp.B)}/${b.hp_max}`);
+  block.push(hpLine(b));
   // bế tắc: hiệp mà không bên nào chạm sinh lực thấp hơn mức thấp nhất từng có
   let fresh = false;
   for (const s of ['A', 'B']) if (hp[s] < b.low[s]) { b.low[s] = hp[s]; fresh = true; }
@@ -196,7 +214,9 @@ function record(b) {
   D.run("INSERT OR IGNORE INTO v213_battles (id, a_id, b_id, status, mode, channel_id, started_at) VALUES (?, ?, ?, 'active', ?, ?, ?)", b.id, b.ids.A, b.ids.B, b.mode, b.channel_id, b.started_at);
 }
 const setMessage = (id, messageId) => D.run('UPDATE v213_battles SET message_id = ? WHERE id = ?', String(messageId), id);
-const abort = (id, reason, t = require('../util').now()) => D.run("UPDATE v213_battles SET status = 'aborted', result = 'aborted', reason = ?, ended_at = ? WHERE id = ? AND status = 'active'", reason, t, id).changes > 0;
+const dropState = (id) => { try { D.run('DELETE FROM v217_battle_state WHERE battle_id = ?', String(id)); } catch (_) { /* bảng chưa có → bỏ qua */ } };
+const abort = (id, reason, t = require('../util').now()) => { dropState(id); return abortRow(id, reason, t); };
+const abortRow = (id, reason, t) => D.run("UPDATE v213_battles SET status = 'aborted', result = 'aborted', reason = ?, ended_at = ? WHERE id = ? AND status = 'active'", reason, t, id).changes > 0;
 /** Khởi động lại bot: mọi trận còn 'active' chưa chốt → huỷ (KHÔNG ai mất/được gì). Trả danh sách để báo kênh. */
 function abortStale(t = require('../util').now()) {
   const rows = D.all("SELECT id, a_id, b_id, channel_id, message_id FROM v213_battles WHERE status = 'active'");
@@ -206,4 +226,36 @@ function abortStale(t = require('../util').now()) {
 function getLog(id) { const r = D.get('SELECT * FROM v213_battles WHERE id = ?', id); if (!r) return null; let log = []; let sum = {}; try { log = JSON.parse(r.log || '[]'); } catch (_) { /* log hỏng */ } try { sum = JSON.parse(r.summary || '{}'); } catch (_) { /* summary hỏng */ } return { ...r, logRows: log, sum }; }
 const recent = (uid, n = 5) => D.all("SELECT id, a_id, b_id, status, result, reason, rounds, stake, ended_at FROM v213_battles WHERE (a_id = ? OR b_id = ?) AND status != 'active' ORDER BY ended_at DESC LIMIT ?", sid(uid), sid(uid), n);
 
-module.exports = { SURRENDER, SHOW_ROUNDS, REASON, policy, createBattle, playRound, judge, simulate, embed, resultText, record, setMessage, abort, abortStale, getLog, recent, logPayload, summaryPayload };
+// ---------------------------------------------------------------- v21.7: lưu / khôi phục trận
+const KEEP_LOG = 60;
+/** Ảnh chụp trạng thái động của trận (chỉ số tĩnh được đóng băng; công pháp/tộc/thú tĩnh dựng lại từ hồ sơ khi khôi phục). */
+function serialize(b) {
+  const CPX = require('./cpfx'); const st = CPX.battleState(b.hp);
+  return JSON.stringify({
+    v: 1, id: b.id, mode: b.mode, guild_id: b.guild_id, channel_id: b.channel_id, ids: b.ids, started_at: b.started_at, round: b.round,
+    atk: b.atk, def_: b.def_, spd: b.spd, power: b.power, mods: b.mods, cur_hp: b.cur_hp,
+    hp: { A: b.hp.A, B: b.hp.B }, cap: b.hp_cap, regen: b.regen, regen_carry: b.regen_carry, cp: st,
+    afk: b.afk, low: b.low, idle: b.idle, surrendered: b.surrendered, fx: b.fx, cd: b.cd, totals: b.totals, policy: b.policy,
+    arenaSt: { A: b.arena.A.st, B: b.arena.B.st }, log: b.log.slice(-KEEP_LOG), log_skipped: (b.log_skipped || 0) + Math.max(0, b.log.length - KEEP_LOG), recs: b.recs,
+  });
+}
+function saveState(b) {
+  const t = require('../util').now();
+  D.run('INSERT INTO v217_battle_state (battle_id, a_id, b_id, round, state, saved_at) VALUES (?,?,?,?,?,?) ON CONFLICT(battle_id) DO UPDATE SET round = excluded.round, state = excluded.state, saved_at = excluded.saved_at',
+    b.id, b.ids.A, b.ids.B, b.round, serialize(b), t);
+}
+/** Dựng lại trận từ ảnh chụp. Trả null nếu hồ sơ không còn / ảnh hỏng. */
+function rehydrate(json) {
+  let d; try { d = typeof json === 'string' ? JSON.parse(json) : json; } catch (_) { return null; }
+  if (!d || d.v !== 1 || !d.ids) return null;
+  const a = Cu.getCultivator(d.ids.A); const bRow = Cu.getCultivator(d.ids.B); if (!a || !bRow) return null;
+  const b = createBattle(a, bRow, { id: d.id, mode: d.mode, guildId: d.guild_id, channelId: d.channel_id, now: d.started_at });
+  Object.assign(b, { atk: d.atk, def_: d.def_, spd: d.spd, power: d.power, mods: d.mods, cur_hp: d.cur_hp, round: d.round, afk: d.afk, low: d.low, idle: d.idle, surrendered: d.surrendered,
+    cd: d.cd, totals: d.totals, policy: { ...b.policy, ...d.policy }, hp_cap: d.cap, regen: d.regen, regen_carry: d.regen_carry, recs: d.recs || [], log: d.log || [], log_skipped: d.log_skipped || 0 });
+  b.fx = FXE.fromJSON(d.fx);
+  HB.attach(b.hp, d.cap); b.hp.A = d.hp.A; b.hp.B = d.hp.B;
+  Object.assign(require('./cpfx').battleState(b.hp), { A: (d.cp && d.cp.A) || {}, B: (d.cp && d.cp.B) || {} });
+  if (d.arenaSt) { if (d.arenaSt.A) b.arena.A.st = d.arenaSt.A; if (d.arenaSt.B) b.arena.B.st = d.arenaSt.B; }
+  return b;
+}
+module.exports = { serialize, saveState, rehydrate, dropState, hpLine, fmtHp, SURRENDER, SHOW_ROUNDS, REASON, policy, createBattle, playRound, judge, simulate, embed, resultText, record, setMessage, abort, abortStale, getLog, recent, logPayload, summaryPayload };

@@ -154,7 +154,7 @@ async function safeReply(interaction, payload) {
 }
 
 /** v21.6.1: mốc khởi động của tiến trình bot + câu giải thích vì sao menu/biểu mẫu cũ "hết hạn" (menu nằm trong bộ nhớ ⇒ khởi động lại là mất). */
-const BOOT_AT = Math.trunc((Date.now() - process.uptime() * 1000) / 1000);
+const BOOT_AT = require('../instance').BOOT_AT;
 const restartedRecently = () => process.uptime() < 3 * 3600;
 const whyGone = () => (restartedRecently() ? `bot vừa khởi động lại <t:${BOOT_AT}:R>` : 'menu quá cũ (tối đa 15 phút không bấm) hoặc bot đã khởi động lại');
 

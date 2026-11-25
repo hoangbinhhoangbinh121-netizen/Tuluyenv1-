@@ -26,7 +26,7 @@ function castSelf(b, side, foe) {
   const s = of(b, side); const d = s.def; const lines = []; const tag = b.tag[side]; const hp = b.hp;
   lines.push(`${tag} thi triển **${s.action}**!`);
   if (d.costHp) { const pay = Math.max(0, Math.min(d.costHp, hp[side] - 1)); hp[side] -= pay; lines.push(`🩸 ${tag} hiến tế ${pay} sinh lực.`); }
-  if (d.heal && hp[side] > 0) { const before = hp[side]; hp[side] = Math.min(100, before + d.heal); if (hp[side] > before) { lines.push(`💚 ${tag} hồi ${hp[side] - before} sinh lực.`); b.totals[side].heal += hp[side] - before; } }
+  if (d.heal && hp[side] > 0) { const before = hp[side]; hp[side] = Math.min(require('./hpbar').cap(hp, side), before + d.heal); if (hp[side] > before) { lines.push(`💚 ${tag} hồi ${hp[side] - before} sinh lực.`); b.totals[side].heal += hp[side] - before; } }
   if (d.cleanse) { const n = FXE.cleanse(b.fx, side); if (n > 0) lines.push(`✨ ${tag} xoá ${n} hiệu ứng xấu.`); }
   for (const e of d.applySelf || []) { const r = FXE.apply(b.fx, side, e.id, { dur: e.dur, power: e.power, source: side }); if (r.line) lines.push(`${tag}: ${r.line}`); }
   for (const e of d.applyFoe || []) { const r = FXE.apply(b.fx, foe, e.id, { dur: e.dur, power: e.power, source: side }); if (r.line) lines.push(`${b.tag[foe]}: ${r.line}`); }

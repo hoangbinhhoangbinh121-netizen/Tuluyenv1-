@@ -87,11 +87,11 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
   client.on(Events.Error, (e) => require('./errorlog').logError('discord.js client', e));            // v21.6: không để lỗi mạng của gateway làm sập tiến trình
   client.on(Events.ShardError, (e) => require('./errorlog').logError('gateway shard', e));
   client.once(Events.ClientReady, async (c) => {
-    console.log(`🤖 Đăng nhập: ${c.user.tag}`);
+    console.log(`🤖 Đăng nhập: ${c.user.tag} (bản #${require('./instance').ID}) — nếu thấy tên bot này đăng nhập ở NƠI KHÁC với cùng token thì sẽ trả lời trùng/xen kẽ.`);
     await applyEmojiFallbacks(c);
     continuePixelSyncInBackground();
     installErrorReporter(c);
-    try { const n = await require('./game/pvp').recoverStale(c); if (n) console.log(`⚔️ PvP: huỷ ${n} trận đang dở do khởi động lại (không ai mất gì).`); } catch (e) { console.warn('⚠️ PvP recoverStale:', e.message); }   // v21.3
+    try { const n = await require('./game/pvp').recoverStale(c); const rv = require('./game/pvp').recoverStale.last || {}; if (n) console.log(`⚔️ PvP: huỷ ${n} trận đang dở do khởi động lại (không ai mất gì).`); if (rv.resumed) console.log(`⚔️ PvP: khôi phục ${rv.resumed} trận đang dở.`); } catch (e) { console.warn('⚠️ PvP recoverStale:', e.message); }   // v21.3
     try { const B19 = require('./game/bicanh19'); B19.sweepLobbies(); B19.sweepStale(); setInterval(() => { try { B19.sweepLobbies(); B19.sweepStale(); } catch (e) { console.warn('⚠️ bc19 sweep:', e.message); } }, 5 * 60 * 1000).unref(); } catch (e) { console.warn('⚠️ bc19 sweep init:', e.message); }   // v21.4: dọn phòng chờ/lần vào treo → không ai bị kẹt
     try { if (require('./game/maintenance').isOn()) { c.user.setPresence({ status: 'dnd', activities: [{ name: '🛠️ Đang bảo trì' }] }); console.log('🛠️ Bot đang ở chế độ BẢO TRÌ (admin gõ /baotri để tắt).'); } } catch (_) { /* bỏ qua */ }
     await detectOwner(c);
@@ -140,7 +140,7 @@ function buildClient({ content: withContent, members: USE_MEMBERS }) {
 }
 
 async function main() {
-  console.log(`🌸 Thiên Tông Bot v21.6.3 (${BOT_VERSION}) — Node ${process.version}`);
+  { const I = require('./instance'); console.log(`🌸 Thiên Tông Bot v${BOT_VERSION} — bản #${I.ID} · PID ${process.pid} · Node ${process.version}`); }
   if (!TOKEN) {
     console.error('❌ Thiếu DISCORD_TOKEN. Hãy tạo file .env (hoặc mục Startup/Variables của host) với dòng:  DISCORD_TOKEN=token_bot_cua_ban');
     process.exit(1);

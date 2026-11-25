@@ -14,6 +14,7 @@ const Cu = require('./cultivator');
 const CP = require('./congphap');
 const T = require('./talent');
 const TO = require('./talentOps');
+const KN = require('./combatKernel');
 const D = require('../db');
 const { getSectExpBuffMult } = require('./sectBase');
 const { now, int, random, randUniform, randInt, clamp } = require('../util');
@@ -94,10 +95,12 @@ function attack(guildId, userId, action = 'atk') {
     if (action === 'rest') {
       const heal = int(maxHp * 0.06); const mpGain = 10;
       curHp = Math.min(maxHp, curHp + heal);
+      let kernelLines = [];
+      if (KN.on('boss')) { const L0 = KN.memGet(`boss:${boss.boss_id}:${userId}`, () => KN.open('boss', row, { name: boss.name, ctrlImmune: true })); const bk0 = KN.begin(L0, maxHp); curHp = Math.max(1, curHp - bk0.dotA); kernelLines = bk0.lines; KN.end(L0); }   // v22.0: hiệu ứng theo thời gian vẫn chạy khi điều tức
       const mp = Math.min(100, mp0 + mpGain);
       Cu.updateCultivator(userId, { cur_hp: curHp, linh_luc: mp, last_hp_regen: now() });
       D.run('INSERT INTO wb7_damage (boss_id, user_id, damage, hits, last_hit) VALUES (?,?,0,0,?) ON CONFLICT(boss_id, user_id) DO UPDATE SET last_hit = excluded.last_hit', boss.boss_id, userId, t);
-      return { ok: true, action, boss, turn, heal, mpGain, hp: curHp, maxHp, mp, dmg: 0, counter: 0, bossHp: boss.hp, finished: false };
+      return { ok: true, action, boss, turn, heal, mpGain, hp: curHp, maxHp, mp, dmg: 0, counter: 0, bossHp: boss.hp, finished: false, kernelLines };
     }
 
     if (curHp < maxHp * MIN_HP_PCT_TO_FIGHT) return { ok: false, code: 'E009', error: `Sinh Mệnh quá thấp (${int(curHp)}/${maxHp}) — hãy **Điều Tức** hoặc chờ hồi phục trước khi giao chiến.`, boss };
@@ -106,13 +109,28 @@ function attack(guildId, userId, action = 'atk') {
       if (mp < SKILL_COST) return { ok: false, code: 'E009', error: `Không đủ Linh Lực để thi triển Thần Thông (cần ${SKILL_COST}%, hiện có ${mp}%).`, boss };
       mp -= SKILL_COST; mult = 2; crit = random() < 0.15; if (crit) mult *= 1.5;
     }
-    const dmg = Math.max(1, int((Cu.effectiveAtk(row) * randUniform(0.8, 1.3) + row.realm_index * 5) * mult * T.bossElemMult(row, boss.tier) * (1 + require('./cpfx').bossBonus(row))));   // v16: công pháp mới tăng sát thương lên Boss   // v13.6: tương khắc hành linh căn ↔ nguyên tố Boss (±5%)
+    let dmg = Math.max(1, int((Cu.effectiveAtk(row) * randUniform(0.8, 1.3) + row.realm_index * 5) * mult * T.bossElemMult(row, boss.tier) * (1 + require('./cpfx').bossBonus(row))));   // v16: công pháp mới tăng sát thương lên Boss   // v13.6: tương khắc hành linh căn ↔ nguyên tố Boss (±5%)
+    // ---- v22.0 Combat Kernel (chỉ khi `kernel_boss = kernel`): hiệu ứng theo hiệp + kỹ năng tộc tự phát. Mặc định legacy = không chạm gì.
+    let L = null; let kernelLines = []; let kDot = 0; let kDodged = false;
+    if (KN.on('boss')) {
+      L = KN.memGet(`boss:${boss.boss_id}:${userId}`, () => KN.open('boss', row, { name: boss.name, ctrlImmune: true }));
+      L.foe.unit = KN.foeUnit(dmg);
+      const bk = KN.begin(L, maxHp); kernelLines.push(...bk.lines); kDot = bk.dotB; curHp = Math.max(1, curHp - bk.dotA);
+      if (bk.stunned) dmg = 0;
+      else {
+        const rc = KN.race(L, curHp, maxHp);
+        if (rc) { kernelLines.push(...rc.lines); if (rc.kind === 'self') curHp = Math.max(1, Math.min(maxHp, curHp + rc.heal)); else dmg = Math.max(1, int(dmg * rc.mult)); }
+        dmg = Math.max(1, int(dmg * KN.outMult(L)));
+        kernelLines.push(...KN.after(L, { damage: dmg, is_crit: crit }));
+      }
+    }
     const hpBefore = boss.hp;
-    const dealt = Math.min(dmg, hpBefore);
+    const dealt = Math.min(dmg + kDot, hpBefore);
     D.run('UPDATE wb7_boss SET hp = hp - ? WHERE boss_id = ? AND status = ?', dealt, boss.boss_id, 'alive');
     D.run('INSERT INTO wb7_damage (boss_id, user_id, damage, hits, last_hit) VALUES (?,?,?,1,?) ON CONFLICT(boss_id, user_id) DO UPDATE SET damage = damage + excluded.damage, hits = hits + 1, last_hit = excluded.last_hit', boss.boss_id, userId, dealt, t);
     const bossHp = hpBefore - dealt;
     const killed = bossHp <= 0;
+    if (!killed && L && kDot > 0) kernelLines.push(`🔥 Hiệu ứng gây thêm **${kDot}** sát thương lên ${boss.name}.`);
     try { require('./pets').onBoss(userId); } catch (_) { /* Linh Thú không được làm hỏng đòn đánh Boss */ }
 
     // Phản đòn (không có khi vừa kết liễu)
@@ -127,16 +145,22 @@ function attack(guildId, userId, action = 'atk') {
         if (cut > 0) { counter = Math.max(1, int(counter * (1 - cut))); v17cut = cut; }
         if (FXb.activeBuff(userId, 'tran:tp_phong_an')) require('./tran17').consumeSeal(userId);
       } catch (e) { console.warn('⚠️ hook v17 Boss:', e.message); }
+      if (L) {                                                             // v22.0: Hộ Thể / Suy Nhược lên Boss / Linh Thân (né) — chỉ phần trong trận
+        counter = Math.max(0, int(counter * KN.takeMult(L) * KN.foeOutMult(L)));
+        if (counter > 0 && random() < KN.dodgeChance(L)) { counter = 0; kDodged = true; kernelLines.push(`🌬️ Bạn né được đòn phản công của ${boss.name}.`); }
+      }
       curHp = Math.max(1, curHp - counter);
     }
+    if (L) KN.end(L);
     try { require('./gear17').wear(userId, 'boss'); } catch (_) { /* độ bền không được làm hỏng đòn đánh */ }
     Cu.updateCultivator(userId, { cur_hp: curHp, linh_luc: mp, last_hp_regen: now(), ...TO.progFields(row, { lc: 1 }) });
-    return { ok: true, action, boss, turn, dmg: dealt, crit, counter, counterCut: v17cut, hp: curHp, maxHp, mp, bossHp: Math.max(0, bossHp), finished: killed, killerId: killed ? userId : null };
+    return { ok: true, action, boss, turn, dmg: dealt, crit, counter, counterCut: v17cut, hp: curHp, maxHp, mp, bossHp: Math.max(0, bossHp), finished: killed, killerId: killed ? userId : null, kernelLines, stunned: kernelLines.some((x) => /Choáng/.test(x)) };
   });
 }
 
 /** Chốt boss: chia thưởng + đóng sổ. reason: 'killed' | 'escaped' | 'cancelled'. */
 function finish(bossId, reason, killerId = null) {
+  KN.memDrop(`boss:${bossId}:`);      // v22.0: bỏ trạng thái hiệu ứng trong bộ nhớ
   return D.transaction(() => {
     const boss = getBossById(bossId);
     if (!boss || boss.status !== 'alive') return null;

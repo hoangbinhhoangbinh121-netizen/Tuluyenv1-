@@ -143,7 +143,7 @@ function applySkill(eff, selfSt, enemySt, hpPool, selfKey, tag) {
   if (eff.weaken) { enemySt.weak = eff.weaken[0]; enemySt.weakN = eff.weaken[1]; lines.push(`❄️ Đối thủ của ${tag} bị suy yếu: gây ít hơn ${round1(eff.weaken[0])}% sát thương trong ${eff.weaken[1]} đòn.`); }
   if (eff.heal && hpPool[selfKey] > 0) {
     const h = Math.max(1, Math.round(eff.heal * HEAL_SCALE));
-    const before = hpPool[selfKey]; hpPool[selfKey] = Math.min(100, before + h);
+    const before = hpPool[selfKey]; hpPool[selfKey] = Math.min(require('./hpbar').cap(hpPool, selfKey), before + h);
     if (hpPool[selfKey] > before) lines.push(`💚 ${tag} hồi ${hpPool[selfKey] - before} sinh lực.`);
   }
   return lines;

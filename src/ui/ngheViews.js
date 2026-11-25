@@ -60,7 +60,7 @@ function groupOf(view) {
   if (v === 'rc') return null;
   if (['item', 'sellc', 'inv'].includes(v)) return 'inv';
   if (['npc', 'npcc', 'npcb'].includes(v)) return 'npc';
-  if (v === 'gearc') return 'gear';
+  if (v === 'gearc' || v === 'gearb') return 'gear';
   return v;
 }
 function navRow(uid, cur) {
@@ -251,13 +251,25 @@ function viewGear(uid, sel = '') {
     rows.push(rowOf(sm));
     if (list.length > 25) e.setFooter({ text: `Hiện 25/${list.length} món đầu — phân giải/bán bớt món thừa để xem tiếp.` });
   } else e.addFields({ name: 'Chưa có trang bị', value: 'Chế ở **Luyện Khí Sư** (Công Thức).' });
+  if (!g && list.length) rows.push(rowOf(btn(cid(uid, 'v', 'gearb', '2'), 'Bán hàng loạt', '🧾', ButtonStyle.Danger)));
   if (g) {
     rows.push(rowOf(g.equipped ? btn(cid(uid, 'gun', g.gear_id), 'Tháo', '⬇️') : btn(cid(uid, 'geq', g.gear_id), 'Mặc', '⬆️', ButtonStyle.Success),
       btn(cid(uid, 'gen', g.gear_id), 'Cường hoá', '🔨', ButtonStyle.Primary, g.enh >= C.ENH_MAX), btn(cid(uid, 'gre', g.gear_id), 'Tinh luyện', '✨', ButtonStyle.Primary, g.refine >= C.REFINE_MAX),
       btn(cid(uid, 'grp', g.gear_id), 'Sửa', '🔧', ButtonStyle.Secondary, g.dura >= g.dura_max), btn(cid(uid, 'glk', g.gear_id), g.locked ? 'Mở khoá' : 'Khoá', g.locked ? '🔓' : '🔒')));
-    rows.push(rowOf(btn(cid(uid, 'v', 'gearc', `${g.gear_id}:dis`), 'Phân giải', '♻️', ButtonStyle.Danger, !!g.equipped || !!g.locked), btn(cid(uid, 'v', 'gearc', `${g.gear_id}:sell`), 'Bán NPC', '💰', ButtonStyle.Danger, !!g.equipped || !!g.locked)));
+    rows.push(rowOf(btn(cid(uid, 'v', 'gearc', `${g.gear_id}:dis`), 'Phân giải', '♻️', ButtonStyle.Danger, !!g.equipped || !!g.locked), btn(cid(uid, 'v', 'gearc', `${g.gear_id}:sell`), 'Bán NPC', '💰', ButtonStyle.Danger, !!g.equipped || !!g.locked), btn(cid(uid, 'v', 'gearb', '2'), 'Bán hàng loạt', '🧾', ButtonStyle.Danger)));
   }
   return shell(uid, 'gear', e, rows);
+}
+/** v21.6.4: bán hàng loạt trang bị — chọn phẩm chất tối đa → xem trước số món + tiền → xác nhận. */
+function viewGearBulk(uid, arg) {
+  const mq = Math.max(1, Math.min(5, Number(arg) || 2)); const pv = Npc.previewGearBulk(uid, { maxQ: mq });
+  const e = E0('🧾 Bán Trang Bị Hàng Loạt', 0xe67e22);
+  const all = G.listOf(uid); const kept = all.length - pv.n;
+  e.setDescription(`Bán cho NPC mọi trang bị phẩm chất **≤ ${I.qName(mq)}** (${mq}/5).\n🛡️ **Luôn giữ lại:** món đang mặc, món 🔒 đã khoá, món đã cường hoá / tinh luyện / khảm ngọc / thức tỉnh.\n\n**Sẽ bán:** ${fmtNum(pv.n)} món → **+${fmtNum(pv.total)}** Linh Thạch\n**Giữ lại:** ${fmtNum(kept)} món\n_Không thể hoàn tác._`);
+  if (pv.list.length) e.addFields({ name: 'Xem trước', value: listFit(pv.list.slice(0, 12).map((g) => `▫️ ${G.name(g)} _(${I.qName(g.q)})_ → ${fmtNum(Npc.gearPrice(G, g))}`), 1000) + (pv.list.length > 12 ? `\n… và ${pv.list.length - 12} món khác` : '') });
+  const sm = new StringSelectMenuBuilder().setCustomId(cid(uid, 'gbq')).setPlaceholder('Bán phẩm chất tối đa…')
+    .addOptions([1, 2, 3, 4, 5].map((q) => ({ label: `Phẩm chất ≤ ${I.qName(q)} (${q}/5)`, value: String(q), default: q === mq })));
+  return shell(uid, 'gearb', e, [rowOf(sm), rowOf(btn(cid(uid, 'gbsell', mq), `Bán ${fmtNum(pv.n)} món`, '✅', ButtonStyle.Danger, pv.n === 0), btn(cid(uid, 'v', 'gear'), 'Quay lại', '↩️'))]);
 }
 function viewGearConfirm(uid, arg) {
   const [gid, mode] = String(arg).split(':'); const g = G.get(uid, Number(gid)); if (!g) return viewGear(uid);
@@ -433,6 +445,7 @@ function render(uid, view = 'home', a = '', b = '', note = '') {
     case 'pill': out = viewPill(uid, a); break;
     case 'gear': out = viewGear(uid, a); break;
     case 'gearc': out = viewGearConfirm(uid, a); break;
+    case 'gearb': out = viewGearBulk(uid, a); break;
     case 'tran': out = viewTran(uid, a); break;
     case 'field': out = viewField(uid); break;
     case 'inv': out = viewInv(uid, a); break;
@@ -481,6 +494,8 @@ registerStatic('ng', async (i, parts) => {
     case 'glk': { const g = G.get(u, Number(a)); if (g) G.setLock(u, Number(a), !g.locked); return go('gear', a, '', g ? (g.locked ? '🔓 Đã mở khoá.' : '🔒 Đã khoá — không phân giải/bán được.') : '❌ Không tìm thấy trang bị.'); }
     case 'gdis': { const r = G.dismantle(u, Number(a)); return go('gear', '', '', r.msg); }
     case 'gsell': { const r = Npc.sellGear(u, Number(a)); return go('gear', '', '', r.msg); }
+    case 'gbq': return go('gearb', sel);                                                                  // v21.6.4: chọn phẩm chất tối đa để bán hàng loạt
+    case 'gbsell': { const r = Npc.sellGearBulk(u, { maxQ: Number(a) || 1 }); return go('gear', '', '', r.msg); }
     case 'tsel': return go('tran', sel);
     case 'tdp': { const [id, q] = a.split(':'); const r = Tr.deploy(u, id, Number(q) || 2); return go('tran', a, '', r.msg); }
     case 'fopen': { const r = Fd.open(u); return go('field', '', '', r.msg); }

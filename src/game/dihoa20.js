@@ -56,8 +56,8 @@ function setActive(user, n) {
   });
 }
 /** Cộng EXP cho ngọn đang dùng (gọi khi nhận đan). Trả thông điệp nếu lên cấp. */
-function addExp(user, amount) {
-  const f = active(user); if (!f || amount <= 0) return '';
+function addExp(user, amount, fire = null) {   // v21.6.4: tham số fire (hàng v20_dihoa) để admin cộng cho từng ngọn; mặc định = ngọn đang dùng
+  const f = fire || active(user); if (!f || amount <= 0) return '';
   let { lv, exp } = f; exp += Math.round(amount); let up = 0;
   while (lv < V.FIRE_MAXLV && exp >= V.fireExpNeed(lv)) { exp -= V.fireExpNeed(lv); lv += 1; up += 1; }
   if (lv >= V.FIRE_MAXLV) exp = Math.min(exp, V.fireExpNeed(V.FIRE_MAXLV - 1));

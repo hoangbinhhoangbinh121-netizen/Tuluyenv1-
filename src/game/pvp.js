@@ -21,11 +21,13 @@ const SESSIONS = new Map();
 const BUSY = new Map();
 const sid = (x) => String(x);
 
+/** v21.7: ghi ảnh chụp trận sau mỗi hiệp (lỗi ghi không được làm hỏng trận — chỉ mất khả năng khôi phục). */
+function saveSafe(s) { try { C21.saveState(s); } catch (e) { console.warn(`⚠️ Không lưu được trạng thái trận ${s.id}:`, e.message); } }
 function buildSession(guildId, channelId, aId, bId) {
   aId = sid(aId); bId = sid(bId);
   const s = C21.createBattle(Cu.getCultivator(aId), Cu.getCultivator(bId), { guildId, channelId, mode: 'duel', now: now() });
   Object.assign(s, { a_id: aId, b_id: bId, actions: { A: null, B: null }, acted: { A: false, B: false }, resolving: false, round_token: 0, active_view: null, message: null, settled: false, created_at: now() });
-  C21.record(s);
+  C21.record(s); saveSafe(s);
   SESSIONS.set(s.id, s); BUSY.set(aId, s.id); BUSY.set(bId, s.id);
   return s;
 }
@@ -44,7 +46,7 @@ function fxLine(s) {
 }
 const statusLine = (s) => `${s.acted.A ? '✅' : '⏳'} ${s.tag.A} đã chọn  —  ${s.acted.B ? '✅' : '⏳'} ${s.tag.B} đã chọn`;
 function roundEmbed(s) {
-  return C21.embed(s, { live: `❤️ ${s.tag.A}: ${Math.max(0, s.hp.A)}/${s.hp_max}  |  ${s.tag.B}: ${Math.max(0, s.hp.B)}/${s.hp_max}\n${statusLine(s)}${fxLine(s)}\n⏱️ ${P.PVP_ROUND_TIMEOUT}s — quá giờ = bỏ lượt (${s.policy.afkForfeit} lần liên tiếp = xử thua).` });
+  return C21.embed(s, { live: `${C21.hpLine(s)}\n${statusLine(s)}${fxLine(s)}\n⏱️ ${P.PVP_ROUND_TIMEOUT}s — quá giờ = bỏ lượt (${s.policy.afkForfeit} lần liên tiếp = xử thua).` });
 }
 const sideOf = (s, uid) => (sid(uid) === s.a_id ? 'A' : sid(uid) === s.b_id ? 'B' : null);
 const eph = (i, c, x = {}) => i.reply({ content: c, flags: EPHEMERAL, ...x });
@@ -163,6 +165,7 @@ async function resolveRoundImpl(s) {
   const { verdict } = C21.playRound(s, s.actions);
   if (!verdict.over) {
     s.actions = { A: null, B: null }; s.acted = { A: false, B: false }; s.resolving = false; s.round_token += 1;
+    saveSafe(s);
     const nv = roundView(s);
     if (s.message) { try { await s.message.edit({ embeds: [roundEmbed(s)], components: nv.components() }); } catch (_) { /* bỏ qua */ } }
     swapActiveView(s, nv);
@@ -197,25 +200,53 @@ async function finishSession(s, verdict) {
       ally_spirit_beast: PetC.describe(s.arena.A), enemy_spirit_beast: PetC.describe(s.arena.B),
       ally_skill_1: s4a[0], ally_skill_2: s4a[1], ally_skill_3: s4a[2], ally_skill_4: s4a[3],
       enemy_skill_1: s4b[0], enemy_skill_2: s4b[1], enemy_skill_3: s4b[2], enemy_skill_4: s4b[3],
-      battle_data: JSON.stringify({ ally_tag: s.tag.A, enemy_tag: s.tag.B, ally_max_hp: s.hp_max, enemy_max_hp: s.hp_max, rounds: s.recs, winner: verdict.result === 'A' ? s.tag.A : s.tag.B }), _rounds: s.round,
+      battle_data: JSON.stringify({ ally_tag: s.tag.A, enemy_tag: s.tag.B, ally_max_hp: s.hp_cap.A, enemy_max_hp: s.hp_cap.B, rounds: s.recs, winner: verdict.result === 'A' ? s.tag.A : s.tag.B }), _rounds: s.round,
     };
     try { const fe = await P.narratePvpViaAi(ctx, emb); await m.edit({ embeds: [fe], components: [] }); }
     catch (e) { console.error('⚠️ Lỗi AI narrate PvP (đã settle DB, giữ embed nhật ký):', e.message); }
   }
 }
 
-/** Khởi động lại bot: huỷ mọi trận 'active' còn sót (chưa chốt → không ai mất/được gì) + báo vào tin nhắn trận nếu sửa được. */
+/**
+ * Khởi động lại bot (v21.7): trận 'active' có ảnh chụp trạng thái, còn trong cửa sổ `pvp_resume_window` (giây, mặc định 900; 0 = tắt)
+ * và sửa được tin nhắn trận → KHÔI PHỤC (dựng lại session + nút mới, hiệp đang dở chọn lại từ đầu). Còn lại → huỷ như cũ (không ai mất gì).
+ * Trả số trận bị huỷ; chi tiết ở recoverStale.last = { aborted, resumed }.
+ */
 async function recoverStale(client) {
+  const ST = require('./settings'); const win = Math.max(0, Math.min(86400, Math.trunc(Number(ST.get('pvp_resume_window', '900')) || 0)));
   let rows = [];
-  try { rows = C21.abortStale(); } catch (e) { console.warn('⚠️ recoverStale:', e.message); return 0; }
+  try { rows = require('../db').all("SELECT b.id, b.a_id, b.b_id, b.channel_id, b.message_id, s.state, s.saved_at FROM v213_battles b LEFT JOIN v217_battle_state s ON s.battle_id = b.id WHERE b.status = 'active'"); }
+  catch (e) { console.warn('⚠️ recoverStale:', e.message); return 0; }
+  let aborted = 0; let resumed = 0; const t = now();
   for (const r of rows) {
+    if (SESSIONS.has(r.id)) continue;                                       // trận đang chạy thật trong tiến trình này (gọi lại recoverStale không được huỷ nhầm)
+    let msg = null; let s = null;
+    const canTry = win > 0 && r.state && client && r.channel_id && r.message_id && r.message_id !== '0' && (t - (r.saved_at || 0)) <= win && !P.pvpIsLocked() && !BUSY.has(sid(r.a_id)) && !BUSY.has(sid(r.b_id));
+    if (canTry) {
+      try {
+        const ch = await client.channels.fetch(r.channel_id); msg = ch && await ch.messages.fetch(r.message_id);
+        const b = msg ? C21.rehydrate(r.state) : null;
+        if (b) {
+          s = b; Object.assign(s, { a_id: sid(r.a_id), b_id: sid(r.b_id), actions: { A: null, B: null }, acted: { A: false, B: false }, resolving: false, round_token: 1, active_view: null, message: msg, settled: false, created_at: now() });
+          SESSIONS.set(s.id, s); BUSY.set(s.a_id, s.id); BUSY.set(s.b_id, s.id);
+          const rv = roundView(s);
+          await msg.edit({ content: '🔄 Bot vừa khởi động lại — **trận đấu pháp được khôi phục** (sinh lực, hiệu ứng, hồi chiêu giữ nguyên). Hiệp đang dở hãy chọn lại hành động.', embeds: [roundEmbed(s)], components: rv.components() });
+          swapActiveView(s, rv); resumed += 1; continue;
+        }
+      } catch (e) {
+        console.warn(`⚠️ Không khôi phục được trận ${r.id}:`, e.message);
+        if (s) { cleanupSession(s); s = null; }
+      }
+    }
+    if (C21.abort(r.id, 'restart', t)) aborted += 1;
     if (!client || !r.channel_id || !r.message_id || r.message_id === '0') continue;
     try {
-      const ch = await client.channels.fetch(r.channel_id); const msg = ch && await ch.messages.fetch(r.message_id);
-      if (msg) await msg.edit({ content: '🔄 Bot vừa khởi động lại nên trận đấu pháp này **bị huỷ** — không ai mất hay được tu vi. Hãy khiêu chiến lại.', embeds: [], components: [] });
+      const ch = await client.channels.fetch(r.channel_id); const m2 = msg || (ch && await ch.messages.fetch(r.message_id));
+      if (m2) await m2.edit({ content: '🔄 Bot vừa khởi động lại nên trận đấu pháp này **bị huỷ** — không ai mất hay được tu vi. Hãy khiêu chiến lại.', embeds: [], components: [] });
     } catch (_) { /* tin nhắn đã xoá / không có quyền */ }
   }
-  return rows.length;
+  recoverStale.last = { aborted, resumed };
+  return aborted;
 }
 
 // ---------- khiêu chiến ----------

@@ -21,6 +21,7 @@ const Inv = require('./invsvc');
 const FX = require('./fx19');
 const BM = require('./benmenh19');
 const IT = require('../data/items_v17');
+const KN = require('./combatKernel');
 const { now, int, random, randUniform, clamp } = require('../util');
 
 const GATE_REALM = 18; const GATE_STAGE = 3; const TIEN_DE = 19;
@@ -110,7 +111,7 @@ function canResp(k, a, row) {
   return null;
 }
 /** Bước 1 đạo lôi: áp dụng ứng phó rồi lôi giáng. Hàm thuần trên k (đã parse). Trả { lines, dead }. */
-function strike(k, a) {
+function strike(k, a, KL = null) {
   const n = k.step; const L = LOI[n - 1]; const lines = []; let cut = 0;
   if (a === 'dan') {
     const q = Math.max(...Object.keys(Inv.byQuality(k.uid, DAN_ID)).map(Number));
@@ -129,16 +130,22 @@ function strike(k, a) {
   } else if (a === 'dok') {
     cut = Math.min(0.60, (k.ll / 100) * 0.60); lines.push(`🔥 Dốc toàn lực (${Math.floor(k.ll)}% Linh Lực): giảm **${Math.round(cut * 100)}%** uy lực.`); k.ll = 0;
   }
+  if (KL) {                                                                               // v22.0 (kernel_chungdao = kernel): kỹ năng tộc tự thân tự phát trước khi lôi giáng
+    KN.begin(KL, k.maxHp);
+    const rc = KN.race(KL, k.hp, k.maxHp, { selfOnly: true });
+    if (rc) { lines.push(...rc.lines.map((x) => String(x))); k.hp = rc.heal >= 0 ? Math.min(k.maxHp, k.hp + rc.heal) : Math.max(1, k.hp + rc.heal); }
+  }
   const base = L.pct * LOI_K * k.maxHp * randUniform(0.95, 1.05);
   const red = Math.min(0.5, k.dr + k.kiepRes);
   let dmg = base * (100 / (100 + defPctOf(k, n))) * (1 - red) * (1 - cut);
-  dmg = Math.floor(Math.max(base * MIN_TAKE * (1 - cut * 0.5), dmg)); dmg = Math.max(1, Math.min(dmg, 9e15));
+  dmg = Math.floor(Math.max(base * MIN_TAKE * (1 - cut * 0.5), dmg)); if (KL) dmg = Math.floor(dmg * KN.takeMult(KL)); dmg = Math.max(1, Math.min(dmg, 9e15));   // v22.0: Hộ Thể (kỹ năng tộc) giảm uy lực lôi
   lines.push(`⚡ **Đạo ${n}/12 — ${L.name}** giáng xuống: ${fmt(dmg)} sát thương${L.pierce ? ' _(Phá Giáp Thiên Kiếp: bỏ qua 25% phòng ngự)_' : ''}.`);
   if (k.shield > 0) { const ab = Math.min(k.shield, dmg); k.shield -= ab; dmg -= ab; if (ab) lines.push(`🔰 Khiên hấp thụ ${fmt(ab)}.`); }
   if (dmg >= k.hp) {
     if (k.surv > 0) { k.surv -= 1; dmg = k.hp - 1; lines.push('♻️ **Bảo mệnh**: sống sót với 1 sinh mệnh!'); }
   }
   k.hp = Math.max(0, k.hp - dmg);
+  if (KL) KN.end(KL);
   lines.push(`💥 Sinh mệnh: **${fmt(k.hp)}/${fmt(k.maxHp)}**`);
   const dead = k.hp <= 0;
   if (!dead) {
@@ -179,7 +186,8 @@ function respond(userId, a) {
     if (now() > k.expireAt) { const r = finish(userId, k, false, 'timeout'); return { ok: true, k, lines: ['⌛ Quá lâu không ứng phó — thiên kiếp tự giáng xuống!'], ended: 'lose', result: r }; }
     if (k.step > 12) return { ok: false, error: 'Đại Kiếp đã kết thúc.' };
     const row = Cu.getCultivator(userId); const bad = canResp(k, a, row); if (bad) return { ok: false, error: bad, k };
-    const out = strike(k, a); if (out.error) return { ok: false, error: out.error, k };
+    const KL = KN.on('chungdao') ? KN.open('chungdao', row, { name: 'Thiên Lôi', ctrlImmune: true, me: 'Bạn' }, k.kx || null) : null;
+    const out = strike(k, a, KL); if (KL) k.kx = KN.toJSON(KL); if (out.error) return { ok: false, error: out.error, k };
     k.expireAt = now() + IDLE_SEC;
     if (out.dead) { const r = finish(userId, k, false, 'dead'); return { ok: true, k, lines: out.lines, ended: 'lose', result: r }; }
     if (k.step > 12) { const r = finish(userId, k, true); return { ok: true, k, lines: out.lines, ended: 'win', result: r }; }

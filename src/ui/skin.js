@@ -85,12 +85,13 @@ function wrapInteraction(i) {
     }
   };
   for (const k of ['reply', 'editReply', 'followUp', 'update', 'deferReply', 'deferUpdate', 'showModal']) if (typeof i[k] === 'function') orig[k] = retry(i[k].bind(i));
-  let timer = null;
+  let timer = null; let pend = null;   // pend = lời ack tự động của watchdog còn bay → phản hồi thật phải ĐỢI nó xong (trước đây đua nhau → 40060)
+  const settle = async () => { if (pend) { try { await pend; } catch (_) { /* bỏ qua */ } } };
   const stop = () => { if (timer) { clearTimeout(timer); timer = null; } };
   const noFlags = (p) => { const q = { ...p }; delete q.flags; delete q.ephemeral; return q; };
 
   if (orig.reply) i.reply = async (p) => {
-    stop(); const q = normalizePayload(p);
+    stop(); await settle(); const q = normalizePayload(p);
     if (i.deferred && !i.replied) {
       // v21.6.3: đã deferUpdate (nút/menu/modal từ tin nhắn) mà handler muốn reply → gửi tin MỚI, tuyệt đối không ghi đè bảng gốc.
       if (ackKind === 'update') return orig.followUp(q);
@@ -99,19 +100,19 @@ function wrapInteraction(i) {
     if (i.replied) return orig.followUp(q);
     return orig.reply(q);
   };
-  if (orig.editReply) i.editReply = async (p) => { stop(); return orig.editReply(noFlags(normalizePayload(p, { edit: true }))); };
+  if (orig.editReply) i.editReply = async (p) => { stop(); await settle(); return orig.editReply(noFlags(normalizePayload(p, { edit: true }))); };
   if (orig.followUp) i.followUp = async (p) => {
-    stop(); const q = normalizePayload(p);
+    stop(); await settle(); const q = normalizePayload(p);
     if (!acked() && orig.reply) return orig.reply(q);
     return orig.followUp(q);
   };
   if (orig.update) i.update = async (p) => {
-    stop(); const q = normalizePayload(p, { edit: true });
+    stop(); await settle(); const q = normalizePayload(p, { edit: true });
     if (acked()) return orig.editReply(noFlags(q));
     return orig.update(q);
   };
-  if (orig.deferReply) i.deferReply = async (o) => { stop(); if (acked()) return null; const r = await orig.deferReply(o); ackKind = 'reply'; return r; };
-  if (orig.deferUpdate) i.deferUpdate = async () => { stop(); if (acked()) return null; const r = await orig.deferUpdate(); ackKind = 'update'; return r; };
+  if (orig.deferReply) i.deferReply = async (o) => { stop(); await settle(); if (acked()) return null; const r = await orig.deferReply(o); ackKind = 'reply'; return r; };
+  if (orig.deferUpdate) i.deferUpdate = async () => { stop(); await settle(); if (acked()) return null; const r = await orig.deferUpdate(); ackKind = 'update'; return r; };
   if (orig.showModal) i.showModal = async (m) => { stop(); return orig.showModal(m); };
 
   // Chậm >1,8s mà chưa phản hồi → ack tự động để Discord không báo 10062 / "ứng dụng không phản hồi".
@@ -125,7 +126,7 @@ function wrapInteraction(i) {
       timer = setTimeout(() => {
         timer = null; if (acked()) return;
         ackKind = wantUpdate ? 'update' : 'reply';
-        (wantUpdate ? doAck() : doAck({ flags: MessageFlags.Ephemeral })).catch(() => { /* quá hạn thật sự → logError ở tầng route sẽ đếm */ });
+        pend = (wantUpdate ? doAck() : doAck({ flags: MessageFlags.Ephemeral })).catch(() => { /* quá hạn thật sự → logError ở tầng route sẽ đếm */ }).finally(() => { pend = null; });
       }, WATCHDOG_MS);
       timer.unref?.();
     }

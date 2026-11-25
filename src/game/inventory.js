@@ -70,8 +70,8 @@ function rewardLinesForCode(c) {
   const r = [];
   if (c.linh_thach) r.push(`💎 **${fmtNum(c.linh_thach)}** ${E.linhthach} Linh Thạch`);
   if (c.linh_tinh) r.push(`🌠 **${fmtNum(c.linh_tinh)}** ${E.linhtinh} Linh Tinh`);
-  if (c.dan_taytuy_trongsinh) r.push(`🧪 **${c.dan_taytuy_trongsinh}** × ${E.taytuydan} Đan Tẩy Tủy Trọng Sinh (vật phẩm hiếm — giá trị cửa hàng ${fmtNum(K.TAYTUY_LINH_THACH_COST)} Linh Thạch)`);
-  if (c.dan_taytuy_nuaban) r.push(`🧪 **${c.dan_taytuy_nuaban}** × ${E.taytuydan} Đan Tẩy Tủy Nửa Tác Dụng (tự chọn reroll ${E.linhcan} Linh Căn HOẶC ${E.thechat} Thể Chất — giá trị cửa hàng ${fmtNum(K.TAYTUY_NUABAN_LINH_THACH_COST)} Linh Thạch)`);
+  if (c.dan_taytuy_trongsinh) r.push(`🧪 **${c.dan_taytuy_trongsinh}** × ${E.taytuydan} Đan Tẩy Tủy Trọng Sinh (vật phẩm hiếm — giá trị cửa hàng ${fmtNum(K.TAYTUY_LINH_TINH_COST)} Linh Tinh)`);
+  if (c.dan_taytuy_nuaban) r.push(`🧪 **${c.dan_taytuy_nuaban}** × ${E.taytuydan} Đan Tẩy Tủy Nửa Tác Dụng (tự chọn reroll ${E.linhcan} Linh Căn HOẶC ${E.thechat} Thể Chất — giá trị cửa hàng ${fmtNum(K.TAYTUY_NUABAN_LINH_TINH_COST)} Linh Tinh)`);
   if (c.dan_duoc) r.push(`💊 **${c.dan_duoc}** × ${E.danduoc} Đan Dược (cắn ngay nhận 60~120 tu vi)`);
   if (c.dan_pha_gioi) r.push(`⚗️ **${c.dan_pha_gioi}** × ${E.phagioidan} Đan Dược Phá Giới (bỏ bớt cooldown Đột Phá thất bại)`);
   if (c.cong_phap && require('./congphapV16').isNew(c.cong_phap)) r.push(`📜 Công Pháp **${require('./congphapV16').nameOf(c.cong_phap)}**`);

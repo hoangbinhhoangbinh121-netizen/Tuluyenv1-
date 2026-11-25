@@ -88,7 +88,7 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Emoji chủng tộc: đang dùng Unicode dự phòng (🧑 🐉 🔥 😈 ✨ 🦊), CHƯA có pixel art; key dự kiến `race_nhan`…`race_yeu` (khi có ảnh, `E['race_<id>']` tự được dùng).
 - Trong PvP hiện tại (thanh sinh mệnh chuẩn hoá 100) các hiệu ứng `hp` và `regen` KHÔNG có tác dụng → Long Tộc / Phượng Tộc / nhánh hồi phục yếu hơn trong PvP so với PvE; sẽ cân lại khi có HP PvP thật (V21.7).
 - Số liệu cân bằng (nội tại, chi phí, mốc cảnh giới) là ĐỀ XUẤT đã benchmark trong engine PvP, chưa qua người chơi thật; toàn bộ nằm ở `src/data/race21.js`.
-- Chi phí chủng tộc chỉ bằng Linh Thạch (không vật phẩm mới); chưa có sổ cái Linh Thạch (`race_history.ledger_ref` để trống đến V21.7).
+- Chi phí chủng tộc chỉ bằng Linh Thạch (không vật phẩm mới); sổ cái Linh Thạch có từ V21.7 (`race_history.ledger_ref` đã điền).
 - Slash: `/dungluong` (admin) chuyển sang tiền tố `!dungluong` để nhường chỗ `/chungtoc` (giữ đúng 100 lệnh slash).
 
 ## V21.6 — Hiệu ứng / kỹ năng tộc / StatEngine: còn thiếu / chờ duyệt (chi tiết: BAO_CAO_V21_6.md, docs/audit_v21_3/11)
@@ -96,8 +96,8 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Số liệu hiệu ứng & kỹ năng tộc là ĐỀ XUẤT đã benchmark trong engine PvP (vòng tròn 6 tộc 44–53%), chưa qua người chơi thật; toàn bộ ở `src/data/effects21.js`.
 - Kỹ năng tộc **chỉ dùng trong PvP** (Boss/Bí Cảnh/Chứng Đạo/Tông Chiến chưa có — V22.0 Combat Kernel).
 - `cpfx.battleState` (guard/dodge/weak theo đòn) và EffectEngine còn chồng chức năng; hai lớp nhân với nhau (trần giảm sát thương 60% ở EffectEngine). Gộp ở V22.0.
-- Sinh lực PvP vẫn chuẩn hoá 100 (F-3) nên `hp`/`regen` của tộc vẫn vô tác dụng trong PvP — V21.7.
-- Trạng thái hiệu ứng nằm trong bộ nhớ trận (`toJSON/fromJSON` đã sẵn); restart giữa trận vẫn huỷ trận (không mất gì) — khôi phục ở V21.7.
+- ~~Sinh lực PvP chuẩn hoá 100 (F-3)~~ — **đã đóng ở V21.7** (HP thật có giới hạn, xem `docs/audit_v21_3/13`).
+- Trạng thái hiệu ứng nằm trong bộ nhớ trận (`toJSON/fromJSON` đã sẵn); ~~restart giữa trận huỷ trận~~ — V21.7 đã khôi phục được (xem docs 13).
 - Lỗi mạng/DNS tạm thời: bot tự thử lại **chỉ** khi gửi tin (reply/followUp/…) và chỉ với lỗi chắc chắn chưa gửi được (`EAI_AGAIN`, `ENOTFOUND`, `ECONNREFUSED`…). Nếu host mất mạng kéo dài, người chơi vẫn không nhận được phản hồi — cần kiểm tra mạng của host (VibeHost). Không test được trên mạng thật.
 - Emoji chủng tộc (31 cái) là bản tạm tự vẽ bằng code; chờ bạn vẽ lại (xem docs 12). Emoji vẽ lại cần ghi hậu tố vào `assets/emoji_revisions.json`.
 - Discord thật: **NOT TESTED** (chỉ mock discord.js + SQLite thật).
@@ -106,3 +106,24 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Menu (`View`) và biểu mẫu động (`showModal`) vẫn nằm **trong bộ nhớ** (mỗi menu sống tối đa 15 phút không bấm; khởi động lại bot = mất hết). Chỉ `/quantri` (nút + biểu mẫu), nút tĩnh (Tông Chiến, ...) sống sót qua restart. Các biểu mẫu còn lại (kho đồ, shop tìm kiếm, tông môn, đại phủ, linh thú…) vẫn là loại động. Chuyển dần sang tĩnh ở các đợt sau.
 - Nguyên nhân gốc chưa xác nhận trên host thật: giả thuyết là bot bị khởi động lại (đăng nhập lỗi DNS → thoát; lỗi không bắt được → sập). Sau khi cài V21.6.2, gõ `/loigannhat` xem dòng "Bot chạy liên tục từ …": nếu mốc luôn rất gần thì host vẫn đang khởi động lại bot vì lý do khác (hết RAM, tự restart theo lịch…).
 
+
+## V21.7 — HP thật PvP, khôi phục trận, Sổ Cái (chi tiết: BAO_CAO_V21_7.md, docs/audit_v21_3/13 & 14)
+- Trần thanh HP chỉ dao động 85–120 (mặc định) — số liệu là ĐỀ XUẤT đã benchmark, chưa qua người chơi thật. `!pvpset pvp_hp_mode norm` quay về kiểu cũ.
+- Chênh lệch có tộc ↔ chưa chọn tộc vẫn ~66–78% — **chưa quyết định thiết kế** (chờ bạn).
+- Khôi phục trận sau restart: mất lựa chọn của hiệp đang dở; nhật ký chỉ còn 60 hiệp cuối; chỉ trong `pvp_resume_window` (mặc định 15 phút).
+- Sổ Cái **chỉ phủ các luồng đã nối** (đổi tộc, NPC mua/bán, bán trang bị, giao dịch, admin). Thưởng nhiệm vụ/Boss/Bí Cảnh/chế tạo/Cửa Hàng Nguyên Bảo chưa nối.
+- Kỹ năng tộc/hiệu ứng vẫn chỉ trong PvP; Boss/Bí Cảnh/Chứng Đạo/Tông Chiến chờ V22.0 (Combat Kernel).
+- "Bán trang bị" hiện là bán hàng loạt cho NPC; chợ người↔người cần thiết kế riêng.
+- Discord thật: **NOT TESTED**.
+
+## V21.7.1 — Đan Tẩy Tủy
+- Phí luyện Tẩy Tủy khi KHÔNG có đan trong kho chuyển từ Linh Thạch sang **Linh Tinh**: Trọng Sinh 1.000.000.000.000.000 (1e15), Nửa Tác Dụng 100.000.000.000.000 (1e14) — thực tế người chơi không đủ. Chỉnh ở `src/data/constants.json` (`TAYTUY_LINH_TINH_COST`, `TAYTUY_NUABAN_LINH_TINH_COST`; phải < 9e15).
+- Giá Nguyên Bảo ở `/cuahang` (×30) **giữ nguyên** — đây là đường mua bằng tiền thật do admin duyệt; muốn khoá hẳn thì nói để đổi.
+- Phí Linh Tinh này chưa nối Sổ Cái.
+
+## V22.0 — Combat Kernel (chi tiết: BAO_CAO_V22_0.md, docs/audit_v21_3/15)
+- **Mặc định TẮT (`legacy`)**: bot hành xử y như v21.7.1 cho đến khi admin chạy `!kernel <hệ thống> kernel`.
+- Số liệu (hồi chiêu ×6/×10/×1/×3, điểm thanh Boss 5% một đòn, miễn nhiễm Choáng) là ĐỀ XUẤT; benchmark nhiễu ±9 điểm % (N=30). Sát thương Boss tăng ~+12–15% ở tộc Phượng/Ma khi bật.
+- Kỹ năng tộc trong PvE tự phát (không có nút); hiệu ứng Boss/Tông Chiến mất khi restart (bộ nhớ); Bí Cảnh/Chứng Đạo lưu trong JSON.
+- Chưa gộp `cpfx.battleState` với EffectEngine; PvE chưa dùng cpfx.battleState. Chưa có số đo Tông Chiến.
+- Discord thật: **NOT TESTED**.

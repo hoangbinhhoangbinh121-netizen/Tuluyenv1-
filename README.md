@@ -1,5 +1,9 @@
-# Thiên Tông Bot v21.6 — Node.js + discord.js + SQLite (trước đây: "Tiên Giới Bot")
+# Thiên Tông Bot v22.0 — Node.js + discord.js + SQLite (trước đây: "Tiên Giới Bot")
 
+> **v22.0** — **Combat Kernel** (`src/game/combatKernel.js`): lớp "trong trận" dùng chung — hiệu ứng theo hiệp (độc/chảy máu/thiêu đốt/choáng/hộ thể…) và kỹ năng chủng tộc tự phát — nối vào **Boss Thế Giới, Bí Cảnh, Chứng Đạo, Tông Chiến**. **MẶC ĐỊNH TẮT** (`legacy`, hành vi y như v21.7.1); admin bật từng hệ thống bằng `!kernel <boss|bicanh|chungdao|tongchien> kernel`. Số liệu chờ duyệt — xem `BAO_CAO_V22_0.md`, `docs/audit_v21_3/15_COMBAT_KERNEL_V22_0.md`. **v21.7.1** — Đan Tẩy Tủy tính phí bằng Linh Tinh, giá cực cao.
+>
+> **v21.7** — **HP thật trong PvP (đóng F-3)**: trần thanh sinh lực theo HP thật (có giới hạn 85–120), hồi phục theo `regen`; **lưu & khôi phục trận** sau khi bot khởi động lại; **Sổ Cái** tiền tệ (`ledger_entries`) nối vào đổi tộc/NPC/bán trang bị/giao dịch/admin; lệnh admin `!socai`, `!pvpset`. Xem `BAO_CAO_V21_7.md`, `docs/audit_v21_3/13`, `14`.
+>
 > **v21.6.2** — Sửa "menu/biểu mẫu toàn báo hết hạn": (1) lỗi mạng khi đăng nhập (`EAI_AGAIN`…) không còn làm bot thoát → host khởi động lại liên tục (bot chờ + thử lại); (2) chặn crash do lỗi không bắt được (`uncaughtException`); (3) biểu mẫu `/quantri` là form tĩnh — còn dùng được sau khi bot khởi động lại; (4) thông báo nói rõ "bot vừa khởi động lại <lúc>"; `/loigannhat` hiện mốc bot chạy liên tục. Xem `BAO_CAO_V21_6_2.md`.
 >
 > **v21.6.1** — Thay 31 emoji chủng tộc bằng bản **bạn tự vẽ** (cắt từ bảng ảnh bạn gửi — không kèm zip vì dung lượng — bằng `scripts/build_race_emoji_from_sheet_v21_7.py`); `assets/emoji_revisions.json` đặt hậu tố `b` cho 31 khoá để bot tải ảnh mới lên Discord (tên `tg7_<key>_b`). Mọi thứ khác giữ nguyên v21.6.

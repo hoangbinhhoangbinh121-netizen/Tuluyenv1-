@@ -21,6 +21,7 @@ const Inv = require('./invsvc');
 const D16 = require('../data/congphap_v16');
 const IT = require('../data/items_v17');
 const B = require('../data/bicanh19');
+const KN = require('./combatKernel');
 const { now, int, random, randUniform, randInt, choice, clamp } = require('../util');
 
 const { Delta } = Cu;
@@ -192,7 +193,9 @@ function enemyDamage(st, e, m, base, o = {}) {
   let raw = base * m.maxHp * e.phaseAtk * e.rage * BOSS_K_OF(e.kind) * randUniform(0.9, 1.1);
   const defPct = clamp(100 * m.def / (m.atk + m.def + 1), 0, CFG.DEF_CAP) * (1 - (o.pierce || 0));
   raw *= 100 / (100 + defPct);
-  if (!o.noDodge && random() < m.dodge) { log(st, `💨 **${m.name}** né được đòn của ${e.name}!`); return { dmg: 0, miss: true }; }
+  const KL = kLayer(m);                                                                  // v22.0 (chỉ khi kernel_bicanh = kernel): hiệu ứng trong trận của người bị đánh
+  if (KL) raw *= KN.takeMult(KL) * KN.foeOutMult(KL);
+  if (!o.noDodge && random() < clamp(m.dodge + (KL ? KN.dodgeChance(KL) : 0), 0, 0.6)) { log(st, `💨 **${m.name}** né được đòn của ${e.name}!`); return { dmg: 0, miss: true }; }
   if (m.guard > 0) { raw *= 1 - CFG.GUARD_CUT; if (o.tele) raw *= CFG.GUARD_TELE_EXTRA; }
   raw *= 1 - m.dr;
   if (e.weak) raw *= 1 - e.weak.pct;
@@ -297,14 +300,42 @@ function canAct(st, m, a) {
   return null;
 }
 /** Thực hiện hành động của thành viên idx. Trả { ok, error } — đã xử lý cả lượt kẻ địch, chuyển tầng, thắng/thua. */
+let CUR = null;                                                                          // v22.0: ngữ cảnh kernel của lượt đang chạy (đồng bộ, 1 lượt tại 1 thời điểm)
+const BOSSLIKE = (e) => B.BOSS_KINDS.has(e.kind);
+/** Lớp kernel của 1 thành viên (đang hành động → bản đầy đủ; người khác → bản nhẹ từ m.kx); null nếu tắt / chưa có. */
+function kLayer(m) {
+  if (!KN.on('bicanh')) return null;
+  if (CUR && CUR.m === m) return CUR.L;
+  return m.kx ? KN.open('bicanh', { user_id: m.uid, __lite: true }, {}, m.kx) : null;
+}
 function step(st, uid, a) {
+  if (!KN.on('bicanh') || st.over) return stepCore(st, uid, a);
+  const m = st.members.find((x) => x.uid === String(uid)); const row = m && m.alive ? Cu.getCultivator(uid) : null;
+  if (!row || !st.enemy) return stepCore(st, uid, a);
+  const e = st.enemy; const fk = `${st.floor}:${st.wave}:${e.name}`;
+  const L = KN.open('bicanh', row, { name: e.name, unit: KN.foeUnit(m.atk), ctrlImmune: BOSSLIKE(e), me: `**${m.name}**` }, m.kx || null);
+  if (m.kx && m.kx.fk !== fk) KN.resetFoe(L, { name: e.name, unit: KN.foeUnit(m.atk), ctrlImmune: BOSSLIKE(e) });
+  const r0 = L.round; CUR = { L, m };
+  let r; try { r = stepCore(st, uid, a); } finally { CUR = null; }
+  if (L.round !== r0) KN.end(L);
+  m.kx = { ...KN.toJSON(L), fk };
+  return r;
+}
+function stepCore(st, uid, a) {
   if (st.over) return { ok: false, error: 'Bí cảnh đã kết thúc.' };
   const mi = st.members.findIndex((x) => x.uid === String(uid)); if (mi < 0) return { ok: false, error: 'Bạn không thuộc đội này.' };
   const m = st.members[mi]; if (!m.alive) return { ok: false, error: 'Bạn đã gục — chờ qua tầng kế tiếp để hồi sinh.' };
   const bad = canAct(st, m, a); if (bad) return { ok: false, error: bad };
   st.turnLog = []; const e = st.enemy;
+  const KL = CUR && CUR.m === m ? CUR.L : null; let kStun = false;
+  if (KL) {                                                                              // v22.0: sát thương theo thời gian / choáng ở ĐẦU lượt của người chơi
+    const bk = KN.begin(KL, m.maxHp); for (const l of bk.lines) log(st, l);
+    m.hp = Math.max(1, m.hp - bk.dotA); kStun = bk.stunned;
+    if (bk.dotB > 0) { hurtEnemy(e, bk.dotB); m.dealt += bk.dotB; log(st, `🔥 Hiệu ứng gây thêm **${fmt(bk.dotB)}** sát thương lên ${e.name}.`); }
+  }
   // ---- thực hiện hành động
-  if (a === 'guard') {
+  if (kStun) { /* Choáng Váng: mất lượt */ }
+  else if (a === 'guard') {
     m.guard = 1; m.ll = Math.min(100, m.ll + 10);
     if (m.perks.binh === 'chung') { e.weak = { pct: 0.15, turns: 2 }; log(st, `🔔 **Hỗn Độn Chấn Hồn**: ${e.name} yếu đi 15% trong 2 lượt!`); }
     log(st, `🛡️ **${m.name}** thủ thế — đòn kế tiếp giảm ${Math.round(CFG.GUARD_CUT * 100)}%, hồi 10% Linh Lực.`);
@@ -321,7 +352,13 @@ function step(st, uid, a) {
     if (a === 'sk') { sig = sigOf(m); mult = sig.mult; m.cd.sk = sig.cd; }
     if (a === 'tuyet') { m.cd.tuyet = A.cd; opts.heavy = true; }
     if (a === 'bi') { m.cd.bi = A.cd; opts.heavy = true; }
+    let kRace = null;
+    if (KL) {                                                                            // v22.0: kỹ năng tộc tự phát + chuỗi nhân hiệu ứng
+      kRace = KN.race(KL, m.hp, m.maxHp);
+      if (kRace) { for (const l of kRace.lines) log(st, l); if (kRace.kind === 'self') { if (kRace.heal >= 0) heal(m, kRace.heal); else m.hp = Math.max(1, m.hp + kRace.heal); } else mult *= kRace.mult; }
+    }
     const r = playerDamage(st, m, e, mult, opts);
+    if (KL) { r.dmg = Math.max(1, Math.floor(r.dmg * KN.outMult(KL))); for (const l of KN.after(KL, { damage: r.dmg, is_crit: r.crit })) log(st, l); }
     hurtEnemy(e, r.dmg); m.dealt += r.dmg;
     log(st, `${A.icon} **${m.name}** dùng **${sig ? sig.name : A.name}**: −${fmt(r.dmg)} sinh lực ${e.name}${r.crit ? ' 💥 chí mạng' : ''}`);
     for (const l of r.lines) log(st, l);

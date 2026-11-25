@@ -11,6 +11,7 @@
 const PB = require('./petBalance');
 const PD = require('./petData');
 const P = require('./pets');
+const HB = require('./hpbar');
 const D = require('../db');
 const { random, int, clamp, randUniform } = require('../util');
 
@@ -86,7 +87,7 @@ function hurt(arena, key, amount, hp, lines, opts = {}) {
 function pre(arena, ak, hp) {
   const sd = arena[ak]; const st = sd.st; const lines = [];
   st.turn += 1;
-  if (sd.pet && sd.fx.regen && hp[ak] > 0 && hp[ak] < 100) { st.regenCarry += sd.fx.regen; const whole = Math.floor(st.regenCarry); st.regenCarry -= whole; const h = Math.min(100 - hp[ak], whole); if (h > 0) { hp[ak] += h; lines.push(`🌿 ${sd.label} hồi **${h}** sinh lực cho chủ nhân.`); } }
+  if (sd.pet && sd.fx.regen && hp[ak] > 0 && hp[ak] < HB.cap(hp, ak)) { st.regenCarry += sd.fx.regen; const whole = Math.floor(st.regenCarry); st.regenCarry -= whole; const h = Math.min(HB.cap(hp, ak) - hp[ak], whole); if (h > 0) { hp[ak] += h; lines.push(`🌿 ${sd.label} hồi **${h}** sinh lực cho chủ nhân.`); } }
   if (st.dots.length) {
     let tot = 0; const names = [];
     for (const d of st.dots) { tot += d.amt; names.push(d.k); d.left -= 1; }
@@ -142,7 +143,7 @@ function castEffect(arena, ak, dk, hp, def, rank, lines, depth = 0) {
       let real = 0; const per = total / hits;
       for (let i = 0; i < hits && hp[dk] > 0; i += 1) real += hurt(arena, dk, per, hp, lines, { pierce: !!def.pierce });
       lines.push(`${nm ? `${sd.label} thi triển ${nm}: ` : ''}gây **${real}** sát thương${crit ? ' 💥 bạo kích' : ''}${hits > 1 ? ` (${hits} đòn)` : ''}.`);
-      if (def.t === 'drain' && real > 0 && hp[ak] > 0) { const h = Math.min(100 - hp[ak], Math.round(real * 0.5)); if (h > 0) { hp[ak] += h; lines.push(`🩸 Hút lại **${h}** sinh lực.`); } }
+      if (def.t === 'drain' && real > 0 && hp[ak] > 0) { const h = Math.min(HB.cap(hp, ak) - hp[ak], Math.round(real * 0.5)); if (h > 0) { hp[ak] += h; lines.push(`🩸 Hút lại **${h}** sinh lực.`); } }
       break;
     }
     case 'dot': {
@@ -160,7 +161,7 @@ function castEffect(arena, ak, dk, hp, def, rank, lines, depth = 0) {
     }
     case 'heal': {
       const amt = Math.min(20, U.HIT * U.HEAL_FRAC * R * def.p * rk * Math.sqrt(sd.bias.hp));
-      const h = Math.min(100 - hp[ak], Math.round(amt));
+      const h = Math.min(HB.cap(hp, ak) - hp[ak], Math.round(amt));
       if (h > 0 && hp[ak] > 0) { hp[ak] += h; lines.push(`${nm ? `${sd.label} thi triển ${nm}: ` : ''}hồi **${h}** sinh lực cho chủ nhân.`); }
       break;
     }
@@ -182,7 +183,7 @@ function castEffect(arena, ak, dk, hp, def, rank, lines, depth = 0) {
     }
     case 'cleanse': {
       st.dots = []; st.weaken = null; st.stun = false;
-      const h = Math.min(100 - hp[ak], Math.round(Math.min(10, U.HIT * U.HEAL_FRAC * R * (def.p || 0.4))));
+      const h = Math.min(HB.cap(hp, ak) - hp[ak], Math.round(Math.min(10, U.HIT * U.HEAL_FRAC * R * (def.p || 0.4))));
       if (h > 0 && hp[ak] > 0) hp[ak] += h;
       lines.push(`${nm ? `${sd.label} thi triển ${nm}: ` : ''}thanh tẩy mọi hiệu ứng xấu${h > 0 ? `, hồi ${h} sinh lực` : ''}.`);
       break;

@@ -14,6 +14,7 @@ const Cat = require('./catalog17');
 const { I, C } = Cat;
 const { int, fmtNum } = require('../util');
 const { Delta } = Cu;
+const LG = require('./ledger');
 
 const GOLD_CAP = 9e15;
 
@@ -40,7 +41,7 @@ function sell(user, id, q = 0, n = 1) {
     const have = Inv.qty(user, id, q); if (have < n) return { ok: false, msg: `❌ Bạn chỉ có ${have} × ${it.name}.` };
     const p = unitPrice(id, Inv.norm(it, q)); if (p <= 0) return { ok: false, msg: '❌ NPC không thu mua vật phẩm này.' };
     if (!Inv.take(user, id, n, { q, why: 'bán NPC' })) return { ok: false, msg: '❌ Số lượng vừa thay đổi — thử lại.' };
-    Cu.updateCultivator(user, { linh_thach: new Delta(p * n) });
+    Cu.updateCultivator(user, { linh_thach: new Delta(p * n) }); LG.note(user, p * n, { reason: 'bán NPC', ref: `${id}×${n}`, key: LG.nonce('npcsell') });
     return { ok: true, gold: p * n, msg: `💰 Bán **${n} × ${it.name}**${q ? ` (${I.qName(q)})` : ''}: +**${fmtNum(p * n)}** Linh Thạch.` };
   });
 }
@@ -64,15 +65,41 @@ function previewAll(user, opts = {}) {
 }
 
 // ------------------------------------------------------------------ trang bị
+/** Giá NPC thu trang bị = giá gốc theo phẩm/độ bền × hệ số "NPC thu" do /quantri đặt (cùng hệ số với vật phẩm). */
+const gearPrice = (G, row) => Math.max(1, Math.floor(G.sellValue(row) * require('./admin17').sellMult()));
 function sellGear(user, gearId) {
   const G = require('./gear17'); const row = G.get(user, gearId); if (!row) return { ok: false, msg: 'Không tìm thấy trang bị.' };
   if (row.equipped) return { ok: false, msg: '❌ Trang bị đang mặc — tháo ra trước.' };
   if (row.locked) return { ok: false, msg: '❌ Trang bị đang 🔒 khoá.' };
   return D.transaction(() => {
-    const v = G.sellValue(row);
+    const v = gearPrice(G, row);
     if (D.run('DELETE FROM gear WHERE gear_id = ? AND user_id = ? AND equipped = 0 AND locked = 0', row.gear_id, String(user)).changes === 0) return { ok: false, msg: 'Trang bị vừa thay đổi.' };
-    Cu.updateCultivator(user, { linh_thach: new Delta(v) });
+    Cu.updateCultivator(user, { linh_thach: new Delta(v) }); LG.note(user, v, { reason: 'bán trang bị', ref: `gear ${row.gear_id}`, key: `gearsell:${row.gear_id}` });
     return { ok: true, gold: v, msg: `💰 Bán **${G.name(row)}**: +**${fmtNum(v)}** Linh Thạch.` };
+  });
+}
+/** v21.6.4: BÁN HÀNG LOẠT trang bị. Chỉ bán món KHÔNG mặc, KHÔNG khoá, phẩm chất ≤ maxQ (1–5), chưa cường hoá/tinh luyện (bảo vệ công sức nâng cấp) trừ khi keepUpgraded=false. */
+function gearSellable(user, { maxQ = 2, keepUpgraded = true } = {}) {
+  const G = require('./gear17'); const mq = Math.max(1, Math.min(5, int(maxQ) || 1));
+  const special = (g) => { try { const r = require('./gear20').rec(g.gear_id); return (r.gems && r.gems.length > 0) || r.awaken > 0; } catch (_) { return false; } };   // đã khảm ngọc / thức tỉnh
+  return G.listOf(user).filter((g) => !g.equipped && !g.locked && g.q <= mq && !(keepUpgraded && ((g.enh || 0) > 0 || (g.refine || 0) > 0 || special(g))));
+}
+function previewGearBulk(user, opts = {}) {
+  const G = require('./gear17'); const list = gearSellable(user, opts); let total = 0; for (const g of list) total += gearPrice(G, g);
+  return { list, total, n: list.length };
+}
+function sellGearBulk(user, opts = {}) {
+  const G = require('./gear17');
+  return D.transaction(() => {
+    let total = 0; let n = 0; const byQ = {};
+    for (const g of gearSellable(user, opts)) {
+      const v = gearPrice(G, g);
+      if (D.run('DELETE FROM gear WHERE gear_id = ? AND user_id = ? AND equipped = 0 AND locked = 0', g.gear_id, String(user)).changes === 0) continue;   // vừa đổi trạng thái → bỏ qua, không bán nhầm
+      total += v; n += 1; byQ[g.q] = (byQ[g.q] || 0) + 1;
+    }
+    if (!n) return { ok: false, msg: 'Không có trang bị nào đủ điều kiện bán (loại món đang mặc, đang khoá, đã cường hoá/tinh luyện/khảm ngọc).' };
+    Cu.updateCultivator(user, { linh_thach: new Delta(total) }); LG.note(user, total, { reason: 'bán trang bị hàng loạt', ref: `${n} món`, key: LG.nonce('gearbulk') });
+    return { ok: true, gold: total, n, byQ, msg: `💰 Đã bán **${n}** trang bị (${Object.entries(byQ).map(([q, c]) => `${c} × ${I.qName(Number(q))}`).join(', ')}): +**${fmtNum(total)}** Linh Thạch.` };
   });
 }
 
@@ -87,10 +114,11 @@ function buy(user, id, n = 1) {
     const cost = buyUnit(id) * n; const me = Cu.getCultivator(user);
     if (!me || me.linh_thach < cost) return { ok: false, msg: `❌ Cần ${fmtNum(cost)} Linh Thạch (hiện có ${fmtNum(me ? me.linh_thach : 0)}).` };
     if (!Cu.updateCultivator(user, { linh_thach: new Delta(-cost) }, { linh_thach: cost })) return { ok: false, msg: Cu.MSG_BALANCE_CHANGED };
+    LG.note(user, -cost, { reason: 'mua NPC', ref: `${id}×${n}`, key: LG.nonce('npcbuy') });
     const got = Inv.add(user, id, n, { why: 'mua NPC' }); if (got < n) throw new Error('kho đầy');
     Inv.dailyAdd(user, `npcbuy:${id}`, n);
     return { ok: true, msg: `🛒 Mua **${n} × ${I.BY_ID[id].name}**: −${fmtNum(cost)} Linh Thạch.` };
   });
 }
 
-module.exports = { blockReason, unitPrice, buyUnit, quote, sell, sellable, sellAll, previewAll, sellGear, shopList, buy, GOLD_CAP };
+module.exports = { blockReason, unitPrice, buyUnit, quote, sell, sellable, sellAll, previewAll, sellGear, gearSellable, previewGearBulk, sellGearBulk, gearPrice, shopList, buy, GOLD_CAP };

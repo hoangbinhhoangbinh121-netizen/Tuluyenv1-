@@ -66,6 +66,8 @@ function apply(userId, build, t = nowSec()) {
       if (b.err) return { ok: false, msg: b.err, lines: b.lines };
       const cost = b.cost || 0;
       if (cost > 0 && !Cu.updateCultivator(userId, { linh_thach: new Cu.Delta(-cost) }, { linh_thach: cost })) return { ok: false, msg: Cu.MSG_BALANCE_CHANGED };
+      const lkey = cost > 0 ? `race:${userId}:${b.event}:v${st ? st.version : 0}:${t}` : '';
+      if (cost > 0) require('./ledger').note(userId, -cost, { reason: `chủng tộc:${b.event}`, ref: `race_state v${st ? st.version : 0}`, key: lkey });
       if (b.create) {
         D.run('INSERT INTO race_state (user_id, race_id, chosen_at, created_at, updated_at) VALUES (?,?,?,?,?)', userId, b.create, t, t, t);
       } else {
@@ -73,7 +75,7 @@ function apply(userId, build, t = nowSec()) {
         const r = D.run(`UPDATE race_state SET ${keys.map((k) => `${k} = ?`).join(', ')}, version = version + 1, updated_at = ? WHERE user_id = ? AND version = ?`, ...keys.map((k) => b.fields[k]), t, userId, st.version);
         if (!r.changes) throw new Error('race_state: xung đột phiên bản (có thao tác khác xen vào)');
       }
-      D.run('INSERT INTO race_history (user_id, event_type, from_state, to_state, cost, created_at) VALUES (?,?,?,?,?,?)', userId, b.event, JSON.stringify(st ? snap(st) : null), JSON.stringify(b.to), cost, t);
+      D.run('INSERT INTO race_history (user_id, event_type, from_state, to_state, cost, ledger_ref, created_at) VALUES (?,?,?,?,?,?,?)', userId, b.event, JSON.stringify(st ? snap(st) : null), JSON.stringify(b.to), cost, lkey, t);
       return { ok: true, msg: b.msg, state: get(userId), cost };
     });
   } catch (e) {

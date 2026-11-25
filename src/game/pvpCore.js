@@ -116,7 +116,7 @@ function roundAction(attackerTag, defenderTag, atkStat, defStat, powerAtk, power
   if (am.lifesteal) {
     const atkKey0 = defenderKey === 'B' ? 'A' : 'B';
     const heal = Math.round(damage * am.lifesteal);
-    if (heal > 0 && hpPool[atkKey0] > 0 && hpPool[atkKey0] < 100) { hpPool[atkKey0] = Math.min(100, hpPool[atkKey0] + heal); lines.push(`🩸 ${attackerTag} hút ${heal} sinh lực.`); record.heal_amount = heal; }
+    if (heal > 0 && hpPool[atkKey0] > 0 && hpPool[atkKey0] < require('./hpbar').cap(hpPool, atkKey0)) { hpPool[atkKey0] = Math.min(require('./hpbar').cap(hpPool, atkKey0), hpPool[atkKey0] + heal); lines.push(`🩸 ${attackerTag} hút ${heal} sinh lực.`); record.heal_amount = heal; }
   }
   if (isCrit) { lines.push('💥 Bạo kích!'); record.is_crit = true; }
   if (random() < 0.18) {
@@ -190,6 +190,7 @@ function settlePvpAtomic(userId, targetId, winnerId, stake, loserNewHp, roundsPl
       } catch (e) { console.warn('⚠️ hook v17 PvP:', e.message); }
     }
     if (meta && meta.battleId) {
+      D.run('DELETE FROM v217_battle_state WHERE battle_id = ?', meta.battleId);
       D.run("UPDATE v213_battles SET status = 'done', result = ?, reason = ?, rounds = ?, stake = ?, summary = ?, log = ?, ended_at = ? WHERE id = ? AND status = 'active'",
         meta.result || (draw ? 'draw' : ''), meta.reason || '', roundsPlayed, real, meta.summary || '', meta.log || '', t, meta.battleId);
     }
@@ -237,7 +238,7 @@ function doPvp(userId, targetId) {
     ally_spirit_beast: PetC.describe(bt.arena.A), enemy_spirit_beast: PetC.describe(bt.arena.B),
     ally_skill_1: s4a[0], ally_skill_2: s4a[1], ally_skill_3: s4a[2], ally_skill_4: s4a[3],
     enemy_skill_1: s4b[0], enemy_skill_2: s4b[1], enemy_skill_3: s4b[2], enemy_skill_4: s4b[3],
-    battle_data: JSON.stringify({ ally_tag: bt.tag.A, enemy_tag: bt.tag.B, ally_max_hp: bt.hp_max, enemy_max_hp: bt.hp_max, rounds: bt.recs, winner: verdict.result === 'A' ? bt.tag.A : verdict.result === 'B' ? bt.tag.B : 'hòa' }),
+    battle_data: JSON.stringify({ ally_tag: bt.tag.A, enemy_tag: bt.tag.B, ally_max_hp: bt.hp_cap.A, enemy_max_hp: bt.hp_cap.B, rounds: bt.recs, winner: verdict.result === 'A' ? bt.tag.A : verdict.result === 'B' ? bt.tag.B : 'hòa' }),
     _rounds: bt.round,
   };
   return { embed, aiContext, winnerId: verdict.result === 'A' ? userId : verdict.result === 'B' ? targetId : null, stake: real, result: verdict.result, battleId: bt.id };

@@ -1,6 +1,6 @@
 {
   "name": "thien-tong-bot",
-  "version": "21.6.3",
+  "version": "22.0.0",
   "description": "Bot Discord Tu Tiên — Node.js + discord.js + SQLite (file data/tutien.db)",
   "main": "index.js",
   "scripts": {

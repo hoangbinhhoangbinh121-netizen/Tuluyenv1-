@@ -7,6 +7,7 @@ const D = require('../db');
 const { E } = require('./emoji');
 const { getSectName } = require('./sectBase');
 const BAL = require('./balance');
+const KN = require('./combatKernel');
 const { now, int, random, randUniform, fmtNum } = require('../util');
 
 const NODES = {
@@ -121,7 +122,19 @@ function doAttack(warId, attackerId, targetId, opts = {}) {
   const atkRow = Cu.getCultivator(attackerId); const defRow = Cu.getCultivator(target.user_id);
   const admin = !!opts.admin;
   const FXw = require('./fx17'); const fxA = atkRow ? FXw.get(atkRow) : FXw.ZERO; const fxD = defRow ? FXw.get(defRow) : FXw.ZERO; const sectD = defRow ? FXw.sectFx(defRow) : FXw.ZERO;   // v17: trang bị / đan / trận pháp / Hộ Tông Đại Trận
-  if (!admin && random() < DODGE_CHANCE + fxD.dodge) return `🌀 <@${target.user_id}> đã né tránh đòn tấn công của <@${attackerId}> tại **${NODES[nodeKey].name}**!`;
+  // ---- v22.0 Combat Kernel (kernel_tongchien = kernel): hiệu ứng theo đòn + kỹ năng tộc tự phát. Mặc định legacy = không chạm gì.
+  let KL = null; let tL = null; const kLines = []; let kDot = 0;
+  if (!admin && KN.on('tongchien') && atkRow && defRow) {
+    const tMax = Math.max(1, target.max_hp || Cu.effectiveMaxHp(defRow));
+    KL = KN.memGet(`tc:${warId}:${attackerId}`, () => KN.open('tongchien', atkRow, { name: `<@${target.user_id}>`, unit: tMax / 100, ctrlImmune: true }));
+    if (KL.tid !== String(target.user_id)) { KN.resetFoe(KL, { name: `<@${target.user_id}>`, unit: tMax / 100, ctrlImmune: true }); KL.tid = String(target.user_id); }
+    tL = KN.memPeek(`tc:${warId}:${target.user_id}`);
+    const aMax = Math.max(1, part.max_hp || Cu.effectiveMaxHp(atkRow)); const bk = KN.begin(KL, aMax); kLines.push(...bk.lines); kDot = bk.dotB;
+    const rc = KN.race(KL, part.hp ? part.hp : aMax, aMax);
+    if (rc) { kLines.push(...rc.lines); if (rc.kind === 'self' && rc.heal) D.run('UPDATE sect_war_participants SET hp = ? WHERE war_id = ? AND user_id = ?', Math.max(1, Math.min(aMax, (part.hp ? part.hp : aMax) + rc.heal)), warId, attackerId); else if (rc.kind === 'attack') KL.atkMult = rc.mult; }
+  }
+  const fin = (txt) => { if (KL) KN.end(KL); return kLines.length ? `${txt}\n${kLines.slice(0, 3).join('\n')}` : txt; };
+  if (!admin && random() < DODGE_CHANCE + fxD.dodge + (tL ? KN.dodgeChance(tL) : 0)) return fin(`🌀 <@${target.user_id}> đã né tránh đòn tấn công của <@${attackerId}> tại **${NODES[nodeKey].name}**!`);
   const isCrit = !admin && random() < CRIT_CHANCE + fxA.crit;
   const maxHp = target.max_hp || Math.max(1, defRow ? Cu.effectiveMaxHp(defRow) : 1);
   // v12.3: cùng mô hình % sinh mệnh với PvP (chênh cảnh giới/chỉ số quyết định có kiểm soát, không còn atk - def tuyệt đối)
@@ -132,6 +145,7 @@ function doAttack(warId, attackerId, targetId, opts = {}) {
     damage = int(maxHp * frac * randUniform(0.6, 1.4));
     if (isCrit) damage = int(damage * CRIT_MULT);
     damage = Math.max(1, int(damage * (1 - Math.min(0.5, fxD.dr + sectD.sectDr)) * (1 + Math.min(0.1, fxA.pierce))));
+    if (KL) { damage = Math.max(1, int(damage * KN.outMult(KL) * (KL.atkMult || 1) * (tL ? KN.takeMult(tL) : 1))); kLines.push(...KN.after(KL, { damage, is_crit: isCrit })); KL.atkMult = 1; damage += kDot; }
     try { const G = require('./gear17'); G.wear(attackerId, 'war'); G.wear(target.user_id, 'war'); } catch (_) { /* độ bền không được làm hỏng đòn đánh */ }
   }
   const hp = (target.hp ? target.hp : maxHp) - damage;
@@ -144,10 +158,10 @@ function doAttack(warId, attackerId, targetId, opts = {}) {
     });
     pushWarLog(warId, admin ? `👑 <@${attackerId}> thiên phạt hạ gục <@${target.user_id}> tại ${NODES[nodeKey].name}` : `☠️ <@${attackerId}> hạ gục <@${target.user_id}> tại ${NODES[nodeKey].name}`);
     if (admin) return `👑 **ADMIN** <@${attackerId}> giáng thiên phạt lên <@${target.user_id}> tại **${NODES[nodeKey].name}**: **-${String(ADMIN_DAMAGE)} HP** → ☠️ **HẠ GỤC**! (+${KILL_POINTS} điểm cho tông môn). Đối phương trọng thương **${REVIVE_SECONDS}s**.`;
-    return `☠️ <@${attackerId}> đã **HẠ GỤC** <@${target.user_id}> tại **${NODES[nodeKey].name}**!${critTxt} (-${damage} HP, +${KILL_POINTS} điểm cho tông môn). Đối phương trọng thương **${REVIVE_SECONDS}s**.`;
+    return fin(`☠️ <@${attackerId}> đã **HẠ GỤC** <@${target.user_id}> tại **${NODES[nodeKey].name}**!${critTxt} (-${damage} HP, +${KILL_POINTS} điểm cho tông môn). Đối phương trọng thương **${REVIVE_SECONDS}s**.`);
   }
   D.run('UPDATE sect_war_participants SET hp = ?, assists = assists + 1 WHERE war_id = ? AND user_id = ?', hp, warId, target.user_id);
-  return `⚔️ <@${attackerId}> gây **${damage}** sát thương lên <@${target.user_id}> tại **${NODES[nodeKey].name}**.${critTxt} (HP còn lại: ${Math.max(0, hp)}/${maxHp})`;
+  return fin(`⚔️ <@${attackerId}> gây **${damage}** sát thương lên <@${target.user_id}> tại **${NODES[nodeKey].name}**.${critTxt} (HP còn lại: ${Math.max(0, hp)}/${maxHp})`);
 }
 
 // ---- vòng lặp nền ----
