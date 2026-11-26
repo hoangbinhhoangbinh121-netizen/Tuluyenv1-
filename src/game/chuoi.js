@@ -117,7 +117,7 @@ function listOf(userId, t = now()) {
 /** Bảng xếp hạng chuỗi đang sống dài nhất toàn bot. */
 function leaderboard(limit = 10, t = now()) {
   const today = dayOf(t);
-  return D.all('SELECT * FROM chuoi_pairs WHERE streak > 0 AND last_done_day >= ? ORDER BY streak DESC, best DESC, total_days DESC LIMIT ?', today - 1, limit)
+  return require('./lbHide').filter(D.all('SELECT * FROM chuoi_pairs WHERE streak > 0 AND last_done_day >= ? ORDER BY streak DESC, best DESC, total_days DESC LIMIT ?', today - 1, limit + 200), (p) => [p.user_lo, p.user_hi]).slice(0, limit)   // v22.2: cặp có người bị ẩn thì ẩn cả cặp
     .map((p) => ({ a: p.user_lo, b: p.user_hi, streak: p.streak, best: p.best, total: p.total_days }));
 }
 

@@ -15,6 +15,7 @@ const CP = require('./congphap');
 const T = require('./talent');
 const TO = require('./talentOps');
 const KN = require('./combatKernel');
+const LG = require('./ledger');
 const D = require('../db');
 const { getSectExpBuffMult } = require('./sectBase');
 const { now, int, random, randUniform, randInt, clamp } = require('../util');
@@ -67,7 +68,7 @@ const totals = (bossId) => D.get('SELECT COALESCE(SUM(damage),0) AS dmg, COUNT(*
 const myStat = (bossId, userId) => D.get('SELECT damage, hits, last_hit FROM wb7_damage WHERE boss_id = ? AND user_id = ?', bossId, String(userId));
 
 /**
- * Một hành động của người chơi. action: 'atk' | 'skill' | 'rest'
+ * Một hành động của người chơi. action: 'atk' | 'skill' | 'rest' | 'race' (v22.1: kỹ năng tộc — cần kernel_boss=kernel)
  * Trả { ok, error?, cooldown?, ... } — UI dựng Embed từ đây.
  */
 function attack(guildId, userId, action = 'atk') {
@@ -104,6 +105,9 @@ function attack(guildId, userId, action = 'atk') {
     }
 
     if (curHp < maxHp * MIN_HP_PCT_TO_FIGHT) return { ok: false, code: 'E009', error: `Sinh Mệnh quá thấp (${int(curHp)}/${maxHp}) — hãy **Điều Tức** hoặc chờ hồi phục trước khi giao chiến.`, boss };
+    const isRace = action === 'race';
+    if (isRace && !KN.on('boss')) return { ok: false, code: 'E009', error: 'Kỹ năng chủng tộc chưa được bật ở Boss Thế Giới (Combat Kernel đang tắt).', boss };
+    if (isRace) { const L1 = KN.memGet(`boss:${boss.boss_id}:${userId}`, () => KN.open('boss', row, { name: boss.name, ctrlImmune: true })); const why = KN.raceCheck(L1); if (why) return { ok: false, code: 'E009', error: why, boss }; }
     let mp = mp0; let crit = false; let mult = 1;
     if (action === 'skill') {
       if (mp < SKILL_COST) return { ok: false, code: 'E009', error: `Không đủ Linh Lực để thi triển Thần Thông (cần ${SKILL_COST}%, hiện có ${mp}%).`, boss };
@@ -118,9 +122,10 @@ function attack(guildId, userId, action = 'atk') {
       const bk = KN.begin(L, maxHp); kernelLines.push(...bk.lines); kDot = bk.dotB; curHp = Math.max(1, curHp - bk.dotA);
       if (bk.stunned) dmg = 0;
       else {
-        const rc = KN.race(L, curHp, maxHp);
-        if (rc) { kernelLines.push(...rc.lines); if (rc.kind === 'self') curHp = Math.max(1, Math.min(maxHp, curHp + rc.heal)); else dmg = Math.max(1, int(dmg * rc.mult)); }
-        dmg = Math.max(1, int(dmg * KN.outMult(L)));
+        const rc = KN.race(L, curHp, maxHp, { request: isRace });
+        let selfCast = false;
+        if (rc) { kernelLines.push(...rc.lines); if (rc.kind === 'self') { selfCast = true; curHp = Math.max(1, Math.min(maxHp, curHp + rc.heal)); } else dmg = Math.max(1, int(dmg * rc.mult)); }
+        dmg = (selfCast && isRace) ? 0 : Math.max(1, int(dmg * KN.outMult(L)));   // kỹ năng tự thân thay cho đòn đánh của lượt này
         kernelLines.push(...KN.after(L, { damage: dmg, is_crit: crit }));
       }
     }
@@ -181,6 +186,7 @@ function finish(bossId, reason, killerId = null) {
       const thach = int(required * 0.2 * tierMult * weight);
       if (idx === 0 && reason === 'killed') tuVi = int(tuVi * 1.1); // MVP sát thương cao nhất
       Cu.updateCultivator(c.user_id, { tu_vi: crow.tu_vi + tuVi, linh_thach: crow.linh_thach + thach });
+      LG.noteOnce(c.user_id, thach, { reason: reason === 'killed' ? 'thưởng Boss' : 'thưởng Boss (thoát)', ref: `boss ${bossId}`, key: `boss:${bossId}:${c.user_id}` });   // v22.1
       out.contributors.push({ user_id: c.user_id, damage: c.damage, hits: c.hits, share, tuVi, linhThach: thach, rank: idx + 1 });
       // v13.6: Thiên Bảo / Truyền Thừa rơi cho người có đóng góp từ 2% sát thương trở lên khi Boss bị hạ
       if (reason === 'killed' && share >= 0.02) {

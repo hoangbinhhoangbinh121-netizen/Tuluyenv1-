@@ -115,7 +115,7 @@ function panelPayload(i, war, userId, note) {
   if (log.length) lines.push(`📜 **Nhật ký:**\n${log.join('\n')}`);
   if (note) lines.push(note);
   if (war.status === 'active') lines.push(`⏳ Còn ${W.fmtTimeLeft(war.ends_at - now())}`);
-  const rows = [rowOf(btn(`sw|pk|${warId}`, 'Đánh Tiếp', E.kiem, ButtonStyle.Danger), btn(`sw|pr|${warId}`, 'Làm Mới', E.lammoi, ButtonStyle.Primary), btn(`sw|pl|${warId}`, 'Rời Cứ Điểm', E.roicudiem))];
+  const rows = [rowOf(btn(`sw|pk|${warId}`, 'Đánh Tiếp', E.kiem, ButtonStyle.Danger), btn(`sw|pq|${warId}`, 'Kỹ Năng Tộc', '🧬', ButtonStyle.Secondary), btn(`sw|pr|${warId}`, 'Làm Mới', E.lammoi, ButtonStyle.Primary), btn(`sw|pl|${warId}`, 'Rời Cứ Điểm', E.roicudiem))];
   rows.push(rowOf(...W.NODE_ORDER.map((key) => btn(`sw|pv|${warId}|${key}`, W.NODES[key].name, W.NODES[key].emoji, key === here ? ButtonStyle.Success : ButtonStyle.Secondary))));
   if (enemies.length) {
     rows.push(rowOf(new StringSelectMenuBuilder().setCustomId(`sw|ps|${warId}`).setPlaceholder('🎯 Chọn mục tiêu cụ thể...')
@@ -147,14 +147,14 @@ function doMove(i, war, row, nodeKey) {
   return null;
 }
 /** Đánh: target = null → tự chọn địch yếu máu nhất. Trả ghi chú. */
-function doFight(i, war, targetId) {
+function doFight(i, war, targetId, race = false) {
   const remain = W.checkActionCooldown(i.user.id);
   if (remain > 0) return `⏳ Thao tác quá nhanh, chờ ${remain.toFixed(1)}s.`;
   const r = W.getAttackableEnemies(war.war_id, i.user.id);
   if (r.error) return r.error;
   const tgt = targetId ? r.enemies.find((x) => String(x.user_id) === String(targetId)) : W.pickAutoTarget(r.enemies);
   if (!tgt) return '❌ Mục tiêu không còn ở cứ điểm này nữa (đã di chuyển/bị hạ) — hãy chọn lại.';
-  const msg = W.doAttack(war.war_id, i.user.id, tgt.user_id, { admin: isGuildAdmin(i) });
+  const msg = W.doAttack(war.war_id, i.user.id, tgt.user_id, { admin: isGuildAdmin(i), race });
   W.pushUserLog(war.war_id, i.user.id, msg.replace(/\*\*/g, '').slice(0, 220));
   return null;
 }
@@ -216,6 +216,7 @@ registerStatic('sw', async (i, parts) => {
   if (c.err) return i.update({ content: c.err, components: [], embeds: [] });
   let note = null;
   if (action === 'pk') note = doFight(i, c.war, null);
+  else if (action === 'pq') note = doFight(i, c.war, null, true);
   else if (action === 'ps') note = doFight(i, c.war, (i.values || [])[0]);
   else if (action === 'pv') note = doMove(i, c.war, c.row, arg);
   else if (action === 'pl') note = doMove(i, c.war, c.row, null);

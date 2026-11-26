@@ -45,6 +45,7 @@ const RESP = {
   bao: { name: 'Pháp Bảo Hộ Thể', icon: '🔰', desc: 'Kích hoạt trang bị/Đế Binh đang mang: dựng khiên 8% sinh mệnh (×1,5 nếu mang Hỗn Độn Chung / Vĩnh Hằng Thần Tháp). Hồi chiêu 4 đạo; hao 2 độ bền món trang bị.' },
   cp: { name: 'Công Pháp Chống Lôi', icon: '📖', desc: 'Vận công pháp đang trang bị: giảm 20% sát thương (+4% mỗi công pháp, tối đa 32%). Hồi chiêu 3 đạo.' },
   sk: { name: 'Kỹ Năng Phá Lôi', icon: '✨', desc: 'Tốn 30% Linh Lực: đánh tan 30% uy lực lôi (Vạn Cổ Đế Kiếm: 40%). Hồi chiêu 2 đạo.' },
+  race: { name: 'Kỹ Năng Tộc', icon: '🧬', desc: 'v22.1: thi triển kỹ năng chủng tộc loại tự thân (hồi / hộ thể / né…) rồi nhận lôi. Cần bật Combat Kernel Chứng Đạo; hồi chiêu theo đạo lôi.' },
   dok: { name: 'Dốc Toàn Lực', icon: '🔥', desc: 'Dốc TOÀN BỘ Linh Lực (cần ≥ 30%): giảm tới 60% sát thương theo lượng Linh Lực. Linh Lực về 0.' },
 };
 const CD = { dan: DAN_CD, bao: 4, cp: 3, sk: 2 };
@@ -107,6 +108,10 @@ function canResp(k, a, row) {
   }
   if (a === 'cp') { if (k.cd.cp > 0) return `Công Pháp còn hồi chiêu ${k.cd.cp} đạo lôi.`; if (!k.eq.length) return 'Bạn chưa trang bị Công Pháp nào.'; }
   if (a === 'sk') { if (k.cd.sk > 0) return `Kỹ năng còn hồi chiêu ${k.cd.sk} đạo lôi.`; if (k.ll < 30) return `Không đủ Linh Lực (cần 30%, còn ${Math.floor(k.ll)}%).`; }
+  if (a === 'race') {
+    if (!KN.on('chungdao')) return 'Kỹ năng chủng tộc chưa bật ở Chứng Đạo (Combat Kernel đang tắt).';
+    return KN.raceCheck(KN.open('chungdao', row, { name: 'Thiên Lôi', ctrlImmune: true, me: 'Bạn' }, k.kx || null), { selfOnly: true });
+  }
   if (a === 'dok' && k.ll < 30) return `Cần ít nhất 30% Linh Lực để dốc toàn lực (còn ${Math.floor(k.ll)}%).`;
   return null;
 }
@@ -132,7 +137,7 @@ function strike(k, a, KL = null) {
   }
   if (KL) {                                                                               // v22.0 (kernel_chungdao = kernel): kỹ năng tộc tự thân tự phát trước khi lôi giáng
     KN.begin(KL, k.maxHp);
-    const rc = KN.race(KL, k.hp, k.maxHp, { selfOnly: true });
+    const rc = KN.race(KL, k.hp, k.maxHp, { selfOnly: true, request: a === 'race' });
     if (rc) { lines.push(...rc.lines.map((x) => String(x))); k.hp = rc.heal >= 0 ? Math.min(k.maxHp, k.hp + rc.heal) : Math.max(1, k.hp + rc.heal); }
   }
   const base = L.pct * LOI_K * k.maxHp * randUniform(0.95, 1.05);
@@ -236,7 +241,7 @@ const recentWins = (n = 10) => D.all("SELECT h.ts, h.user_id FROM de19_history h
 // ================================================================ Sau Chứng Đạo: Đế Đạo · Đế Binh · Đế Hiệu
 const needPassed = (uid) => (passed(uid) ? null : 'Bạn chưa **Chứng Đạo Thành Đế**.');
 const costOk = (uid, c) => { if (Number(Cu.getCultivator(uid).linh_thach) < c.lt) return `Thiếu Linh Thạch (cần ${fmt(c.lt)}).`; const m = Inv.missing(uid, c.items); return m.length ? `Thiếu: ${m.map((x) => `${itemName(x.id)} ${x.have}/${x.need}`).join(' · ')}` : null; };
-const pay = (uid, c, why) => { if (!Inv.takeMany(uid, c.items, why)) return false; Cu.updateCultivator(uid, { linh_thach: new Cu.Delta(-c.lt) }, { linh_thach: c.lt }); return true; };
+const pay = (uid, c, why) => { if (!Inv.takeMany(uid, c.items, why)) return false; Cu.updateCultivator(uid, { linh_thach: new Cu.Delta(-c.lt) }, { linh_thach: c.lt }); require('./ledger').noteOnce(uid, -c.lt, { reason: 'Chứng Đạo/Đế', ref: String(why).slice(0, 100), key: require('./ledger').nonce('cdpay') }); return true; };
 const costText = (c) => `${fmt(c.lt)} Linh Thạch · ${Object.entries(c.items).map(([id, n]) => `${n} ${itemName(id)}`).join(' · ')}`;
 const awakeOf = (lv, cur) => Math.min(FX.DAO_AWAKEN_LEVELS.filter((x) => lv >= x).length, cur + 1);
 

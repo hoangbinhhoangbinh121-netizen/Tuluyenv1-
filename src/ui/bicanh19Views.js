@@ -89,7 +89,7 @@ function runView(runId, note = '') {
     const c = (a, label, emoji, style = GRAY) => btn(`b19|r|${runId}|${a}`, label, emoji, style);
     rows.push(rowOf(c('atk', 'Đánh Thường', E9.aComp('atk', '⚔️'), PRIMARY), c('trong', 'Trọng Kích', E9.aComp('trong', '💢')), c('than', 'Thần Thông', E9.aComp('than', '✨')), c('tuyet', 'Tuyệt Kỹ', E9.aComp('tuyet', '🌠')), c('bi', 'Bí Pháp', E9.aComp('bi', '☠️'), DANGER)));
     rows.push(rowOf(c('sk', 'Kỹ Công Pháp', E9.aComp('sk', '📖')), c('guard', 'Phòng Thủ', E9.aComp('guard', '🛡️'), e && e.tele ? SUCCESS : GRAY), c('rest', 'Điều Tức', E9.aComp('rest', '🧘')), c('item', 'Dùng Vật Phẩm', E9.aComp('item', '💊')), c('auto', 'Tự Chiến', E9.aComp('auto', '🤖'))));
-    rows.push(rowOf(c('boss', 'Xem Kẻ Địch', E9.aComp('look', '👁️')), c('refresh', 'Làm mới', E9.aComp('refresh', '🔄')), c('retreat', 'Thoát bí cảnh', E9.aComp('retreat', '🏃'), DANGER)));
+    rows.push(rowOf(c('boss', 'Xem Kẻ Địch', E9.aComp('look', '👁️')), c('race', 'Kỹ Năng Tộc', E9.aComp('race', '🧬')), c('refresh', 'Làm mới', E9.aComp('refresh', '🔄')), c('retreat', 'Thoát bí cảnh', E9.aComp('retreat', '🏃'), DANGER)));
   } else if (!done && st.pendingReward) {
     rows.push(rowOf(btn(`b19|r|${runId}|next`, st.floor >= 5 ? 'Hoàn tất' : 'Sang tầng kế', E9.aComp('next', '🚪'), SUCCESS), btn(`b19|r|${runId}|retreat`, 'Rút lui (giữ thưởng)', E9.aComp('retreat', '🏃'), GRAY)));
   } else rows.push(rowOf(btn('b19|done', 'Đã kết thúc', E9.aComp('done', '🏁'), GRAY, true)));

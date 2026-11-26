@@ -123,7 +123,7 @@ function bossRewards(boss, out, reason, killerId) {
     }
   }
 }
-const hallTop = (n = 10) => D.all('SELECT * FROM ev19_hall ORDER BY wins DESC, best_damage DESC LIMIT ?', n);
+const hallTop = (n = 10) => D.all('SELECT * FROM ev19_hall WHERE 1 = 1' + require('./lbHide').sqlNot('user_id') + ' ORDER BY wins DESC, best_damage DESC LIMIT ?', n);   // v22.2: bỏ người bị ẩn
 
 // ---------------------------------------------------------------- bộ tạo ngẫu nhiên (gọi mỗi phút từ background)
 function autoCandidates(guildId, tNow = now()) {

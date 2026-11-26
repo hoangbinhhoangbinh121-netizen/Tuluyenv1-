@@ -45,9 +45,13 @@ function note(user, delta, opts = {}) {
   const row = D.get(`SELECT ${o.currency} AS b FROM cultivators WHERE user_id = ?`, String(user));
   insert(user, o.currency, delta, row ? row.b || 0 : 0, o); return true;
 }
+/** Như note() nhưng KHÔNG ném lỗi khi trùng khoá (dùng cho thưởng PvE: xử lý lặp chỉ bỏ qua dòng sổ, không làm hỏng transaction). Trả true nếu đã ghi. */
+function noteOnce(user, delta, opts = {}) {
+  try { if (opts && opts.key && exists(String(opts.key))) return false; return note(user, delta, opts) === true; } catch (_) { return false; }
+}
 const recent = (user, n = 15, currency = null) => D.all(`SELECT * FROM ledger_entries WHERE user_id = ? ${currency ? 'AND currency = ?' : ''} ORDER BY entry_id DESC LIMIT ?`, ...[String(user), ...(currency ? [currency] : []), Math.max(1, Math.min(100, n))]);
 function summary(user, currency = 'linh_thach') {
   const r = D.get('SELECT COUNT(*) AS n, COALESCE(SUM(CASE WHEN delta > 0 THEN delta END), 0) AS inn, COALESCE(SUM(CASE WHEN delta < 0 THEN -delta END), 0) AS out FROM ledger_entries WHERE user_id = ? AND currency = ?', String(user), currency);
   return { count: r.n, in: r.inn, out: r.out, net: r.inn - r.out };
 }
-module.exports = { CURRENCIES, nonce, apply, note, recent, summary, exists };
+module.exports = { CURRENCIES, nonce, apply, note, noteOnce, recent, summary, exists };

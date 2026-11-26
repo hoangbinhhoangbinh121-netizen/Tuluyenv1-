@@ -68,6 +68,7 @@ const ACT = {
   item: { name: 'Dùng Vật Phẩm', icon: '💊', unlock: 'Huyết Nguyên Đan: hồi sinh mệnh, tối đa 3 viên mỗi lần vào' },
   guard: { name: 'Phòng Thủ', icon: '🛡️' },
   rest: { name: 'Điều Tức', icon: '🧘' },
+  race: { name: 'Kỹ Năng Tộc', mult: 1.0, ll: 0, icon: '🧬', unlock: 'v22.1: cần bật Combat Kernel Bí Cảnh + có Chủng Tộc' },
 };
 // Kỹ năng chủ động đặc trưng của công pháp V19 (spec §4.2): mult / hồi chiêu / hiệu ứng
 const SIG = {
@@ -194,8 +195,10 @@ function enemyDamage(st, e, m, base, o = {}) {
   const defPct = clamp(100 * m.def / (m.atk + m.def + 1), 0, CFG.DEF_CAP) * (1 - (o.pierce || 0));
   raw *= 100 / (100 + defPct);
   const KL = kLayer(m);                                                                  // v22.0 (chỉ khi kernel_bicanh = kernel): hiệu ứng trong trận của người bị đánh
-  if (KL) raw *= KN.takeMult(KL) * KN.foeOutMult(KL);
-  if (!o.noDodge && random() < clamp(m.dodge + (KL ? KN.dodgeChance(KL) : 0), 0, 0.6)) { log(st, `💨 **${m.name}** né được đòn của ${e.name}!`); return { dmg: 0, miss: true }; }
+  const CI = KL ? KN.cpIn(KL) : null;                                                     // v22.1: hiệu ứng chiêu công pháp (hộ thể / né / suy yếu) gộp vào kernel
+  if (KL) raw *= KN.takeMult(KL) * KN.foeOutMult(KL) * (1 - clamp(CI.guard, 0, 0.6)) * (1 - clamp(CI.weak, 0, 0.6));
+  if (!o.noDodge && random() < clamp(m.dodge + (KL ? KN.dodgeChance(KL) + CI.dodge : 0), 0, 0.6)) { if (KL) KN.cpTick(KL); log(st, `💨 **${m.name}** né được đòn của ${e.name}!`); return { dmg: 0, miss: true }; }
+  if (KL) KN.cpTick(KL);
   if (m.guard > 0) { raw *= 1 - CFG.GUARD_CUT; if (o.tele) raw *= CFG.GUARD_TELE_EXTRA; }
   raw *= 1 - m.dr;
   if (e.weak) raw *= 1 - e.weak.pct;
@@ -288,6 +291,7 @@ function applyWeakPlayer(st, m, pct, turns) {
 function canAct(st, m, a) {
   const e = st.enemy; const bc = bcOf(st.bc);
   if (!ACT[a]) return 'Hành động không hợp lệ.';
+  if (a === 'race') { const K0 = CUR && CUR.m === m ? CUR.L : null; if (!K0) return 'Kỹ năng chủng tộc chưa bật ở Bí Cảnh (Combat Kernel đang tắt).'; return KN.raceCheck(K0) || (e ? null : 'Không có kẻ địch.'); }
   if (a === 'item') { if ((m.items || 0) >= CFG.ITEMS_MAX) return `Đã dùng đủ ${CFG.ITEMS_MAX} vật phẩm trong lần vào này.`; if (!(st.itemHeal > 0)) return 'Bạn không có Huyết Nguyên Đan.'; if (m.hp >= m.maxHp) return 'Sinh mệnh đang đầy.'; return null; }
   if (a === 'guard' || a === 'rest') { if (a === 'rest' && m.cd.rest > 0) return `Điều Tức còn hồi chiêu ${m.cd.rest} lượt.`; return null; }
   const A = ACT[a]; if (m.ll < (A.ll || 0)) return `Không đủ Linh Lực (cần ${A.ll}%, còn ${Math.floor(m.ll)}%).`;
@@ -300,13 +304,15 @@ function canAct(st, m, a) {
   return null;
 }
 /** Thực hiện hành động của thành viên idx. Trả { ok, error } — đã xử lý cả lượt kẻ địch, chuyển tầng, thắng/thua. */
+let LITE = null;                                                                         // v22.1: lớp nhẹ của các thành viên bị đánh trong lượt này (để ghi lại số lượt hiệu ứng cpfx)
 let CUR = null;                                                                          // v22.0: ngữ cảnh kernel của lượt đang chạy (đồng bộ, 1 lượt tại 1 thời điểm)
 const BOSSLIKE = (e) => B.BOSS_KINDS.has(e.kind);
 /** Lớp kernel của 1 thành viên (đang hành động → bản đầy đủ; người khác → bản nhẹ từ m.kx); null nếu tắt / chưa có. */
 function kLayer(m) {
   if (!KN.on('bicanh')) return null;
   if (CUR && CUR.m === m) return CUR.L;
-  return m.kx ? KN.open('bicanh', { user_id: m.uid, __lite: true }, {}, m.kx) : null;
+  if (LITE && LITE.has(m)) return LITE.get(m);
+  if (!m.kx) return null; const Lx = KN.open('bicanh', { user_id: m.uid, __lite: true }, {}, m.kx); if (LITE) LITE.set(m, Lx); return Lx;
 }
 function step(st, uid, a) {
   if (!KN.on('bicanh') || st.over) return stepCore(st, uid, a);
@@ -315,8 +321,8 @@ function step(st, uid, a) {
   const e = st.enemy; const fk = `${st.floor}:${st.wave}:${e.name}`;
   const L = KN.open('bicanh', row, { name: e.name, unit: KN.foeUnit(m.atk), ctrlImmune: BOSSLIKE(e), me: `**${m.name}**` }, m.kx || null);
   if (m.kx && m.kx.fk !== fk) KN.resetFoe(L, { name: e.name, unit: KN.foeUnit(m.atk), ctrlImmune: BOSSLIKE(e) });
-  const r0 = L.round; CUR = { L, m };
-  let r; try { r = stepCore(st, uid, a); } finally { CUR = null; }
+  const r0 = L.round; CUR = { L, m }; LITE = new Map();
+  let r; try { r = stepCore(st, uid, a); } finally { for (const [m2, L2] of LITE) if (m2 !== m) m2.kx = { ...KN.toJSON(L2), fk: (m2.kx || {}).fk }; CUR = null; LITE = null; }
   if (L.round !== r0) KN.end(L);
   m.kx = { ...KN.toJSON(L), fk };
   return r;
@@ -350,22 +356,27 @@ function stepCore(st, uid, a) {
     const A = ACT[a]; let mult = A.mult; let sig = null; let opts = {};
     m.ll -= A.ll || 0;
     if (a === 'sk') { sig = sigOf(m); mult = sig.mult; m.cd.sk = sig.cd; }
+    if (KL && a === 'sk' && sig) { const cpr = KN.cp(KL, String(sig.name).split(' · ')[0], m.hp, m.maxHp); for (const l of cpr.lines) log(st, l); if (cpr.heal > 0) heal(m, cpr.heal); }   // v22.1
     if (a === 'tuyet') { m.cd.tuyet = A.cd; opts.heavy = true; }
     if (a === 'bi') { m.cd.bi = A.cd; opts.heavy = true; }
     let kRace = null;
     if (KL) {                                                                            // v22.0: kỹ năng tộc tự phát + chuỗi nhân hiệu ứng
-      kRace = KN.race(KL, m.hp, m.maxHp);
+      kRace = KN.race(KL, m.hp, m.maxHp, { request: a === 'race' });
       if (kRace) { for (const l of kRace.lines) log(st, l); if (kRace.kind === 'self') { if (kRace.heal >= 0) heal(m, kRace.heal); else m.hp = Math.max(1, m.hp + kRace.heal); } else mult *= kRace.mult; }
     }
-    const r = playerDamage(st, m, e, mult, opts);
-    if (KL) { r.dmg = Math.max(1, Math.floor(r.dmg * KN.outMult(KL))); for (const l of KN.after(KL, { damage: r.dmg, is_crit: r.crit })) log(st, l); }
-    hurtEnemy(e, r.dmg); m.dealt += r.dmg;
-    log(st, `${A.icon} **${m.name}** dùng **${sig ? sig.name : A.name}**: −${fmt(r.dmg)} sinh lực ${e.name}${r.crit ? ' 💥 chí mạng' : ''}`);
-    for (const l of r.lines) log(st, l);
-    if (m.ls > 0) { const h = heal(m, Math.min(r.dmg * m.ls, m.maxHp * 0.10)); if (h > 0) log(st, `🩸 Hút máu: **${m.name}** hồi ${fmt(h)}.`); }
-    if (sig && sig.weaken && random() < sig.chance) { e.weak = { pct: sig.weaken[0], turns: sig.weaken[1] }; log(st, `⬇️ **${sig.name}** làm ${e.name} suy yếu ${Math.round(sig.weaken[0] * 100)}% trong ${sig.weaken[1]} lượt!`); }
-    if (A.recoil) { const rc = Math.min(m.hp - 1, Math.floor(m.maxHp * A.recoil)); m.hp -= rc; log(st, `☠️ Phản phệ: **${m.name}** mất ${fmt(rc)} sinh mệnh.`); }
-    checkPhase(st, e);
+    const selfRace = a === 'race' && kRace && kRace.kind === 'self';          // v22.1: kỹ năng tự thân thay cho đòn đánh
+    if (selfRace) log(st, `🧬 **${m.name}** dùng **${kRace.name}**.`);
+    else {
+      const r = playerDamage(st, m, e, mult, opts);
+      if (KL) { r.dmg = Math.max(1, Math.floor(r.dmg * KN.outMult(KL))); for (const l of KN.after(KL, { damage: r.dmg, is_crit: r.crit })) log(st, l); }
+      hurtEnemy(e, r.dmg); m.dealt += r.dmg;
+      log(st, `${A.icon} **${m.name}** dùng **${sig ? sig.name : A.name}**: −${fmt(r.dmg)} sinh lực ${e.name}${r.crit ? ' 💥 chí mạng' : ''}`);
+      for (const l of r.lines) log(st, l);
+      if (m.ls > 0) { const h = heal(m, Math.min(r.dmg * m.ls, m.maxHp * 0.10)); if (h > 0) log(st, `🩸 Hút máu: **${m.name}** hồi ${fmt(h)}.`); }
+      if (sig && sig.weaken && random() < sig.chance) { e.weak = { pct: sig.weaken[0], turns: sig.weaken[1] }; log(st, `⬇️ **${sig.name}** làm ${e.name} suy yếu ${Math.round(sig.weaken[0] * 100)}% trong ${sig.weaken[1]} lượt!`); }
+      if (A.recoil) { const rc = Math.min(m.hp - 1, Math.floor(m.maxHp * A.recoil)); m.hp -= rc; log(st, `☠️ Phản phệ: **${m.name}** mất ${fmt(rc)} sinh mệnh.`); }
+      checkPhase(st, e);
+    }
   }
   m.t += 1;
   if (m.pendingHeal) { heal(m, m.maxHp * m.pendingHeal); m.pendingHeal = 0; }
@@ -703,6 +714,7 @@ function rollMember(st, uid, mult, floor, share) {
     if (idx === 8 && (isFirst || random() < B.DE_COT_BOSS8)) addItem('tdc19_bat_hu_de_cot', 1);   // v19.10: đường gom Đế Cốt cho người chưa Chứng Đạo
   }
   Cu.updateCultivator(uid, up);
+  { const LG = require('./ledger'); for (const [cur, d] of [['linh_thach', up.linh_thach], ['linh_tinh', up.linh_tinh]]) if (d && d.n) LG.noteOnce(uid, d.n, { currency: cur, reason: 'thưởng Bí Cảnh', ref: `bc${idx} tầng ${floor}`, key: LG.nonce('bc19') }); }   // v22.1
   for (const [id, n] of Object.entries(items)) { const g = Inv.add(uid, id, n, { why: `bicanh19:${idx}:${floor}` }); if (g) lines.push(`${I19ItemEmoji(id)} **${g}** ${IT.BY_ID[id].name}`); }
   return { lines, tu: tu * fm, lt: lt * fm };
 }

@@ -12,7 +12,8 @@ const mk = (id, race = null, extra = '') => { const u = String(id); Cu.createCul
 const setAll = (v) => { for (const s of KN.SYSTEMS) ST.set(`kernel_${s}`, v); };
 
 // ---- 1) công tắc: mặc định legacy
-ok(KN.SYSTEMS.length === 4 && KN.SYSTEMS.every((s) => KN.mode(s) === 'legacy' && !KN.on(s)), 'mặc định cả 4 hệ thống = legacy');
+ok(KN.SYSTEMS.length === 4 && KN.SYSTEMS.every((s) => KN.mode(s) === KN.DEFAULT_MODE[s]) && KN.on('boss') && KN.on('chungdao') && !KN.on('bicanh') && !KN.on('tongchien'), 'v22.1: mặc định boss+chungdao = kernel, bicanh+tongchien = legacy');
+ST.set('kernel_race_auto', 'on');   // test v22.0 kiểm tra kiểu tự phát; nút bấm (v22.1) có test riêng ở test_kernel221.js
 ok(KN.mode('khong_co') === 'legacy', 'hệ thống lạ → legacy');
 ST.set('kernel_boss', 'kernel'); ok(KN.on('boss') && !KN.on('bicanh'), 'bật riêng boss'); ST.set('kernel_all', 'off'); ok(!KN.on('boss'), 'kernel_all=off cắt khẩn cấp'); ST.set('kernel_all', 'on'); ok(KN.on('boss'), 'bật lại'); setAll('legacy');
 

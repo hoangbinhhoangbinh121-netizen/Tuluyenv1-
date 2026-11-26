@@ -8,7 +8,8 @@
  *   • Kỹ năng chủ động chủng tộc (raceSkill21) — PvE tự phát khi hồi chiêu xong (không thêm nút)
  *   • Một chuỗi nhân thống nhất: outMult / takeMult / foeOutMult / dodge (lấy từ EffectEngine, qua StatEngine)
  *
- * Công tắc: bot_settings `kernel_<hệ thống>` ∈ legacy | kernel (MẶC ĐỊNH legacy ⇒ hành vi y như V21.7).  `kernel_all = off` tắt tất cả (cắt khẩn cấp).
+ * Công tắc: bot_settings `kernel_<hệ thống>` ∈ legacy | kernel. v22.1: mặc định BẬT cho boss + chungdao, TẮT (legacy) cho bicanh + tongchien.  `kernel_all = off` tắt tất cả (cắt khẩn cấp).
+ * Kỹ năng tộc: v22.1 do người chơi BẤM NÚT (request); `kernel_race_auto = on` mới tự phát khi hồi xong.
  * Hệ thống: boss · bicanh · chungdao · tongchien.
  *
  * Quy ước đơn vị: số liệu hiệu ứng/kỹ năng tộc tính theo "điểm thanh 100" (1 điểm = 1% sinh lực tối đa của chính bên đó).
@@ -26,10 +27,11 @@ const SYSTEMS = Object.freeze(['boss', 'bicanh', 'chungdao', 'tongchien']);
 const SYS_NAME = Object.freeze({ boss: 'Boss Thế Giới', bicanh: 'Bí Cảnh', chungdao: 'Chứng Đạo', tongchien: 'Tông Chiến' });
 
 /** 'kernel' | 'legacy' cho 1 hệ thống. */
+const DEFAULT_MODE = Object.freeze({ boss: 'kernel', chungdao: 'kernel', bicanh: 'legacy', tongchien: 'legacy' });   // v22.1
 function mode(sys) {
   if (!SYSTEMS.includes(sys)) return 'legacy';
   if (String(ST.get('kernel_all', 'on')) === 'off') return 'legacy';
-  return String(ST.get(`kernel_${sys}`, 'legacy')) === 'kernel' ? 'kernel' : 'legacy';
+  return String(ST.get(`kernel_${sys}`, DEFAULT_MODE[sys])) === 'kernel' ? 'kernel' : 'legacy';
 }
 const on = (sys) => mode(sys) === 'kernel';
 /** Hệ số nhân hồi chiêu kỹ năng tộc trong PvE: 1 trận PvP ≈ 8 hiệp, còn 1 lượt Bí Cảnh ≈ hàng trăm thao tác → hồi chiêu tính theo THAO TÁC phải dài hơn (bench: ×1 làm Bí Cảnh thắng 7%→100%). Ghi đè: kernel_cd_<hệ thống>. */
@@ -57,13 +59,13 @@ function open(sys, row, foe = {}, saved = null) {
   return {
     sys, uid: String(row.user_id), race: row.__lite ? null : RS.forRow(row), foe: { name: foe.name || 'Kẻ địch', unit: Math.max(0, Number(foe.unit) || 0), ctrlImmune: foe.ctrlImmune !== false },
     name: foe.me || `<@${row.user_id}>`,
-    fx: sv && sv.fx ? FXE.fromJSON(sv.fx) : FXE.createStore(), cd: { race: sv && sv.cd ? Math.max(0, Number(sv.cd.race) || 0) : 0 }, round: sv ? Number(sv.round) || 0 : 0,
+    fx: sv && sv.fx ? FXE.fromJSON(sv.fx) : FXE.createStore(), cp: sv && sv.cp && sv.cp.A && sv.cp.B ? { A: { ...sv.cp.A }, B: { ...sv.cp.B } } : { A: {}, B: {} }, cd: { race: sv && sv.cd ? Math.max(0, Number(sv.cd.race) || 0) : 0 }, round: sv ? Number(sv.round) || 0 : 0,
   };
 }
-const toJSON = (L) => ({ v: 1, fx: L.fx, cd: { race: L.cd.race }, round: L.round });
+const toJSON = (L) => ({ v: 1, fx: L.fx, cp: L.cp, cd: { race: L.cd.race }, round: L.round });
 /** Làm mới thông tin kẻ địch (đổi quái) mà giữ hiệu ứng của người chơi; hiệu ứng lên kẻ địch cũ bị xoá. */
 function resetFoe(L, foe = {}) {
-  L.fx.fx.B = []; L.fx.stunned.B = false; L.fx.immune.B = {};
+  L.fx.fx.B = []; L.fx.stunned.B = false; L.fx.immune.B = {}; L.cp.B = {};
   L.foe = { name: foe.name || L.foe.name, unit: Math.max(0, Number(foe.unit) || 0), ctrlImmune: foe.ctrlImmune !== false };
 }
 const unitA = (maxHp) => Math.max(1e-9, Number(maxHp) / 100);
@@ -100,9 +102,18 @@ function pseudo(L, curHp, maxHp) {
  *  • kind 'self'  : { kind, lines, heal (+hồi / −hiến tế, tuyệt đối) } — người chơi VẪN ra đòn thường nếu `free`.
  *  • kind 'attack': { kind, lines, mult, critAdd } — adapter nhân `mult` vào đòn và gọi after() sau đòn.
  */
-function race(L, curHp, maxHp, { selfOnly = false } = {}) {
-  if (!L.race || L.cd.race > 0 || String(ST.get('kernel_race_auto', 'on')) === 'off') return null;
-  if (selfOnly && L.race.def.kind !== 'self') return null;                  // vd Chứng Đạo: không có đòn tấn công → chỉ dùng kỹ năng tự thân
+/** Kiểm tra TRƯỚC khi bấm nút kỹ năng tộc (không đổi trạng thái): trả null nếu dùng được, ngược lại câu giải thích. */
+function raceCheck(L, { selfOnly = false } = {}) {
+  if (!L.race) return '🧬 Bạn chưa có kỹ năng chủng tộc (cần chọn và thức tỉnh Chủng Tộc).';
+  if (selfOnly && L.race.def.kind !== 'self') return `🧬 **${L.race.action}** là kỹ năng tấn công — không dùng được ở đây.`;
+  if (L.cd.race > 0) return `⏳ **${L.race.action}** còn hồi chiêu **${L.cd.race}** lượt.`;
+  return null;
+}
+function race(L, curHp, maxHp, { selfOnly = false, request = false } = {}) {
+  if (!L.race) return request ? { kind: 'none', lines: ['🧬 Bạn chưa có kỹ năng chủng tộc (cần chọn và thức tỉnh Chủng Tộc).'] } : null;
+  if (!request && String(ST.get('kernel_race_auto', 'off')) !== 'on') return null;   // v22.1: mặc định do người chơi bấm nút
+  if (selfOnly && L.race.def.kind !== 'self') return request ? { kind: 'none', lines: [`🧬 **${L.race.action}** là kỹ năng tấn công — không dùng được ở đây.`] } : null;   // vd Chứng Đạo
+  if (L.cd.race > 0) return request ? { kind: 'none', lines: [`⏳ **${L.race.action}** còn hồi chiêu **${L.cd.race}** lượt.`] } : null;
   const { b, pool, u } = pseudo(L, curHp, maxHp); const def = L.race.def; L.cd.race = L.race.cd * cdMult(L.sys);
   if (def.kind === 'self') {
     const before = pool.A; const lines = RS.castSelf(b, 'A', 'B'); noCtrlOnFoe(L);
@@ -117,9 +128,25 @@ function after(L, rec) {
   const b = { race: { A: L.race }, cd: { A: { race: 0 }, B: {} }, tag: { A: L.name, B: L.foe.name }, fx: L.fx };
   const lines = RS.after(b, 'A', 'B', { dodge: false, damage: rec.damage, is_crit: !!rec.is_crit }); noCtrlOnFoe(L); return lines;
 }
+// ---- công pháp mới (cpfx) dùng chung với PvP: hiệu ứng của CHIÊU (hộ thể / né / suy yếu / hồi) — chỉ áp khi tên chiêu thuộc 40 công pháp V16
+/** Dùng chiêu `skillName`; trả { lines, heal (tuyệt đối) }. Không có hiệu ứng ⇒ rỗng. */
+function cp(L, skillName, curHp, maxHp) {
+  const CPX = require('./cpfx'); const eff = CPX.skillEffect(skillName); if (!eff) return { lines: [], heal: 0 };
+  const u = unitA(maxHp); const pool = HB.attach({ A: Math.max(0, curHp) / u, B: 100 }, { A: 100, B: 100 }); const before = pool.A;
+  const lines = CPX.applySkill(eff, L.cp.A, L.cp.B, pool, 'A', L.name);
+  return { lines, heal: Math.round((pool.A - before) * u) };
+}
+/** Hệ số từ cpfx lên đòn kẻ địch đánh người chơi: { dodge, guard, weak } (chỉ đọc). */
+const cpIn = (L) => { const CPX = require('./cpfx'); const b = CPX.incomingBuffs(L.cp.A); return { dodge: b.dodge, guard: b.guard, weak: CPX.outgoingWeak(L.cp.B) }; };
+/** Trừ lượt hiệu ứng cpfx sau khi 1 đòn của kẻ địch lên người chơi đã xử lý. */
+const cpTick = (L) => { const CPX = require('./cpfx'); CPX.tickDefender(L.cp.A); CPX.tickAttacker(L.cp.B); };
+/** Nhãn nút kỹ năng tộc cho người chơi (null nếu hệ thống chưa bật kernel / không có kỹ năng / (selfOnly) không phải kỹ năng tự thân). */
+function raceBtn(sys, row, { selfOnly = false } = {}) {
+  if (!on(sys)) return null; const r = RS.forRow(row); if (!r) return null; if (selfOnly && r.def.kind !== 'self') return null; return r.action;
+}
 /** Cuối hiệp: giảm hiệu ứng + hồi chiêu. */
 function end(L) { FXE.endRound(L.fx); if (L.cd.race > 0) L.cd.race -= 1; }
 /** Mô tả hiệu ứng đang có (cho nhật ký/UI). */
 const describe = (L) => ({ me: FXE.describe(L.fx, 'A'), foe: FXE.describe(L.fx, 'B') });
 
-module.exports = { SYSTEMS, SYS_NAME, CD_MULT, cdMult, mode, on, foePct, foeUnit, open, toJSON, resetFoe, begin, mods, outMult, takeMult, foeOutMult, dodgeChance, race, after, end, describe, memGet, memPeek, memDrop };
+module.exports = { SYSTEMS, SYS_NAME, DEFAULT_MODE, CD_MULT, cdMult, mode, on, foePct, foeUnit, open, toJSON, resetFoe, begin, mods, outMult, takeMult, foeOutMult, dodgeChance, race, raceCheck, after, cp, cpIn, cpTick, raceBtn, end, describe, memGet, memPeek, memDrop };

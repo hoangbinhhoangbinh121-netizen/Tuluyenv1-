@@ -8,6 +8,7 @@ const { E } = require('./emoji');
 const { getSectName } = require('./sectBase');
 const BAL = require('./balance');
 const KN = require('./combatKernel');
+const LG = require('./ledger');
 const { now, int, random, randUniform, fmtNum } = require('../util');
 
 const NODES = {
@@ -121,6 +122,7 @@ function doAttack(warId, attackerId, targetId, opts = {}) {
   if (!target) return '❌ Mục tiêu không còn ở cứ điểm này nữa (đã di chuyển/bị hạ) — hãy chọn lại.';
   const atkRow = Cu.getCultivator(attackerId); const defRow = Cu.getCultivator(target.user_id);
   const admin = !!opts.admin;
+  if (opts.race && (admin || !KN.on('tongchien'))) return '🧬 Kỹ năng chủng tộc chưa bật ở Tông Môn Chiến (Combat Kernel đang tắt).';   // v22.1
   const FXw = require('./fx17'); const fxA = atkRow ? FXw.get(atkRow) : FXw.ZERO; const fxD = defRow ? FXw.get(defRow) : FXw.ZERO; const sectD = defRow ? FXw.sectFx(defRow) : FXw.ZERO;   // v17: trang bị / đan / trận pháp / Hộ Tông Đại Trận
   // ---- v22.0 Combat Kernel (kernel_tongchien = kernel): hiệu ứng theo đòn + kỹ năng tộc tự phát. Mặc định legacy = không chạm gì.
   let KL = null; let tL = null; const kLines = []; let kDot = 0;
@@ -129,8 +131,9 @@ function doAttack(warId, attackerId, targetId, opts = {}) {
     KL = KN.memGet(`tc:${warId}:${attackerId}`, () => KN.open('tongchien', atkRow, { name: `<@${target.user_id}>`, unit: tMax / 100, ctrlImmune: true }));
     if (KL.tid !== String(target.user_id)) { KN.resetFoe(KL, { name: `<@${target.user_id}>`, unit: tMax / 100, ctrlImmune: true }); KL.tid = String(target.user_id); }
     tL = KN.memPeek(`tc:${warId}:${target.user_id}`);
+    if (opts.race) { const why = KN.raceCheck(KL); if (why) return why; }      // v22.1: bấm nút Kỹ Năng Tộc nhưng chưa dùng được → báo, không tốn lượt
     const aMax = Math.max(1, part.max_hp || Cu.effectiveMaxHp(atkRow)); const bk = KN.begin(KL, aMax); kLines.push(...bk.lines); kDot = bk.dotB;
-    const rc = KN.race(KL, part.hp ? part.hp : aMax, aMax);
+    const rc = KN.race(KL, part.hp ? part.hp : aMax, aMax, { request: !!opts.race });
     if (rc) { kLines.push(...rc.lines); if (rc.kind === 'self' && rc.heal) D.run('UPDATE sect_war_participants SET hp = ? WHERE war_id = ? AND user_id = ?', Math.max(1, Math.min(aMax, (part.hp ? part.hp : aMax) + rc.heal)), warId, attackerId); else if (rc.kind === 'attack') KL.atkMult = rc.mult; }
   }
   const fin = (txt) => { if (KL) KN.end(KL); return kLines.length ? `${txt}\n${kLines.slice(0, 3).join('\n')}` : txt; };
@@ -244,6 +247,7 @@ function doRutkho(userId, amount) {
     if (used + amount > RUTKHO_DAILY_LIMIT) return `❌ Vượt giới hạn rút mỗi ngày (${fmtNum(RUTKHO_DAILY_LIMIT)}). Hôm nay còn rút được tối đa ${fmtNum(Math.max(0, RUTKHO_DAILY_LIMIT - used))}.`;
     D.run('UPDATE sects SET treasury = MAX(0, treasury - ?), rutkho_day = ?, rutkho_today = ? WHERE sect_id = ?', amount, day, used + amount, row.sect_id);
     D.run('UPDATE cultivators SET linh_thach = linh_thach + ? WHERE user_id = ?', amount, userId);
+    LG.noteOnce(userId, amount, { reason: 'rút Kho Tông', ref: `tông ${row.sect_id}`, key: LG.nonce('rutkho') });   // v22.1
     return `💰 Tông Chủ đã rút **${fmtNum(amount)}** Linh Thạch từ Kho Tông vào túi riêng.`;
   });
 }
@@ -256,6 +260,7 @@ function doNopkho(userId, amount) {
     if (!cur || (cur.linh_thach || 0) < amount) return '❌ Số Linh Thạch không hợp lệ hoặc không đủ.';
     D.run('UPDATE cultivators SET linh_thach = linh_thach - ? WHERE user_id = ? AND linh_thach >= ?', amount, userId, amount);
     D.run('UPDATE sects SET treasury = treasury + ? WHERE sect_id = ?', amount, row.sect_id);
+    LG.noteOnce(userId, -amount, { reason: 'nộp Kho Tông', ref: `tông ${row.sect_id}`, key: LG.nonce('nopkho') });   // v22.1
     return `🏛️ Đã đóng góp **${fmtNum(amount)}** Linh Thạch vào Kho Tông.`;
   });
 }

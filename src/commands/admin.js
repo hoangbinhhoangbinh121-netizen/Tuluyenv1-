@@ -86,13 +86,13 @@ defineCommand({
   options: [{ name: 'he_thong', type: 'string', description: 'boss | bicanh | chungdao | tongchien | all | foe | race | cd_<hệ thống> (bỏ trống = xem)' }, { name: 'gia_tri', type: 'string', description: 'kernel | legacy (với all: on|off · foe: 0–50 · race: on|off)' }],
   async run(ctx) {
     const ST = require('../game/settings'); const KN = require('../game/combatKernel'); const k = String(ctx.args.he_thong || '').trim().toLowerCase(); const v = String(ctx.args.gia_tri || '').trim().toLowerCase();
-    const show = () => [`🧩 **Combat Kernel V22.0** (đổi: \`!kernel <hệ thống> kernel|legacy\`)`, ...KN.SYSTEMS.map((x) => `• ${KN.SYS_NAME[x]} (\`${x}\`): **${KN.mode(x)}**`),
-      `• Cắt khẩn cấp \`all\`: **${ST.get('kernel_all', 'on')}** (off = mọi hệ thống về legacy)`, `• \`foe\` (Thiêu Đốt/độc lên kẻ địch PvE = % một đòn điển hình): **${KN.foePct()}**`, `• \`race\` (kỹ năng tộc tự phát): **${ST.get('kernel_race_auto', 'on')}**`, `• Hồi chiêu kỹ năng tộc nhân (\`cd_<hệ thống>\`): ${KN.SYSTEMS.map((x) => `${x} ×${KN.cdMult(x)}`).join(' · ')}`].join('\n');
+    const show = () => [`🧩 **Combat Kernel V22.1** (đổi: \`!kernel <hệ thống> kernel|legacy\`)`, ...KN.SYSTEMS.map((x) => `• ${KN.SYS_NAME[x]} (\`${x}\`): **${KN.mode(x)}**`),
+      `• Cắt khẩn cấp \`all\`: **${ST.get('kernel_all', 'on')}** (off = mọi hệ thống về legacy)`, `• \`foe\` (Thiêu Đốt/độc lên kẻ địch PvE = % một đòn điển hình): **${KN.foePct()}**`, `• \`race\` (kỹ năng tộc tự phát): **${ST.get('kernel_race_auto', 'off')}** (off = người chơi bấm nút Kỹ Năng Tộc)`, `• Hồi chiêu kỹ năng tộc nhân (\`cd_<hệ thống>\`): ${KN.SYSTEMS.map((x) => `${x} ×${KN.cdMult(x)}`).join(' · ')}`].join('\n');
     if (!k) return ctx.send(show());
     if (KN.SYSTEMS.includes(k)) { if (!['kernel', 'legacy'].includes(v)) return ctx.send('❌ Giá trị: `kernel` hoặc `legacy`.'); ST.set(`kernel_${k}`, v); return ctx.send(`✅ ${KN.SYS_NAME[k]} = **${v}** (áp dụng ngay cho lượt đánh kế tiếp; trận đang dở giữ hiệu ứng đã có).`); }
     if (k === 'all') { if (!['on', 'off'].includes(v)) return ctx.send('❌ Giá trị: `on` hoặc `off`.'); ST.set('kernel_all', v); return ctx.send(`✅ kernel_all = **${v}**.`); }
     if (k.startsWith('cd_') && KN.SYSTEMS.includes(k.slice(3))) { if (!/^\d+$/.test(v) || Number(v) < 1 || Number(v) > 100) return ctx.send('❌ Giá trị: số nguyên 1–100.'); ST.set(`kernel_${k}`, v); return ctx.send(`✅ Hồi chiêu kỹ năng tộc ở ${KN.SYS_NAME[k.slice(3)]} = ×**${v}**.`); }
-    if (k === 'race') { if (!['on', 'off'].includes(v)) return ctx.send('❌ Giá trị: `on` hoặc `off`.'); ST.set('kernel_race_auto', v); return ctx.send(`✅ kỹ năng tộc tự phát = **${v}**.`); }
+    if (k === 'race') { if (!['on', 'off'].includes(v)) return ctx.send('❌ Giá trị: `on` hoặc `off`.'); ST.set('kernel_race_auto', v); return ctx.send(`✅ kỹ năng tộc tự phát = **${v}** (mặc định off: người chơi tự bấm nút).`); }
     if (k === 'foe') { if (!/^\d+$/.test(v) || Number(v) > 50) return ctx.send('❌ Giá trị: số nguyên 0–50.'); ST.set('kernel_foe_dot_pct', v); return ctx.send(`✅ kernel_foe_dot_pct = **${v}**.`); }
     return ctx.send(`❌ Không hợp lệ.\n${show()}`);
   },
@@ -267,3 +267,27 @@ defineCommand({
 });
 
 module.exports = { makeBackup, listBackups };
+
+// v22.2 — ẩn / xoá một người khỏi bảng xếp hạng + công tắc bật/tắt
+defineCommand({
+  name: 'bxh', description: '[Admin] Ẩn hoặc xoá một người khỏi bảng xếp hạng; bật/tắt tính năng ẩn (an | xoa | hien | ds | bat | tat)', anyAdmin: true, prefixOnly: true,
+  options: [{ name: 'hanh_dong', type: 'string', description: 'an | xoa | hien | ds | bat | tat (bỏ trống = hướng dẫn)' }, { name: 'thanh_vien', type: 'user', description: 'Người chơi (@ hoặc ID)' }],
+  async run(ctx) {
+    const LB = require('../game/lbHide'); const a = String(ctx.args.hanh_dong || '').trim().toLowerCase();
+    const help = () => ['🏆 **Ẩn / xoá khỏi bảng xếp hạng** — chỉ admin', `Tính năng đang: **${LB.enabled() ? 'BẬT' : 'TẮT'}** · đang ẩn/xoá: **${LB.list().length}** người`,
+      '`!bxh an @người [lý do]` — **ẩn**: không hiện ở bảng, dữ liệu giữ nguyên.', '`!bxh xoa @người [lý do]` — **xoá**: ẩn + gỡ điểm xếp hạng đã lưu (thành tích Siêu Thoát, sát thương Boss đã kết thúc); có bản sao để khôi phục.',
+      '`!bxh hien @người` — hiện lại + khôi phục điểm đã gỡ · `!bxh ds` — danh sách', '`!bxh tat` / `!bxh bat` — tắt/bật cả tính năng (tắt = mọi người hiện lại, dữ liệu ẩn/xoá vẫn giữ).',
+      '_Áp dụng: Thiên Kiêu Bảng, sát thương Boss, bảng thành tích Siêu Thoát, bảng Chuỗi Đồng Tu. Không áp: bảng Tông Môn/Tông Chiến, Đại Phú Đường._'].join('\n');
+    if (!a) return ctx.send(help());
+    if (a === 'bat' || a === 'tat') { LB.setEnabled(a === 'bat'); return ctx.send(`✅ Tính năng ẩn/xoá khỏi bảng xếp hạng: **${a === 'bat' ? 'BẬT' : 'TẮT'}**.`); }
+    if (a === 'ds') { const rows = LB.list(); return ctx.send(rows.length ? [`📋 **Đang ẩn/xoá** (${rows.length}) — tính năng ${LB.enabled() ? 'BẬT' : 'TẮT'}`, ...rows.map((r) => `• <@${r.user_id}> \`${r.user_id}\` — **${r.mode === 'xoa' ? 'xoá' : 'ẩn'}** · <t:${r.ts}:d>${r.reason ? ` · ${r.reason}` : ''}`)].join('\n').slice(0, 1900) : 'Chưa ẩn/xoá ai.'); }
+    if (!['an', 'xoa', 'hien'].includes(a)) return ctx.send(`❌ Hành động không hợp lệ.\n${help()}`);
+    const uid = ctx.args.thanh_vien ? String(ctx.args.thanh_vien.id) : '';
+    if (!uid) return ctx.send('❌ Cần người chơi: `!bxh ' + a + ' @người` hoặc `!bxh ' + a + ' <ID>`.');
+    if (a === 'hien') { const r = LB.unset(uid, ctx.user.id); return ctx.send(r.ok ? `✅ <@${uid}> đã hiện lại trên bảng xếp hạng${r.restored ? ` (khôi phục ${r.restored} dòng điểm đã gỡ)` : ''}.` : `ℹ️ ${r.error}`); }
+    const reason = String((ctx.message && ctx.message.content) || '').trim().split(/\s+/).slice(3).join(' ');
+    const r = LB.set(uid, a, ctx.user.id, reason); if (!r.ok) return ctx.send(`❌ ${r.error}`);
+    return ctx.send(a === 'an' ? `🙈 Đã **ẩn** <@${uid}> khỏi bảng xếp hạng${r.restored ? ` (trả lại ${r.restored} dòng điểm đã gỡ trước đó)` : ''}.${LB.enabled() ? '' : ' ⚠️ Tính năng đang TẮT — `!bxh bat` để có hiệu lực.'}`
+      : `🗑️ Đã **xoá** <@${uid}> khỏi bảng xếp hạng (gỡ ${r.purged} dòng điểm lưu riêng, có bản sao khôi phục).${LB.enabled() ? '' : ' ⚠️ Tính năng đang TẮT — `!bxh bat` để có hiệu lực.'}`);
+  },
+});

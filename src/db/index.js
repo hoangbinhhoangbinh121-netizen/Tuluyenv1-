@@ -16,6 +16,7 @@ const { CREATE_V21, ADD_COLUMNS_V21 } = require('./schema_v21');
 const { CREATE_V213 } = require('./schema_v213');
 const { CREATE_V215 } = require('./schema_v215');
 const { CREATE_V217 } = require('./schema_v217');
+const { CREATE_V221 } = require('./schema_v221');
 
 const DB_PATH = process.env.TULUYEN_DB_PATH
   ? path.resolve(process.env.TULUYEN_DB_PATH)
@@ -176,6 +177,7 @@ function migrate() {
   for (const sql of CREATE_V20) d.exec(sql);   // v20.0 (chỉ thêm bảng mới)
   for (const sql of CREATE_V213) d.exec(sql);   // v21.3 (nhật ký trận PvP)
   for (const sql of CREATE_V217) d.exec(sql);   // v21.7 (v217_battle_state, ledger_entries — chỉ thêm bảng)
+  for (const sql of CREATE_V221) d.exec(sql);   // v22.2 (lb_hidden, lb_removed — chỉ thêm bảng)
   for (const sql of CREATE_V215) d.exec(sql);   // v21.5 (Chủng Tộc: race_state, race_history — chỉ thêm bảng)
   for (const sql of CREATE_V21) d.exec(sql);   // v21.0 (Cửa Hàng Nguyên Bảo + đơn nạp; chỉ thêm bảng mới)
   const ALLCOLS = {};

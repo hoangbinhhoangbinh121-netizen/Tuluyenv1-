@@ -1,5 +1,5 @@
 'use strict';
-// V22.0 — benchmark Combat Kernel: legacy vs kernel, theo tộc. Số liệu hiệu ứng/kỹ năng tộc là ĐỀ XUẤT chờ duyệt.
+// V22.0/22.1 — benchmark Combat Kernel: legacy vs kernel, theo tộc (+ Tông Chiến từ v22.1). Người chơi mô phỏng BẤM kỹ năng tộc ngay khi hồi xong (kernel_race_auto=on) = cận trên. Số liệu hiệu ứng/kỹ năng tộc là ĐỀ XUẤT chờ duyệt.
 process.env.TULUYEN_DB_PATH = require('node:path').join(require('node:os').tmpdir(), `tg_bk22_${Date.now()}.db`); process.env.BOSS_ACTION_COOLDOWN = '0';
 const D = require('../src/db'); D.initDb();
 const Cu = require('../src/game/cultivator'); const ST = require('../src/game/settings'); const RC = require('../src/game/race21'); const Inv = require('../src/game/invsvc');
@@ -7,6 +7,7 @@ const BC = require('../src/game/bicanh19'); const B = require('../src/data/bican
 const N = Number(process.env.N || 24); const RACES = [null, 'nhan', 'long', 'phuong', 'ma', 'linh', 'yeu']; let seq = 100000;
 const mkBase = (race, sql) => { const u = String(seq++); Cu.createCultivator(u); D.run(`UPDATE cultivators SET linh_thach = 900000000000000, ${sql} WHERE user_id = ?`, u); if (race) { RC.choose(u, race); const r = RC.awaken(u); if (!r.ok) throw new Error(JSON.stringify(r)); } return u; };
 const setK = (on) => { for (const s of ['boss', 'bicanh', 'chungdao', 'tongchien']) ST.set(`kernel_${s}`, on ? 'kernel' : 'legacy'); };
+ST.set('kernel_race_auto', 'on');
 const pct = (a, b) => `${(100 * a / Math.max(1, b)).toFixed(0)}%`;
 
 function benchBicanh(race, kernel) {
@@ -42,11 +43,30 @@ function benchChungdao(race, kernel) {
   }
   return { win: pct(win, NN), hp: pct(hpEnd, NN) };
 }
-console.log(`## Bench Combat Kernel V22.0 (N=${N}/ô; mock + SQLite thật)\n`);
+
+function benchTongchien(race, kernel) {
+  setK(kernel); const W = require('../src/game/sectwar'); const war = W.createWar(`GW${seq++}`, 'c', 'registration', 0); W.activateWar(war);
+  let win = 0; let hits = 0; let done = 0; const stat = 'realm_index = 3, stage_index = 1, world_tier = 0, atk = 40000, def_ = 30000, spd = 3000, hp = 900000, cur_hp = 900000';
+  for (let i = 0; i < N; i++) {
+    const a = mkBase(race, stat); const d = mkBase(null, stat); const sa = 800000 + seq; const sd = 900000 + seq; seq += 2;
+    D.run("INSERT INTO sects (sect_id, name, leader_id, treasury) VALUES (?,?,?,0),(?,?,?,0)", sa, `A${sa}`, a, sd, `D${sd}`, d); D.run('UPDATE cultivators SET sect_id = ? WHERE user_id = ?', sa, a); D.run('UPDATE cultivators SET sect_id = ? WHERE user_id = ?', sd, d);
+    W.joinWar(war, a, sa); W.joinWar(war, d, sd); W.moveToNode(war, a, sa, 'bac'); W.moveToNode(war, d, sd, 'bac');
+    let res = null; const aFirst = Math.random() < 0.5;   // tung đồng xu: ai đánh trước cũng có lợi thế, nên phải ngẫu nhiên hoá
+    for (let t = 1; t <= 80 && !res; t++) {
+      const turn = (x, y, tag) => /HẠ GỤC/.test(W.doAttack(war, x, y)) ? tag : null;
+      res = aFirst ? (turn(a, d, 'A') || turn(d, a, 'D')) : (turn(d, a, 'D') || turn(a, d, 'A')); if (res) hits += t;
+    }
+    if (res) { done += 1; if (res === 'A') win += 1; }
+  }
+  return { win: pct(win, Math.max(1, done)), hits: (hits / Math.max(1, done)).toFixed(1), done };
+}
+console.log(`## Bench Combat Kernel V22.1 (N=${N}/ô; mock + SQLite thật)\n`);
 console.log('### Bí Cảnh #1 solo, người chơi đúng cảnh giới yêu cầu — thắng / lượt TB / HP còn lại cuối run (legacy → kernel)\n| Tộc | thắng | lượt | HP cuối |\n|---|---|---|---|');
 for (const r of RACES) { const a = benchBicanh(r, false); const k = benchBicanh(r, true); console.log(`| ${r || 'không tộc'} | ${a.win} → ${k.win} | ${a.turns} → ${k.turns} | ${a.hp} → ${k.hp} |`); }
 console.log('\n### Boss Thế Giới — sát thương TB/đòn · phản công TB/đòn (legacy → kernel)\n| Tộc | sát thương | phản công |\n|---|---|---|');
 for (const r of RACES) { const a = benchBoss(r, false); const k = benchBoss(r, true); console.log(`| ${r || 'không tộc'} | ${a.dmg} → ${k.dmg} | ${a.counter} → ${k.counter} |`); }
 console.log('\n### Chứng Đạo — tỉ lệ vượt kiếp / HP cuối (legacy → kernel), người chơi trung bình (có trang bị + 3 công pháp, không đan)\n| Tộc | vượt kiếp | HP cuối |\n|---|---|---|');
 for (const r of RACES) { const a = benchChungdao(r, false); const k = benchChungdao(r, true); console.log(`| ${r || 'không tộc'} | ${a.win} → ${k.win} | ${a.hp} → ${k.hp} |`); }
+console.log('\n### Tông Chiến — 1v1 (ai đánh trước tung đồng xu) người có tộc vs người không tộc, cùng chỉ số: tỉ lệ người có tộc thắng / số đòn TB (legacy → kernel)\n| Tộc | thắng | đòn TB | trận phân thắng bại |\n|---|---|---|---|');
+for (const r of RACES) { const a = benchTongchien(r, false); const k = benchTongchien(r, true); console.log(`| ${r || 'không tộc'} | ${a.win} → ${k.win} | ${a.hits} → ${k.hits} | ${a.done} → ${k.done} |`); }
 setK(false); process.exit(0);

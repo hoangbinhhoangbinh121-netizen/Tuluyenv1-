@@ -61,7 +61,7 @@ function kiepView(uid, k, note = '') {
     .setFooter({ text: `Hết hạn ứng kiếp sau ${fmtTime(Math.max(0, k.expireAt - now()))} không thao tác (coi như thất bại)${note ? ` · ${note}` : ''}` });
   if (k.log.length) emb.addFields({ name: '📜 Diễn biến', value: k.log.slice(-7).join('\n').slice(0, 1020) });
   const b = (a, st = GR) => { const bad = CD.canResp({ ...k, uid }, a, row); return btn(cid(uid, 'r', a), CD.RESP[a].name, CD.RESP[a].icon, st, !!bad); };
-  return CFX.dressKiep({ content: '', embeds: [emb], components: [rowOf(b('none', P), b('dan', SU), b('bao')), rowOf(b('cp'), b('sk'), b('dok', DG)), rowOf(btn(cid(uid, 'info'), 'Giải thích lựa chọn', '❓', GR), btn(cid(uid, 'rf'), 'Làm mới', '🔄', GR), btn(cid(uid, 'giveup'), 'Bỏ cuộc', '🏳️', DG))] }, n);
+  return CFX.dressKiep({ content: '', embeds: [emb], components: [rowOf(b('none', P), b('dan', SU), b('bao')), rowOf(b('cp'), b('sk'), b('race'), b('dok', DG)), rowOf(btn(cid(uid, 'info'), 'Giải thích lựa chọn', '❓', GR), btn(cid(uid, 'rf'), 'Làm mới', '🔄', GR), btn(cid(uid, 'giveup'), 'Bỏ cuộc', '🏳️', DG))] }, n);
 }
 // ================================================================ Đế (sau khi chứng đạo)
 const tabRow = (uid, cur) => rowOf(...[['ov', 'Tổng Quan', E9.comp('dean', '👑')], ['dao', 'Đế Đạo', E9.comp('dedao', '☯️')], ['binh', 'Đế Binh', E9.comp('debinh', '🗡️')], ['hieu', 'Đế Hiệu', E9.comp('dehieu', '🏷️')]].map(([k, l, e]) => btn(cid(uid, 'tab', k), l, e, k === cur ? P : GR)));

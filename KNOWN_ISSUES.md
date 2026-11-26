@@ -127,3 +127,16 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Kỹ năng tộc trong PvE tự phát (không có nút); hiệu ứng Boss/Tông Chiến mất khi restart (bộ nhớ); Bí Cảnh/Chứng Đạo lưu trong JSON.
 - Chưa gộp `cpfx.battleState` với EffectEngine; PvE chưa dùng cpfx.battleState. Chưa có số đo Tông Chiến.
 - Discord thật: **NOT TESTED**.
+
+## V22.1 — nút Kỹ Năng Tộc, kernel mặc định, cpfx, Sổ Cái PvE (chi tiết: BAO_CAO_V22_1.md, docs/audit_v21_3/16)
+- **Boss + Chứng Đạo chạy kernel ngay khi cập nhật** (Bí Cảnh/Tông Chiến vẫn legacy). Muốn về y như v21.7.1: `!kernel all off`.
+- Số liệu kernel vẫn là ĐỀ XUẤT; benchmark là mô phỏng người chơi bấm kỹ năng ngay khi hồi xong (cận trên), không phải người thật.
+- Hiệu ứng Boss/Tông Chiến mất khi restart (bộ nhớ). Kỹ năng tự thân trong Tông Chiến cộng thêm vào đòn đánh (khác Boss: thay đòn) — chờ xác nhận.
+- Nút Chứng Đạo xám khi kernel tắt / chưa có tộc / tộc chỉ có kỹ năng tấn công.
+- Sổ Cái PvE chỉ phủ các luồng đã nối (xem docs 16); thưởng thắng/thua Tông Chiến đi vào quỹ tông, chưa ghi sổ.
+- Discord thật: **NOT TESTED**.
+
+## V22.2 — `!bxh` ẩn/xoá khỏi bảng xếp hạng (chi tiết: BAO_CAO_V22_2.md)
+- Chỉ áp cho Thiên Kiêu Bảng, sát thương Boss, thành tích Siêu Thoát, Chuỗi Đồng Tu. Chưa áp: bảng Tông Môn/Tông Chiến, Đại Phú Đường.
+- "Xoá" chỉ gỡ điểm lưu riêng (có sao lưu khôi phục), không bao giờ gỡ sát thương Boss đang sống.
+- Discord thật: **NOT TESTED**.

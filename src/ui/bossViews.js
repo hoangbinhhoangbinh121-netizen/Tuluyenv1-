@@ -22,7 +22,7 @@ const logs = new Map();   // bossId -> [dòng nhật ký] (chỉ trong bộ nh�
 const pushLog = (bossId, line) => { const a = logs.get(bossId) || []; a.push(line); if (a.length > 20) a.shift(); logs.set(bossId, a); };
 
 const rankLines = (bossId, n = 5) => {
-  const r = B.ranking(bossId, n);
+  const r = require('../game/lbHide').filter(B.ranking(bossId, n + 200)).slice(0, n);   // v22.2: bỏ người bị ẩn khỏi bảng hiển thị
   return r.length ? r.map((c, i) => `${MEDAL[i] || `**${i + 1}.**`} <@${c.user_id}> — ${num(c.damage)} (${num(c.hits)} đòn)`).join('\n') : '*Chưa ai ra đòn — hãy là người đầu tiên!*';
 };
 
@@ -56,7 +56,7 @@ function bossComponents(bossId, disabled = false) {
     mk('rest', 'Điều Tức', 'hoihp', ButtonStyle.Success),
     mk('rank', 'Xếp Hạng', 'cup', ButtonStyle.Secondary),
     mk('me', 'Của Tôi', 'thanhvien', ButtonStyle.Secondary),
-  )];
+  ), new ActionRowBuilder().addComponents(mk('race', 'Kỹ Năng Tộc', 'linhngothiendao', ButtonStyle.Secondary))];   // v22.1
 }
 const panelPayload = (boss) => ({ embeds: [bossPanel(boss)], components: bossComponents(boss.boss_id, boss.status !== 'alive') });
 
@@ -111,6 +111,7 @@ function personalResult(res, user) {
   let line;
   if (res.action === 'rest') line = `[Lượt ${num(res.turn)}] ${nm} điều tức, hồi **${num(res.heal)}** Sinh Mệnh và **${res.mpGain}%** Linh Lực.`;
   else if (res.action === 'skill') line = `[Lượt ${num(res.turn)}] ${nm} thi triển **Thần Thông**${res.crit ? ' — **BẠO KÍCH!**' : ''}, gây **${num(res.dmg)}** sát thương.`;
+  else if (res.action === 'race') line = res.dmg > 0 ? `[Lượt ${num(res.turn)}] ${nm} thi triển **Kỹ Năng Tộc**, gây **${num(res.dmg)}** sát thương.` : `[Lượt ${num(res.turn)}] ${nm} thi triển **Kỹ Năng Tộc** hộ thân.`;
   else line = `[Lượt ${num(res.turn)}] ${nm} tung đòn, gây **${num(res.dmg)}** sát thương.`;
   const log = [line];
   if (res.counter > 0) log.push(`[Lượt ${num(res.turn)}] ${boss.name} phản công, gây **${num(res.counter)}** sát thương${res.counterCut ? ` _(trang bị/đan/trận giảm ${Math.round(res.counterCut * 100)}%)_` : ''}.`);
@@ -131,6 +132,7 @@ function personalResult(res, user) {
 const feedLine = (res, user) => {
   const nm = `<@${user.id}>`;
   if (res.action === 'rest') return `[Lượt ${num(res.turn)}] ${nm} điều tức hồi sức.`;
+  if (res.action === 'race') return `[Lượt ${num(res.turn)}] ${nm} dùng Kỹ Năng Tộc — **${num(res.dmg)}** sát thương.`;
   return `[Lượt ${num(res.turn)}] ${nm} ${res.action === 'skill' ? `dùng Thần Thông${res.crit ? ' (bạo kích)' : ''}` : 'tấn công'} — **${num(res.dmg)}** sát thương.`;
 };
 
@@ -155,14 +157,14 @@ registerStatic('wb', async (i, [action, bossId]) => {
     return i.reply({ embeds: [N.info('Boss này đã kết thúc. Chờ lần triệu hồi tiếp theo!')], flags: EPH });
   }
   if (action === 'rank') {
-    const all = B.ranking(boss.boss_id, 15);
+    const all = require('../game/lbHide').filter(B.ranking(boss.boss_id, 215)).slice(0, 15);
     return i.reply({ embeds: [createEmbed({ cat: 'boss', header: 'BẢNG SÁT THƯƠNG', title: boss.name, color: COLORS.DANGER, description: all.length ? all.map((c, k) => `${MEDAL[k] || `**${k + 1}.**`} <@${c.user_id}> — ${num(c.damage)} (${num(c.hits)} đòn)`).join('\n') : 'Chưa có ai ra đòn.' })], flags: EPH });
   }
   if (action === 'me') {
     const m = B.myStat(boss.boss_id, i.user.id); const t = B.totals(boss.boss_id);
     return i.reply({ embeds: [createEmbed({ cat: 'boss', header: 'CHIẾN TÍCH CỦA TÔI', title: boss.name, color: COLORS.INFO, description: m && m.hits ? `${E.satthuong} Sát thương: **${num(m.damage)}** (${pct(t.dmg ? m.damage / t.dmg : 0)} tổng)\n${E.kiem} Số đòn: **${num(m.hits)}**` : 'Bạn chưa ra đòn nào.' })], flags: EPH });
   }
-  if (['atk', 'skill', 'rest'].includes(action)) return doAction(i, action, boss.guild_id);
+  if (['atk', 'skill', 'rest', 'race'].includes(action)) return doAction(i, action, boss.guild_id);
   return null;
 });
 
