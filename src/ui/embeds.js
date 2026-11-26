@@ -23,7 +23,7 @@ function buildStatusEmbed(user, row0) {
   const userId = user.id;
   let row = row0;
   const { realm_index: realmIdx, stage_index: stageIdx, world_tier: worldTier } = row;
-  const required = R.tuViRequired(realmIdx, stageIdx, worldTier);
+  const required = R.tuViRequiredFor(row, realmIdx, stageIdx, worldTier);
   const curHp = Cu.syncHpRegen(userId, row);
   row = Cu.getCultivator(userId);
   const lucChien = Cu.calcLucChien(row);

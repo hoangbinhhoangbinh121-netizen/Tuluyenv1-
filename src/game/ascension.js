@@ -244,7 +244,7 @@ function phithangCore(userId, guildId = 0) {
   const tierLabel = R.worldTierName(newTier);
   const title = myRank === 1 ? `${E.phithangdau} Tiên Phong ${tierLabel} ${E.phithangdau}` : `Người Phi Thăng ${tierLabel} Thứ ${myRank}`;
   Cu.updateCultivator(userId, { title });
-  const nextReq = R.tuViRequired(row.realm_index, row.stage_index, newTier);
+  const nextReq = R.tuViRequiredFor(row, row.realm_index, row.stage_index, newTier);
   const first = myRank === 1 ? `\n${E.phithangdau} **NGƯỜI ĐẦU TIÊN CỦA SERVER PHI THĂNG ${tierLabel.toUpperCase()} THÀNH CÔNG!** Danh hiệu **「${title}」** đặc biệt đã được trao!\n` : '';
   const bcNote = newTier === 1 ? `\n${E.bicanhlinhgioi} **Hệ Thống Bí Cảnh Linh Giới đã mở khóa!** Dùng nút **Bí Cảnh Linh Giới** trong Chiến Đấu hoặc \`/bicanhlinhgioi\` để bắt đầu.` : '';
   const tgNote = newTier === 2 ? `\n${E.thiennhanngusuy} 👑 **PHI THĂNG TIÊN GIỚI THÀNH CÔNG!** Vượt qua Độ Kiếp, Thượng Cổ Thủ Hộ và Thiên Nhân Ngũ Suy — bạn chính thức bước vào hàng ngũ Chân Tiên.` : '';

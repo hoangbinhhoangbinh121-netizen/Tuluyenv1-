@@ -291,3 +291,50 @@ defineCommand({
       : `🗑️ Đã **xoá** <@${uid}> khỏi bảng xếp hạng (gỡ ${r.purged} dòng điểm lưu riêng, có bản sao khôi phục).${LB.enabled() ? '' : ' ⚠️ Tính năng đang TẮT — `!bxh bat` để có hiệu lực.'}`);
   },
 });
+
+// v22.3 — tăng tu vi (Tu Luyện / Bế Quan / Bế Quan Treo) RIÊNG cho 1 người, hoặc cho tất cả
+defineCommand({
+  name: 'tangexp', description: '[Admin] Tăng tốc tu vi riêng cho 1 người (người khác giữ nguyên) hoặc cho tất cả (dat | xoa | ds | tat | bat | all)', anyAdmin: true, prefixOnly: true,
+  options: [{ name: 'a', type: 'string', description: 'dat | xoa | ds | tat | bat | all | @người' }, { name: 'b', type: 'string', description: '@người/ID hoặc hệ số' }, { name: 'c', type: 'string', description: 'hệ số hoặc số phút' }, { name: 'd', type: 'string', description: 'số phút (0 = vĩnh viễn)' }],
+  async run(ctx) {
+    const PB = require('../game/playerBoost'); const ST = require('../game/settings'); const N = (x) => String(Math.round(x * 100) / 100);
+    const uidOf = (t) => { const m = /\d{15,}/.exec(String(t || '')); return m ? m[0] : ''; };
+    const sp = ST.speedInfo();
+    const help = () => ['⚡ **Tăng tu vi riêng / toàn server** — chỉ admin', `Hệ số riêng: **${PB.enabled() ? 'BẬT' : 'TẮT'}** · đang có **${PB.list().length}** người · Toàn server: **${sp.active ? `×${N(sp.mult)}` : 'bình thường (×1)'}**`,
+      '`!tangexp dat @người <hệ số> [phút]` — chỉ người đó nhận tu vi ×hệ số (0,1–100); phút bỏ trống hoặc 0 = vĩnh viễn. (viết tắt: `!tangexp @người 5 60`)',
+      '`!tangexp yeucau @người 10 [phút]` — **hạ yêu cầu đột phá** riêng người đó: người khác cần 100 tu vi thì người này chỉ cần 10 (chia cho số nhập, 0,1–1000).', '`!tangexp yeucau @người x2 [phút]` — **tăng yêu cầu**: người này cần **gấp đôi** tu vi để đột phá (`x3` = gấp ba…). `!tangexp yeucau xoa @người` để bỏ.', '`!tangexp xoa @người` — bỏ hệ số tu vi riêng · `!tangexp ds` — danh sách (cả hệ số lẫn yêu cầu đột phá)', '`!tangexp tat` / `!tangexp bat` — tắt/bật mọi hệ số riêng (dữ liệu giữ nguyên)',
+      '`!tangexp all <hệ số> [phút]` — tăng cho TẤT CẢ mọi người (`!tangexp all 1` = về bình thường). Cùng cơ chế với `/tangtoctuluyen`.',
+      '_Hệ số tu vi áp: Tu Luyện, Bế Quan, Bế Quan Treo. Yêu cầu đột phá áp: điều kiện đột phá + mọi chỗ hiển thị tu vi cần. Hệ số riêng nhân CHỒNG với hệ số toàn server. Không áp: tu vi từ Boss/Bí Cảnh/Chứng Đạo, EXP Nghề._'].join('\n');
+    let a = String(ctx.args.a || '').trim().toLowerCase(); let rest = [ctx.args.b, ctx.args.c, ctx.args.d];
+    if (!a) return ctx.send(help());
+    if (uidOf(a)) { rest = [ctx.args.a, ctx.args.b, ctx.args.c]; a = 'dat'; }               // !tangexp @người 5 60
+    const by = ctx.user.id;
+    if (a === 'bat' || a === 'tat') { PB.setEnabled(a === 'bat'); return ctx.send(`✅ Hệ số tu vi riêng: **${a === 'bat' ? 'BẬT' : 'TẮT'}**.`); }
+    if (a === 'yeucau') {
+      const sub = String(rest[0] || '').trim().toLowerCase();
+      if (sub === 'xoa') { const u = uidOf(rest[1]); if (!u) return ctx.send('❌ Cần người chơi: `!tangexp yeucau xoa @người`'); const r = PB.clearNeed(u, by); return ctx.send(r.ok ? `✅ <@${u}> cần tu vi đột phá **bình thường** trở lại.` : `ℹ️ ${r.error}`); }
+      const u = uidOf(rest[0]); const tok = String(rest[1] === undefined ? '' : rest[1]).trim().toLowerCase().replace(',', '.');
+      const times = /^[x*]/.test(tok);                                   // `x2` = cần GẤP 2 lần (khó hơn) ⇒ số chia = 1/2
+      const num = tok === '' ? NaN : Number(times ? tok.slice(1) : tok); const d = times ? (Number.isFinite(num) && num > 0 ? 1 / num : NaN) : num;
+      if (!u || !Number.isFinite(d)) return ctx.send('❌ Cú pháp: `!tangexp yeucau @người <số chia> [phút]` — `10` = dễ hơn (người khác cần 100, người này cần 10); `x2` = KHÓ hơn (người này cần gấp đôi)');
+      const r = PB.setNeed(u, d, rest[2], by); if (!r.ok) return ctx.send(`❌ ${r.error}`);
+      const when = r.until ? `đến <t:${r.until}:R>` : '(vĩnh viễn)'; const off = PB.enabled() ? '' : ' ⚠️ Hệ số riêng đang TẮT — `!tangexp bat`.';
+      if (r.div < 1) return ctx.send(`🔒 <@${u}> cần **gấp ${N(1 / r.div)} lần** tu vi để đột phá (người khác cần 100 thì người này cần ${N(100 / r.div)}) ${when} — **chỉ người này**.${off}`);
+      return ctx.send(`🔓 <@${u}> chỉ cần **1/${N(r.div)}** tu vi để đột phá (người khác cần ${N(r.div)} thì người này cần 1) ${when} — **chỉ người này**.${off}`);
+    }
+    if (a === 'ds') { const rows = PB.list(); const nrows = PB.listNeed(); return ctx.send(rows.length || nrows.length ? [`📋 **Hệ số tu vi riêng** (${rows.length}) · **hạ yêu cầu đột phá** (${nrows.length}) — tính năng ${PB.enabled() ? 'BẬT' : 'TẮT'}`, ...nrows.map((r) => `• <@${r.user_id}> \`${r.user_id}\` — đột phá cần ${r.div < 1 ? `**gấp ${N(1 / r.div)} lần**` : `**1/${N(r.div)}**`} · ${r.until ? `đến <t:${r.until}:R>${r.active ? '' : ' (đã hết)'}` : 'vĩnh viễn'}${!PB.enabled() ? ' (đang tắt)' : ''}`), ...rows.map((r) => `• <@${r.user_id}> \`${r.user_id}\` — **×${N(r.mult)}** · ${r.until ? `đến <t:${r.until}:R>${r.active ? '' : ' (đã hết)'}` : 'vĩnh viễn'}${!PB.enabled() ? ' (đang tắt)' : ''}`)].join('\n').slice(0, 1900) : 'Chưa đặt hệ số riêng cho ai.'); }
+    if (a === 'all') {
+      const m = rest[0] === undefined || String(rest[0]).trim() === '' ? NaN : Number(String(rest[0]).replace(',', '.')); const mins = Math.max(0, Math.floor(Number(rest[1]) || 0));
+      if (!Number.isFinite(m)) return ctx.send('❌ Cú pháp: `!tangexp all <hệ số> [phút]`');
+      const i = ST.setSpeed(m, mins); try { require('../game/admin17').log(by, 'tangexp_all', '', `x${i.mult}${mins ? ` ${mins}p` : ''}`); } catch (_) { /* nhật ký phụ */ }
+      return ctx.send(i.active ? `⚡ Tu vi **TẤT CẢ mọi người** ×**${N(i.mult)}** ${i.until ? `đến <t:${i.until}:R>` : '(không hết hạn)'}.` : '✅ Toàn server về **bình thường (×1)**.');
+    }
+    if (a === 'xoa') { const u = uidOf(rest[0]); if (!u) return ctx.send('❌ Cần người chơi: `!tangexp xoa @người`'); const r = PB.clear(u, by); return ctx.send(r.ok ? `✅ Đã bỏ hệ số riêng của <@${u}> (về bình thường).` : `ℹ️ ${r.error}`); }
+    if (a === 'dat') {
+      const u = uidOf(rest[0]); const m = rest[1] === undefined || String(rest[1]).trim() === '' ? NaN : Number(String(rest[1]).replace(',', '.')); if (!u || !Number.isFinite(m)) return ctx.send('❌ Cú pháp: `!tangexp dat @người <hệ số> [phút]`');
+      const r = PB.set(u, m, rest[2], by); if (!r.ok) return ctx.send(`❌ ${r.error}`);
+      return ctx.send(`⚡ <@${u}> nhận tu vi ×**${N(r.mult)}** ${r.until ? `đến <t:${r.until}:R>` : '(vĩnh viễn)'} — **chỉ người này**, mọi người khác giữ nguyên.${PB.enabled() ? '' : ' ⚠️ Hệ số riêng đang TẮT — `!tangexp bat`.'}${r.mult < 1 ? ' (hệ số < 1 = làm chậm)' : ''}`);
+    }
+    return ctx.send(`❌ Hành động không hợp lệ.\n${help()}`);
+  },
+});

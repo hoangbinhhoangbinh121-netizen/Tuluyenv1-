@@ -28,7 +28,7 @@ const hieuName = (uid, name) => FX.withHieu(uid, name);
 // ================================================================ Chứng Đạo — trước / trong kiếp
 function preView(uid) {
   const row = Cu.getCultivator(uid); const why = CD.whyCannot(row);
-  const need = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const need = R.tuViRequiredFor(row);
   const list = Object.entries(CD.REQ).map(([id, n]) => { const h = require('../game/invsvc').qty(uid, id); return `${h >= n ? '✅' : '❌'} **${CD.itemName(id)}** ${fmt(h)}/${fmt(n)}`; }).join('\n');
   const emb = new EmbedBuilder().setColor(0xf1c40f).setTitle(`${E9.k('chungdao', '👑')} CON ĐƯỜNG CHỨNG ĐẠO`)
     .setDescription(`Tại **${K.REALMS[CD.GATE_REALM].name} · Viên Mãn**, phải vượt **Chứng Đạo Đại Kiếp** — **12 đạo Đế Kiếp** — mới thành **Tiên Đế**. Không thể bỏ qua Chuẩn Tiên Tôn → Tiên Tôn → Chuẩn Tiên Đế.`)

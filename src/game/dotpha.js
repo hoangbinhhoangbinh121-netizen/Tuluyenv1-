@@ -64,7 +64,7 @@ function doDotpha(userId) {
   if (realmIdx === require('./chungdao19').GATE_REALM && stageIdx === require('./chungdao19').GATE_STAGE) {
     return `👑 **${R.realmDisplay(realmIdx, stageIdx, true)}** là cửa ải cuối trước **Tiên Đế**: phải vượt **Chứng Đạo Đại Kiếp** (12 đạo Đế Kiếp) — dùng \`/chungdao\` để xem điều kiện và bắt đầu.`;
   }
-  const required = R.tuViRequired(realmIdx, stageIdx, row.world_tier);
+  const required = R.tuViRequiredFor(row, realmIdx, stageIdx, row.world_tier);
   if (row.tu_vi < required) return `❌ Chưa đủ tu vi để đột phá (cần ${required}, hiện có ${row.tu_vi}).`;
 
   const fxd = X17.get(row);   // v17: trang bị / Phá Cảnh Đan / Hộ Mạch Đan / Ngưng Thần Đan

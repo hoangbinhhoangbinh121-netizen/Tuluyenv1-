@@ -34,7 +34,7 @@ function stats(s) {
 }
 
 function progressField(row, extra = 0) {
-  const required = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const required = R.tuViRequiredFor(row);
   const cur = row.tu_vi + extra;
   return { name: `${E.tuvi || E.linhngo || '✨'} Tiến độ đột phá`, value: `${progressBar(cur, required, { kind: 'tuvi' })}\n**${exp(cur, required)}** EXP`, inline: false };
 }

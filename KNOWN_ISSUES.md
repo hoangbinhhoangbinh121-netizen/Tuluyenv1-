@@ -140,3 +140,13 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Chỉ áp cho Thiên Kiêu Bảng, sát thương Boss, thành tích Siêu Thoát, Chuỗi Đồng Tu. Chưa áp: bảng Tông Môn/Tông Chiến, Đại Phú Đường.
 - "Xoá" chỉ gỡ điểm lưu riêng (có sao lưu khôi phục), không bao giờ gỡ sát thương Boss đang sống.
 - Discord thật: **NOT TESTED**.
+
+## V22.3 — `!tangexp` hệ số tu vi riêng (chi tiết: BAO_CAO_V22_3.md)
+- Chỉ áp Tu Luyện / Bế Quan / Bế Quan Treo; không áp tu vi từ Boss, Bí Cảnh, Chứng Đạo, EXP Nghề.
+- Bế Quan Treo tính theo hệ số tại lúc nhận (không theo từng đoạn thời gian).
+- Discord thật: **NOT TESTED**.
+
+## V22.4 — `!tangexp yeucau` (chi tiết: BAO_CAO_V22_4.md)
+- Chỉ hạ mốc tu vi đột phá của người được đặt; cơ hội thành công, Cửu Lôi Kiếp và các cửa ải khác giữ nguyên.
+- Phần thưởng Bí Cảnh và trần tu vi Hóa Thần vẫn tính theo mốc gốc.
+- Discord thật: **NOT TESTED**.

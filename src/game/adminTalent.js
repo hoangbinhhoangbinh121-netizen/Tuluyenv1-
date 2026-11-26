@@ -51,7 +51,7 @@ function revoke(userId, kinds, adminId) {
 /** Đầy tu vi: đặt tu vi bằng đúng mức cần để đột phá tầng kế (không giảm nếu đã cao hơn). */
 function fullExp(userId) {
   const row = Cu.getCultivator(userId); if (!row) return null;
-  const need = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const need = R.tuViRequiredFor(row);
   const nv = Math.max(row.tu_vi, need);
   Cu.updateCultivator(userId, { tu_vi: nv });
   return { before: row.tu_vi, after: nv, need, row };

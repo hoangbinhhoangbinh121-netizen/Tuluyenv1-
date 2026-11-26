@@ -31,7 +31,7 @@ function tuluyenMultFor(userId, row) {
   // v13.6: độ tinh khiết Linh Căn (×0,85–1,15, trung bình 1) và hiệu ứng Thể Chất/Linh Căn (+tối đa 35%) — Ngũ/Phàm không đổi
   const fx = T.tuluyenPurity(row) * (1 + T.bundle(row).tu);
   // v13.7: sự kiện tăng tốc toàn server do admin đặt (/tangtoctuluyen) — nhân thêm cho Tu Luyện và Bế Quan Treo
-  return { mult: talentMult(row) * fx * cpBonus * wt * st * sectBuff * buff * ST.speedMult(), sectBuff, buff };
+  return { mult: talentMult(row) * fx * cpBonus * wt * st * sectBuff * buff * ST.speedMult() * require('./playerBoost').mult(userId), sectBuff, buff };   // v22.3: × hệ số riêng của người chơi (!tangexp)
 }
 
 /** v19.5: ở cảnh giới Tiên (từ Chân Tiên) tốc độ Tu Luyện / Bế Quan / Treo nhân thêm K.TIEN_SPEED_MULT (mặc định ×3). Chỉ nhân tu vi, không nhân Linh Thạch. */
@@ -107,7 +107,7 @@ function dongquanR(userId) {
   const need = R.tuViRequiredBase(row.realm_index, row.stage_index, row.world_tier); // mốc GỐC: tốc độ không đổi khi tăng exp đột phá
   const oldGained = int(randInt(80, 150) * R.realmSpeedMult(row.realm_index) * mult);
   // v12.3: 1 lần Bế Quan = 12% tu vi cần cho tầng kế (tư chất chuẩn) × tư chất; Linh Thạch GIỮ NGUYÊN công thức cũ để không lạm phát.
-  const gained = Math.max(oldGained, int(BAL.dongquanBase(need) * mult * tienSpeed(row) * BAL.B.TULUYEN_SPEED_MULT * ST.speedMult() * randUniform(0.9, 1.1)));   // v13.7: sự kiện tăng tốc chỉ nhân tu vi, KHÔNG nhân Linh Thạch
+  const gained = Math.max(oldGained, int(BAL.dongquanBase(need) * mult * tienSpeed(row) * BAL.B.TULUYEN_SPEED_MULT * ST.speedMult() * require('./playerBoost').mult(userId) * randUniform(0.9, 1.1)));   // v13.7: sự kiện tăng tốc chỉ nhân tu vi, KHÔNG nhân Linh Thạch
   const linhThachGain = oldGained * 500;
   Cu.updateCultivator(userId, { tu_vi: row.tu_vi + gained, linh_thach: row.linh_thach + linhThachGain, last_dongquan: t, ...TO.progFields(row, { lc: 3 }) });
   return { ok: true, kind: 'dongquan', gained, linhThachGain, mult, sectBuff: sectBuff > 1, before: row.tu_vi, after: row.tu_vi + gained, row: Cu.getCultivator(userId), cooldown: CD.COOLDOWN_DONGQUAN };

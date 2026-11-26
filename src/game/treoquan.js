@@ -103,9 +103,9 @@ function xem(userId) {
 /** Xuất quan: cộng tu vi và kết thúc phiên treo. */
 function xuatQuan(userId) {
   const fresh = settleIfExpired(userId);
-  if (fresh) { Cu.updateCultivator(userId, { treo_forced: 0 }); const s0 = stateOf(userId); const row0 = Cu.getCultivator(userId); return { ok: true, kind: 'cuong_che', ...s0, ...fresh, after: row0.tu_vi, required: R.tuViRequired(row0.realm_index, row0.stage_index, row0.world_tier) }; }
+  if (fresh) { Cu.updateCultivator(userId, { treo_forced: 0 }); const s0 = stateOf(userId); const row0 = Cu.getCultivator(userId); return { ok: true, kind: 'cuong_che', ...s0, ...fresh, after: row0.tu_vi, required: R.tuViRequiredFor(row0) }; }
   const notice = takeForcedNotice(userId);
-  if (notice && !(Number(Cu.getCultivator(userId).treo_start) > 0)) { const s0 = stateOf(userId); const row0 = Cu.getCultivator(userId); return { ok: true, kind: 'cuong_che', ...s0, ...notice, after: row0.tu_vi, required: R.tuViRequired(row0.realm_index, row0.stage_index, row0.world_tier) }; }
+  if (notice && !(Number(Cu.getCultivator(userId).treo_start) > 0)) { const s0 = stateOf(userId); const row0 = Cu.getCultivator(userId); return { ok: true, kind: 'cuong_che', ...s0, ...notice, after: row0.tu_vi, required: R.tuViRequiredFor(row0) }; }
   const row = Cu.getCultivator(userId);
   const s = stateOf(userId, row);
   if (!s.active) return { ok: false, kind: 'chua_treo', ...s };
@@ -115,7 +115,7 @@ function xuatQuan(userId) {
   const after = Cu.getCultivator(userId);
   return {
     ok: true, kind: 'xuatquan', ...s, gained, before: row.tu_vi, after: after.tu_vi, row: after,
-    required: R.tuViRequired(after.realm_index, after.stage_index, after.world_tier), capped: s.elapsed > s.maxSeconds,
+    required: R.tuViRequiredFor(after), capped: s.elapsed > s.maxSeconds,
   };
 }
 

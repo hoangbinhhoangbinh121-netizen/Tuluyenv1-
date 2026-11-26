@@ -79,7 +79,7 @@ function whyCannot(row) {
   if (row.realm_index > GATE_REALM) return 'Bạn đã vượt qua cửa ải này.';
   if (row.stage_index < GATE_STAGE) return `Phải đạt **${K.REALMS[GATE_REALM].name} · Viên Mãn** mới được vượt Đại Kiếp (hiện ${R.realmDisplay(row.realm_index, row.stage_index)}).`;
   if (s.fail_until > now()) return `🩹 **Thiên Kiếp Trọng Thương** — còn **${require('./format').fmtTime(s.fail_until - now())}** mới được Chứng Đạo lại.`;
-  const need = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const need = R.tuViRequiredFor(row);
   if (row.tu_vi < need) return `Chưa đủ tu vi để Chứng Đạo (cần ${fmt(need)}, hiện có ${fmt(row.tu_vi)}).`;
   const miss = Inv.missing(row.user_id, REQ);
   if (miss.length) return `Thiếu tài nguyên: ${miss.map((m) => `**${itemName(m.id)}** ${m.have}/${m.need}`).join(' · ')}`;
@@ -177,7 +177,7 @@ function begin(userId) {
       v: 1, uid: String(userId), step: 1, maxHp, hp: maxHp, ll: 100, shield: (BM.get(userId) && BM.get(userId).awaken >= 1) ? Math.floor(maxHp * 0.05) : 0, atk: Math.max(1, Cu.effectiveAtk(row)), def: Math.max(0, Cu.effectiveDef(row)),
       dr: clamp((b.dr || 0) + (f17.dr || 0), 0, 0.30), kiepRes: clamp((b.kiepDmg || 0) + (f17.kiep || 0) + (perks.kiepDmg || 0), 0, 0.50),
       eq, binh: perks.binh || null, hasGear, danUsed: 0, cd: { dan: 0, bao: 0, cp: 0, sk: 0 }, surv: (perks.dao === 'luanhoi' && perks.awake >= 1) || eq.includes(1055) ? 1 : 0,
-      spent: { ...REQ }, startedAt: now(), expireAt: now() + IDLE_SEC, log: ['🌩️ Thiên địa biến sắc — **Chứng Đạo Đại Kiếp** bắt đầu!'], last: [], tuNeed: R.tuViRequired(row.realm_index, row.stage_index, row.world_tier),
+      spent: { ...REQ }, startedAt: now(), expireAt: now() + IDLE_SEC, log: ['🌩️ Thiên địa biến sắc — **Chứng Đạo Đại Kiếp** bắt đầu!'], last: [], tuNeed: R.tuViRequiredFor(row),
     };
     D.run('UPDATE de19_state SET kiep = ?, attempts = attempts + 1 WHERE user_id = ?', JSON.stringify(k), String(userId));
     hist(userId, 'begin', { maxHp });

@@ -25,7 +25,7 @@ function inProgress(kind, step, steps) {
 function result(r) {
   const [title, intro] = LABEL[r.kind] || LABEL.tuluyen;
   const row = r.row;
-  const required = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const required = R.tuViRequiredFor(row);
   const ready = row.tu_vi >= required;
   const fields = [
     statField('linhmach', 'Linh khí hấp thu', `+${num(r.gained)}`),

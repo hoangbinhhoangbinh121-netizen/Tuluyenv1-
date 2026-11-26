@@ -28,7 +28,7 @@ const TAB_KEYS = TABS.map((t) => t[0]);
 const nameOf = (u) => { const base = safe(u.displayName || u.globalName || u.username, 'Đạo hữu'); try { const h = u.id && require('../../game/fx19').hieuOf(u.id); return h ? `「${h}」${base}` : base; } catch (_) { return base; } };   // v19.0: kèm Đế Hiệu
 
 function tongquan(user, row) {
-  const required = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const required = R.tuViRequiredFor(row);
   const curHp = Cu.syncHpRegen(user.id, row);
   row = Cu.getCultivator(user.id);
   const maxHp = Cu.effectiveMaxHp(row);
@@ -61,7 +61,7 @@ function thuoctinh(user, row) {
 }
 
 function canhgioi(user, row) {
-  const required = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const required = R.tuViRequiredFor(row);
   const nxt = R.nextStage(row.realm_index, row.stage_index);
   let rate = K.BASE_BREAKTHROUGH_RATE - row.realm_index * 0.005 + row.ngo_tinh * 0.01 + row.khi_van * 0.005;
   rate = Math.max(0.15, Math.min(0.97, rate));

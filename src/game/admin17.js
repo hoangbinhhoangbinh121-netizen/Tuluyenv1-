@@ -101,7 +101,7 @@ function realm(admin, userText, realmText, stageText) {
 }
 function tuvi(admin, userText, text) {
   const u = resolveUser(userText); if (u.err) return u.err; const t = fold(text);
-  let nv; if (t === 'full' || t === 'day') { const R = require('./realm'); nv = Math.max(u.row.tu_vi, R.tuViRequired(u.row.realm_index, u.row.stage_index, u.row.world_tier)); }
+  let nv; if (t === 'full' || t === 'day') { const R = require('./realm'); nv = Math.max(u.row.tu_vi, R.tuViRequiredFor(u.row)); }
   else nv = rel(u.row.tu_vi, text); if (nv === null) return '❌ Nhập số (vd 5000000), +số / −số để cộng trừ, hoặc `full` để đầy tu vi đột phá.';
   Cu.updateCultivator(u.id, { tu_vi: nv }); log(admin, 'dat_tu_vi', u.id, `${u.row.tu_vi} → ${nv}`);
   return `✨ Tu vi của <@${u.id}>: ${fmtNum(u.row.tu_vi)} → **${fmtNum(nv)}**.`;

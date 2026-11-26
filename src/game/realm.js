@@ -59,6 +59,12 @@ function softCap(x) {
   return Math.min(cap, SOFT_START + int(room * (1 - Math.exp(-(x - SOFT_START) / room))));
 }
 const tuViRequired = (realmIdx, stageIdx, worldTier = 0) => softCap(int(tuViRequiredBase(realmIdx, stageIdx, worldTier) * K.EXP_REQUIRED_MULT * (isMajorGate(realmIdx, stageIdx) ? K.EXP_GATE_MAJOR_MULT : K.EXP_GATE_MINOR_MULT) * tienExpMult(realmIdx, stageIdx)));
+/** v22.4: yêu cầu tu vi đột phá THEO NGƯỜI (admin chia riêng cho 1 người: `!tangexp yeucau`). Không đặt gì = đúng bằng tuViRequired. */
+function tuViRequiredFor(row, realmIdx = row.realm_index, stageIdx = row.stage_index, worldTier = row.world_tier) {
+  const base = tuViRequired(realmIdx, stageIdx, worldTier);
+  const d = row && row.user_id ? require('./playerBoost').needDiv(row.user_id) : 1;
+  return d === 1 ? base : Math.max(1, Math.ceil(base / d));
+}
 
 /** [realmIdx, stageIdx] kế tiếp, hoặc null nếu đã ở Siêu Thoát Viên Mãn (đỉnh cao nhất hiện tại). */
 function nextStage(realmIdx, stageIdx) {
@@ -84,6 +90,6 @@ const linhgioilenhLabel = (row) => (row.world_tier > 0 ? 'Tiên Lệnh' : 'Linh 
 const linhphuLabel = (row) => (row.world_tier > 0 ? 'Tiên Phù' : 'Linh Phù');
 
 module.exports = {
-  realmSpeedMult, realmDisplay, tuViRequired, softCap, tienExpMult, tuViRequiredBase, tuViRequiredLegacy, isMajorGate, nextStage, rollWeighted, getMult,
+  realmSpeedMult, realmDisplay, tuViRequired, tuViRequiredFor, softCap, tienExpMult, tuViRequiredBase, tuViRequiredLegacy, isMajorGate, nextStage, rollWeighted, getMult,
   worldTierName, worldMult, worldTierFlavor, lenhCol, phuCol, linhgioilenhLabel, linhphuLabel,
 };

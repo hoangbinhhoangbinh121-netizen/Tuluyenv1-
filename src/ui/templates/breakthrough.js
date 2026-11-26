@@ -32,7 +32,7 @@ function result(d) {
 
 /** Danh sách điều kiện (✓/✕) hiển thị ở tab Cảnh giới của nhân vật. */
 function checklist(row) {
-  const required = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const required = R.tuViRequiredFor(row);
   const nxt = R.nextStage(row.realm_index, row.stage_index);
   const line = (ok, text) => `${ok ? E.xacnhan : E.tuchoi} ${text}`;
   return [

@@ -42,7 +42,7 @@ const nameOfTier = (t) => (C16.isNew(t) ? C16.nameOf(t) : `[Tầng ${t}] ${safe(
 
 // ---------------------------------------------------------------- dữ liệu từng tab (trả { title, description?, fields:[{name,value,inline}] })
 function tabTongQuan(row) {
-  const req = R.tuViRequired(row.realm_index, row.stage_index, row.world_tier);
+  const req = R.tuViRequiredFor(row);
   const maxHp = Cu.effectiveMaxHp(row); const curHp = row.cur_hp === null || row.cur_hp === undefined ? maxHp : row.cur_hp;
   const eq = Cu.equippedCongphapTiers(row).map(nameOfTier);
   return {
@@ -185,7 +185,7 @@ function fullText(userId) {
   if (!row) return null;
   const L = [`HỒ SƠ NGƯỜI CHƠI ${userId} — xuất lúc ${new Date().toISOString()}`, '='.repeat(70), '', '## GIÁ TRỊ TÍNH RA'];
   L.push(`Cảnh giới: ${R.realmDisplay(row.realm_index, row.stage_index, true)} / ${R.worldTierName(row.world_tier)}`);
-  L.push(`Tu vi cần: ${R.tuViRequired(row.realm_index, row.stage_index, row.world_tier)}`);
+  L.push(`Tu vi cần: ${R.tuViRequiredFor(row)}`);
   L.push(`Công/Thủ/Tốc/HP hiệu dụng: ${Cu.effectiveAtk(row)} / ${Cu.effectiveDef(row)} / ${Cu.effectiveSpd(row)} / ${Cu.effectiveMaxHp(row)}`);
   L.push(`Lực chiến: ${Cu.calcLucChien(row)}`);
   L.push(`Hệ số tu vi công pháp: ×${Cu.cpTuMult(row).toFixed(3)}`);
