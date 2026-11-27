@@ -52,6 +52,18 @@ function bossView(idx) {
   return { embeds: [e], flags: EPH };
 }
 
+/** v22.4.2: dòng mô tả AI của kẻ địch (né / hồi / khiên / Kim Thân / phản kích còn mấy lần). */
+function aiLine(e) {
+  const a = e.ai; if (!a) return '';
+  const p = [`Né ${Math.round(a.dodge * 100)}% (còn ${Math.max(0, a.dodgeCap - a.dodgeN)} lần)`];
+  if (a.heal) p.push(`Hồi phục còn ${Math.max(0, a.heal.cap - a.heal.n)} lần`);
+  if (a.shield) p.push(`Khiên còn ${Math.max(0, a.shield.cap - a.shield.n)} lần`);
+  if (a.defst) p.push(`Kim Thân còn ${Math.max(0, a.defst.cap - a.defst.n)} lần`);
+  if (a.ctr) p.push(`Phản kích còn ${Math.max(0, a.ctr.cap - a.ctr.n)} lần`);
+  if (a.resEff) p.push(`Kháng hiệu ứng ${Math.round(a.resEff * 100)}%`);
+  return `\n🧠 AI cấp ${a.lv}: ${p.join(' · ')}`;
+}
+
 // ================================================================ PANEL TRẬN
 const kindIcon = new Proxy({}, { get: (_, kd) => E9.mob(String(kd)) });   // v19.1: emoji pixel theo loại kẻ địch
 function lobbyView(runId) {
@@ -66,22 +78,22 @@ const cdLabel = (m) => [m.cd.tuyet > 0 ? `${E9.a('tuyet', '🌠')}${m.cd.tuyet}`
 function runView(runId, note = '') {
   const L = BC.load(runId); if (!L) return { content: '❌ Không tìm thấy lần thám hiểm này.', embeds: [], components: [] };
   const { run, st } = L; if (run.status === 'lobby') return lobbyView(runId);
-  const bc = B.BCS[st.bc]; const F = B.FLOORS[Math.min(4, Math.max(0, st.floor - 1))]; const e = st.enemy;
+  const prof = st.prof || null; const bc = prof || B.BCS[st.bc]; const FL = prof ? prof.floors : B.FLOORS; const F = FL[Math.min(FL.length - 1, Math.max(0, st.floor - 1))]; const e = st.enemy;   // v22.4.2: prof = trận Bí Cảnh Nhân/Linh Giới
   const color = st.over === 'won' ? 0x2ecc71 : st.over ? 0xe74c3c : (e && e.tele ? 0xe67e22 : 0x8e44ad);
-  const emb = new EmbedBuilder().setColor(color).setTitle(`${E9.bc(st.bc)} ${bc.name} — Tầng ${st.floor}/5 · ${F.name}`);
+  const emb = new EmbedBuilder().setColor(color).setTitle(prof ? `⚔️ ${bc.name} — ${F.name}` : `${E9.bc(st.bc)} ${bc.name} — Tầng ${st.floor}/5 · ${F.name}`);
   const done = !!st.over;
   if (e && !done) {
     const wave = `${st.wave + 1}/${F.waves.length}`;
     const phase = e.kind === 'final' ? ` · Giai đoạn ${e.phase}/3` : '';
-    emb.addFields({ name: `${kindIcon[e.kind] || '👾'} ${e.name}  _(lượt ${wave}${phase})_`, value: `${bar(e.hp, e.maxHp)} **${fmt(e.hp)}/${fmt(e.maxHp)}**${e.shield > 0 ? ` ${E9.a('guard', '🛡️')} ${fmt(e.shield)}` : ''}${e.weak ? ` ${E9.a('weak', '⬇️')} yếu ${Math.round(e.weak.pct * 100)}%` : ''}${e.lose ? ' ⏳' : ''}${e.tele ? `\n${E9.a('warn', '⚠️')} **ĐANG TỤ LỰC: ${e.tele.name}**${e.tele.aoe ? ' (diện rộng)' : ''} — bấm ${E9.a('guard', '🛡️')} **Phòng Thủ**!` : ''}` });
+    emb.addFields({ name: `${kindIcon[e.kind] || '👾'} ${e.name}  _(lượt ${wave}${phase})_`, value: `${bar(e.hp, e.maxHp)} **${fmt(e.hp)}/${fmt(e.maxHp)}**${e.shield > 0 ? ` ${E9.a('guard', '🛡️')} ${fmt(e.shield)}` : ''}${e.weak ? ` ${E9.a('weak', '⬇️')} yếu ${Math.round(e.weak.pct * 100)}%` : ''}${e.lose ? ' ⏳' : ''}${e.ai && e.ai.st.def > 0 ? ' 🔰 Kim Thân' : ''}${e.ai && e.ai.st.ctr > 0 ? ' ⚔️ Lập thế phản kích' : ''}${e.tele ? `\n${E9.a('warn', '⚠️')} **ĐANG TỤ LỰC: ${e.tele.name}**${e.tele.aoe ? ' (diện rộng)' : ''} — bấm ${E9.a('guard', '🛡️')} **Phòng Thủ**!` : ''}` });
   }
   emb.addFields({ name: `${E9.k('doi19', '🧑‍🤝‍🧑')} Đội hình (${st.members.length})`, value: E9.clip(st.members.map((m, i) => `${i === st.turn && !done ? E9.a('start', '▶️') : '　'}${m.alive ? E9.a('alive', '🟢') : E9.a('dead', '💀')} **${m.name}** ${bar(m.hp, m.maxHp, 8)} ${fmt(m.hp)}/${fmt(m.maxHp)}${m.shield ? ` ${E9.a('guard', '🛡️')}${fmt(m.shield)}` : ''} · ${E9.a('ll', '✨')}${Math.floor(m.ll)}% ${cdLabel(m)}`).join('\n')) });
   const logs = (() => { const out = []; let n = 0; for (const l of st.log.slice(-8).reverse()) { const t = E9.px(l); if (n + t.length + 1 > 980) break; out.unshift(t); n += t.length + 1; } return out.join('\n'); })();
   if (logs) emb.addFields({ name: `${E9.a('log', '📜')} Diễn biến`, value: logs });
   if (st.pendingReward && st.lastReward) emb.addFields({ name: `${E9.a('gift', '🎁')} Thưởng`, value: E9.clip(E9.px(st.lastReward)) });
-  if (st.over === 'won') emb.setDescription('🎉 **CHINH PHỤC BÍ CẢNH!** Phần thưởng đã được trao vào kho.');
-  if (st.over === 'lost') emb.setDescription('💀 Cả đội gục ngã. Phần thưởng các tầng đã qua vẫn được giữ.');
-  if (st.over === 'retreat') emb.setDescription('🏃 Đã rút lui. Phần thưởng các tầng đã qua vẫn được giữ.');
+  if (st.over === 'won') emb.setDescription(prof ? '🎉 **CHIẾN THẮNG!** Phần thưởng đã được trao vào kho.' : '🎉 **CHINH PHỤC BÍ CẢNH!** Phần thưởng đã được trao vào kho.');
+  if (st.over === 'lost') emb.setDescription(prof ? '💀 Thất bại — không nhận được phần thưởng (lượt khám phá / Vé đã bị tiêu hao).' : '💀 Cả đội gục ngã. Phần thưởng các tầng đã qua vẫn được giữ.');
+  if (st.over === 'retreat') emb.setDescription(prof ? '🏃 Đã rút lui — không nhận được phần thưởng (lượt khám phá / Vé đã bị tiêu hao).' : '🏃 Đã rút lui. Phần thưởng các tầng đã qua vẫn được giữ.');
   const cur = st.members[st.turn];
   emb.setFooter({ text: done ? 'Kết thúc' : `Đến lượt: ${cur ? cur.name : '—'}${st.members.length > 1 ? ` · im lặng ${BC.CFG.IDLE_SKIP}s thì người khác được đánh thay` : ''}${note ? ` · ${note}` : ''}` });
   const rows = [];
@@ -129,7 +141,7 @@ registerStatic('b19', async (i, parts) => {
   if (kind !== 'r') return;
   const act = b;
   if (act === 'refresh') return showRun(i, runId);
-  if (act === 'boss') { const L = BC.load(runId); if (!L || !L.st.enemy) return deny(i, 'Không có kẻ địch.'); const e = L.st.enemy; return i.reply({ flags: EPH, embeds: [new EmbedBuilder().setColor(0xc0392b).setTitle(`${kindIcon[e.kind] || '👾'} ${e.name}`).setDescription(`HP **${fmt(e.hp)}/${fmt(e.maxHp)}** · Kháng sát thương **${Math.round((e.res || 0) * 100)}%** · Phòng ngự **${Math.round(e.defPct)}%**${e.kind === 'final' ? `\nGiai đoạn **${e.phase}/3**\nKỹ năng: ${(e.skills || []).map((x) => x.name || x).join(' · ')}` : ''}${e.skill ? `\nKỹ năng: ${e.skill.name}` : ''}`)] }); }
+  if (act === 'boss') { const L = BC.load(runId); if (!L || !L.st.enemy) return deny(i, 'Không có kẻ địch.'); const e = L.st.enemy; return i.reply({ flags: EPH, embeds: [new EmbedBuilder().setColor(0xc0392b).setTitle(`${kindIcon[e.kind] || '👾'} ${e.name}`).setDescription(`HP **${fmt(e.hp)}/${fmt(e.maxHp)}** · Kháng sát thương **${Math.round((e.res || 0) * 100)}%** · Phòng ngự **${Math.round(e.defPct)}%**${e.kind === 'final' ? `\nGiai đoạn **${e.phase}/3**\nKỹ năng: ${(e.skills || []).map((x) => x.name || x).join(' · ')}` : ''}${e.skill ? `\nKỹ năng: ${e.skill.name}` : ''}${aiLine(e)}`)] }); }
   if (act === 'retreat') {
     const r = BC.retreat(runId, i.user.id); if (!r.ok) return deny(i, `❌ ${r.error}`);
     return showRun(i, runId, r.ended ? 'Đã rút lui' : 'Bạn đã rút lui');

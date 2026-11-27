@@ -22,6 +22,7 @@ const D16 = require('../data/congphap_v16');
 const IT = require('../data/items_v17');
 const B = require('../data/bicanh19');
 const KN = require('./combatKernel');
+const AI = require('./combatAI');   // v22.4.2: AI quái/Boss dùng chung 3 thế giới
 const { now, int, random, randUniform, randInt, choice, clamp } = require('../util');
 
 const { Delta } = Cu;
@@ -39,6 +40,7 @@ const CFG = {
               // BossHP = Solo × (1 + 0.65 × (N − 1))
   DEF_CAP: 70, CRIT_BASE: 0.05, CRIT_BASE_MULT: 1.5, DMG_CAP: 9e17, LOG_KEEP: 9,   // v19.9: nâng trần 9e15 → 9e17 để Boss ×10–20 HP không bị chặn phẳng ở cảnh giới cao
   BOSS_CRIT: 0.08, AOE_SPLIT: 0.45,
+  HP_JIT: [0.93, 1.07], HP_DEF_K: 0.15,   // v22.4.2: dao động HP kẻ địch ±7% (trung bình 1) · hệ số theo tỉ lệ Phòng Thủ của đội
   ITEMS_MAX: 3,               // Huyết Nguyên Đan tối đa mỗi lần vào
   AUTO_MAX: 30,               // "Tự Chiến" tối đa bấy nhiêu lượt / lần bấm (v19.9: 6 → 30 vì Boss trâu hơn)
   // v19.9: ĐƯỜNG CONG SỨC MẠNH BOSS theo bí cảnh (0..18): HP ×10 → ×20, sát thương ×1 → ×1,6 (tuyến tính, nên bí cảnh sau LUÔN mạnh hơn bí cảnh trước).
@@ -79,6 +81,11 @@ const SIG = {
 
 const REALM_NAME = (i) => K.REALMS[B.BCS[i].realm].name;
 const bcOf = (i) => B.BCS[i] || null;
+// v22.4.2: "profile" — trận của Bí Cảnh Nhân/Linh Giới dùng CHÍNH lõi này; st.prof thay cho B.BCS[st.bc] / B.FLOORS (xem game/bcFight.js). Không có st.prof ⇒ Tiên Giới như cũ.
+const bcOfSt = (st) => st.prof || B.BCS[st.bc] || null;
+const floorsOf = (st) => (st.prof ? st.prof.floors : B.FLOORS);
+const worldOf = (st) => (st.prof ? st.prof.world : 'tien');
+const powOf = (st, kind) => { if (!st.prof) return bossPower(st.bc, kind); const P = st.prof.pow; return { hp: P.hp[kind] || 1, atk: P.atk[kind] || 1 }; };
 
 // ================================================================ LÕI THUẦN
 const hasBook = (m) => m.eq.length > 0;
@@ -120,7 +127,7 @@ function log(st, line) { st.log.push(line); if (st.log.length > 40) st.log.splic
 
 /** Sinh kẻ địch cho "lượt" thứ st.wave của tầng st.floor. */
 function spawnEnemy(st) {
-  const bc = bcOf(st.bc); const kind = B.FLOORS[st.floor - 1].waves[st.wave]; const N = st.members.length;
+  const bc = bcOfSt(st); const kind = floorsOf(st)[st.floor - 1].waves[st.wave]; const N = st.members.length;
   const KD = B.KINDS[kind]; let name; let hpMult; let atkPct = KD.atk; let defPct = KD.def * 100; let skill = null; let mobKey = null;
   if (kind === 'normal') {
     const mob = choice(bc.mobs); mobKey = mob.key; name = mob.name; skill = mob.skill;
@@ -133,14 +140,19 @@ function spawnEnemy(st) {
   }
   const hpE = 1 + (bc.diff.hp - 1) * CFG.HP_EASE; const atkE = 1 + (bc.diff.atk - 1) * CFG.ATK_EASE;
   const party = 1 + CFG.PARTY_HP * (N - 1);
-  const pw = bossPower(st.bc, kind);   // v19.9
-  const hp = Math.max(1, Math.min(CFG.DMG_CAP, Math.ceil(meanAtk(st) * hpMult * hpE * party * pw.hp)));
+  const pw = powOf(st, kind);   // v19.9 (Tiên Giới) / profile (Nhân–Linh Giới)
+  // v22.4.2: HP ĐỘNG — theo Công Kích (đã gồm cảnh giới/lực chiến), số người, độ khó bí cảnh, loại kẻ địch; thêm hệ số theo tỉ lệ Phòng Thủ của đội + dao động ngẫu nhiên.
+  // Giá trị được CHỐT lúc tạo kẻ địch và lưu vào state (e.maxHp) — không đổi giữa trận, không đổi sau khi bot khởi động lại.
+  const dRatio = clamp(st.members.reduce((s, x) => s + x.def / (x.atk + x.def + 1), 0) / N, 0, 1);
+  const defF = clamp(1 + CFG.HP_DEF_K * (dRatio - 0.5), 0.92, 1.08); const jit = randUniform(CFG.HP_JIT[0], CFG.HP_JIT[1]);
+  const hp = Math.max(1, Math.min(CFG.DMG_CAP, Math.ceil(meanAtk(st) * hpMult * hpE * party * pw.hp * defF * jit)));
   const resBase = { normal: 0, elite: 0.03, mini: 0.05, guard: 0.07, final: 0.10 }[kind];
   const e = {
     kind, name, hp, maxHp: hp, atkPct: atkPct * atkE * pw.atk, defPct, counter: randUniform(KD.counter[0], KD.counter[1]) * atkE * pw.atk, res: resBase, skill, mobKey,
     phase: 1, phaseAtk: 1, rage: 1, rageT: 0, shield: 0, tele: null, et: 0, weak: null, lose: false, healed: {}, shieldUsed: {}, bc: st.bc,
   };
   if (kind === 'final') { e.skills = bc.skills; }
+  e.ai = AI.build(kind, worldOf(st), mobKey);                                                 // v22.4.2: bộ đặc tính AI (né / hồi / khiên / phản kích…), null nếu tắt
   return e;
 }
 
@@ -199,7 +211,8 @@ function enemyDamage(st, e, m, base, o = {}) {
   if (KL) raw *= KN.takeMult(KL) * KN.foeOutMult(KL) * (1 - clamp(CI.guard, 0, 0.6)) * (1 - clamp(CI.weak, 0, 0.6));
   if (!o.noDodge && random() < clamp(m.dodge + (KL ? KN.dodgeChance(KL) + CI.dodge : 0), 0, 0.6)) { if (KL) KN.cpTick(KL); log(st, `💨 **${m.name}** né được đòn của ${e.name}!`); return { dmg: 0, miss: true }; }
   if (KL) KN.cpTick(KL);
-  if (m.guard > 0) { raw *= 1 - CFG.GUARD_CUT; if (o.tele) raw *= CFG.GUARD_TELE_EXTRA; }
+  if (m.guard > 0) { raw *= 1 - CFG.GUARD_CUT * (1 - (o.breakGuard || 0)); if (o.tele) raw *= CFG.GUARD_TELE_EXTRA; }   // v22.4.2: breakGuard = đòn phá thế thủ
+  if (m.defDown) raw *= 1 + m.defDown.pct;                                               // v22.4.2: đang bị phá giáp
   raw *= 1 - m.dr;
   if (e.weak) raw *= 1 - e.weak.pct;
   let crit = false;
@@ -230,13 +243,17 @@ function enemyTurn(st) {
   const e = st.enemy; const live = alive(st); if (!live.length) return;
   if (e.lose) { e.lose = false; log(st, `⏳ **${e.name}** bị đóng băng thời gian — mất lượt!`); return; }
   e.et += 1;
-  const target = () => choice(alive(st));
+  const ai = e.ai || null;
+  const weakest = () => alive(st).reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
+  const target = () => { const l = alive(st); return (ai && ai.lv >= 2 && l.length > 1 && random() < 0.35) ? weakest() : choice(l); };   // v22.4.2: AI cấp 2+ đôi khi nhắm người yếu nhất
   const hit = (m, base, o, label) => {
     const r = enemyDamage(st, e, m, base, o);
     if (r.miss) return r;
     log(st, `${label} **${m.name}** −${fmt(r.dmg)} sinh mệnh${r.crit ? ' (chí mạng)' : ''} → còn ${fmt(m.hp)}/${fmt(m.maxHp)}`); return r;
   };
   const counter = () => { const m = target(); if (m) hit(m, e.counter, {}, `💥 ${e.name} phản công`); };
+  // ---- v22.4.2: nổi giận 1 lần khi sắp gục (Boss cấp AI ≥ 2)
+  if (AI.shouldEnrage(e)) { ai.enraged = 1; e.rage = 1.15; e.rageT = 3; log(st, `😤 **${e.name}** nổi giận khi sắp gục — công kích +15% trong 3 lượt!`); }
   // ---- tụ lực đang chờ → tung đòn
   if (e.tele) {
     const t = e.tele; e.tele = null;
@@ -248,29 +265,85 @@ function enemyTurn(st) {
   }
   const announce = (name, mult, pierce, aoe) => {
     e.tele = { name, mult, pierce, aoe };
+    if (ai) ai.lastCharge = e.et;
     log(st, `⚠️ **${e.name}** đang tụ lực **${name}**${aoe ? ' (diện rộng)' : ''} — đòn kế tiếp rất nặng! Hãy 🛡️ **Phòng Thủ**.`);
   };
-  if (e.kind === 'final') {
-    const sk = e.skills; const ph = e.phase; const k = ph === 1 ? e.et % 4 : e.et % 3;
-    if (ph === 1) {
-      if (k === 1) { const m = target(); log(st, `👑 **${e.name}** thi triển **${sk[0]}**!`); hit(m, e.atkPct * 1.4, {}, '💢'); applyWeakPlayer(st, m, 0.10, 2); }
-      else if (k === 3) { counter(); announce(sk[1], 1.8, 0.20, false); } else counter();
-    } else if (ph === 2) {
-      if (k === 1) { const m = target(); log(st, `👑 **${e.name}** thi triển **${sk[0]}**!`); hit(m, e.atkPct * 1.4, {}, '💢'); applyWeakPlayer(st, m, 0.10, 2); }
-      else if (k === 2) { counter(); announce(sk[1], 1.8, 0.20, st.members.length > 1); } else counter();
-    } else {
-      if (k === 0) { const m = target(); log(st, `👑 **${e.name}** thi triển **${sk[0]}**!`); hit(m, e.atkPct * 1.4, {}, '💢'); applyWeakPlayer(st, m, 0.10, 2); }
-      else if (k === 2) { counter(); announce(sk[3], 2.5, 0, st.members.length > 1); } else counter();
+  // ---- v22.4.2: AI phòng thủ (hồi phục / khiên / Kim Thân / lập thế phản kích) — thay cho đòn đánh của lượt này
+  if (ai) {
+    const d = AI.planDefense(e);
+    if (d === 'heal') {
+      const a = AI.doHeal(e); const nm = e.kind === 'final' ? 'Hấp Thu Linh Khí' : (e.kind === 'normal' ? 'Bản Năng Hồi Phục' : 'Linh Khí Hồi Phục');
+      log(st, `💚 **${e.name}** dùng **${nm}** — hồi ${fmt(a)} sinh lực (${Math.round(a * 100 / e.maxHp)}%)${ai.heal.n >= ai.heal.cap ? ' _(đã dùng hết lượt hồi)_' : ''}.`); return;
     }
+    if (d === 'shield') { const a = AI.doShield(e); log(st, `🛡️ **${e.name}** dựng khiên ${fmt(a)} (${Math.round(ai.shield.pct * 100)}% sinh mệnh).`); return; }
+    if (d === 'defst') { const x = AI.doDefst(e); log(st, `🔰 **${e.name}** vận **Kim Thân** — sát thương nhận vào −${Math.round(x.red * 100)}% trong ${x.turns} lượt. _(Mẹo: dùng Phòng Thủ / Điều Tức chờ hết hiệu lực.)_`); return; }
+    if (d === 'ctr') { AI.doCtr(e); log(st, `⚔️ **${e.name}** lập thế **phản kích** — kẻ nào ra đòn kế tiếp sẽ bị đánh trả! _(Mẹo: Phòng Thủ để vô hiệu.)_`); return; }
+  }
+  const sinceCh = ai ? e.et - ai.lastCharge : 0;
+  const guardHeavy = !!(ai && ai.mem.guard >= 2);                                          // người chơi co cụm Phòng Thủ liên tục → Boss đổi chiến thuật bằng đòn phá thế thủ
+  const wpick = (w) => { let tot = 0; for (const k of Object.keys(w)) tot += Math.max(0, w[k]); let r = random() * tot; for (const k of Object.keys(w)) { r -= Math.max(0, w[k]); if (r <= 0) return k; } return Object.keys(w)[0]; };
+  const bc = bcOfSt(st); const theme = bc.theme || bc.name;
+  const brk = () => {                                                                       // đòn xuyên giáp + phá thế thủ (+ giảm phòng thủ ở cấp 2+)
+    const m = target(); log(st, `🔨 **${e.name}** tung **${theme} Phá Thủ**!`);
+    hit(m, e.atkPct * 1.15, { pierce: 0.25, breakGuard: 0.5 }, '💢');
+    if (ai.lv >= 2 && random() < 0.4) applyDefDown(st, m, 0.15, 2);
+  };
+  const finisher = () => {                                                                  // truy sát người yếu nhất
+    const m = weakest(); ai.lastFinish = e.et; log(st, `🎯 **${e.name}** truy sát **${m.name}**!`); hit(m, e.atkPct * 1.5, {}, '💢');
+  };
+  const wantFin = !!(ai && ai.lv >= 2 && live.length > 1 && e.et - ai.lastFinish >= 3 && alive(st).some((m) => m.hp / m.maxHp < 0.35));   // truy sát chỉ có nghĩa khi có nhiều mục tiêu (solo: không tăng sát thương vô cớ)
+  if (e.kind === 'final') {
+    const sk = e.skills; const ph = e.phase;
+    if (!ai) {                                                                               // hành vi V22.4.1 (khi tắt AI)
+      const k = ph === 1 ? e.et % 4 : e.et % 3;
+      if (ph === 1) {
+        if (k === 1) { const m = target(); log(st, `👑 **${e.name}** thi triển **${sk[0]}**!`); hit(m, e.atkPct * 1.4, {}, '💢'); applyWeakPlayer(st, m, 0.10, 2); }
+        else if (k === 3) { counter(); announce(sk[1], 1.8, 0.20, false); } else counter();
+      } else if (ph === 2) {
+        if (k === 1) { const m = target(); log(st, `👑 **${e.name}** thi triển **${sk[0]}**!`); hit(m, e.atkPct * 1.4, {}, '💢'); applyWeakPlayer(st, m, 0.10, 2); }
+        else if (k === 2) { counter(); announce(sk[1], 1.8, 0.20, st.members.length > 1); } else counter();
+      } else {
+        if (k === 0) { const m = target(); log(st, `👑 **${e.name}** thi triển **${sk[0]}**!`); hit(m, e.atkPct * 1.4, {}, '💢'); applyWeakPlayer(st, m, 0.10, 2); }
+        else if (k === 2) { counter(); announce(sk[3], 2.5, 0, st.members.length > 1); } else counter();
+      }
+      return;
+    }
+    const canC = sinceCh >= 3; const must = sinceCh >= (ph === 1 ? 5 : 4); const multi = live.length > 1;
+    const w = ph === 1 ? { atk: 45, sk0: 25, ch: canC ? 30 : 0 } : ph === 2 ? { atk: 38, sk0: 22, ch: canC ? 34 : 0, brk: 6 } : { atk: 30, sk0: 20, ch: canC ? 38 : 0, brk: 6, aoe: multi ? 8 : 0 };
+    if (guardHeavy) { w.brk = (w.brk || 0) + 35; w.ch = (w.ch || 0) * 0.5; }
+    if (wantFin) w.fin = 25;
+    const pick = must && !guardHeavy ? 'ch' : wpick(w);
+    if (pick === 'sk0') { const m = target(); log(st, `👑 **${e.name}** thi triển **${sk[0]}**!`); hit(m, e.atkPct * 1.4, {}, '💢'); applyWeakPlayer(st, m, 0.10, 2); }
+    else if (pick === 'ch') { counter(); if (ph === 3) announce(sk[3], 2.5, 0, multi); else announce(sk[1], 1.8, 0.20, ph === 2 && multi); }
+    else if (pick === 'brk') brk();
+    else if (pick === 'fin') finisher();
+    else if (pick === 'aoe') { log(st, `🌪️ **${e.name}** quét một đòn diện rộng!`); for (const m of alive(st)) hit(m, e.atkPct * 1.0 * CFG.AOE_SPLIT * 1.6, {}, '💢'); }
+    else counter();
     return;
   }
   if (e.kind === 'mini' || e.kind === 'guard') {
-    if (e.kind === 'guard' && !e.shieldUsed.half && e.hp / e.maxHp <= 0.5) { e.shieldUsed.half = 1; e.shield += Math.floor(e.maxHp * 0.10); log(st, `🛡️ **${e.name}** dựng khiên bằng 10% sinh mệnh!`); }
-    if (e.et % 4 === 3) { counter(); announce(e.kind === 'mini' ? `${bcOf(st.bc).theme} Trọng Kích` : `${bcOf(st.bc).theme} Phong Tỏa`, e.kind === 'mini' ? 1.7 : 2.0, e.kind === 'guard' ? 0.15 : 0, false); } else counter();
+    if (!ai) {
+      if (e.kind === 'guard' && !e.shieldUsed.half && e.hp / e.maxHp <= 0.5) { e.shieldUsed.half = 1; e.shield += Math.floor(e.maxHp * 0.10); log(st, `🛡️ **${e.name}** dựng khiên bằng 10% sinh mệnh!`); }
+      if (e.et % 4 === 3) { counter(); announce(e.kind === 'mini' ? `${theme} Trọng Kích` : `${theme} Phong Tỏa`, e.kind === 'mini' ? 1.7 : 2.0, e.kind === 'guard' ? 0.15 : 0, false); } else counter();
+      return;
+    }
+    const canC = sinceCh >= 3; const must = sinceCh >= 5;
+    const w = { atk: 60, ch: canC ? 30 : 0, brk: ai.lv >= 2 ? 10 : 0 };
+    if (guardHeavy) { w.brk = (w.brk || 0) + 30; w.ch *= 0.5; if (!w.brk) w.brk = 30; }
+    if (wantFin) w.fin = 25;
+    const pick = must && !guardHeavy ? 'ch' : wpick(w);
+    if (pick === 'ch') { counter(); announce(e.kind === 'mini' ? `${theme} Trọng Kích` : `${theme} Phong Tỏa`, e.kind === 'mini' ? 1.7 : 2.0, e.kind === 'guard' ? 0.15 : 0, false); }
+    else if (pick === 'brk') brk();
+    else if (pick === 'fin') finisher();
+    else counter();
     return;
   }
-  // quái thường / tinh anh: kỹ năng mỗi 3 lượt, không báo trước
-  if (e.skill && e.et % 3 === 0) {
+  // quái thường / tinh anh: kỹ năng riêng (không báo trước)
+  const useSkill = ai ? (e.skill && ((e.et - (ai.lastSkill || 0) >= 4) || (e.et - (ai.lastSkill || 0) >= 2 && random() < 0.34))) : (e.skill && e.et % 3 === 0);
+  if (ai && wantFin && random() < 0.35) { finisher(); return; }
+  if (ai && guardHeavy && ai.lv >= 2 && random() < 0.5) { brk(); return; }
+  if (useSkill) {
+    if (ai) ai.lastSkill = e.et;
     const m = target(); const s = e.skill;
     if (s.shield) { e.shield += Math.floor(e.maxHp * s.shield); log(st, `🛡️ **${e.name}** dùng **${s.name}** — dựng khiên ${Math.round(s.shield * 100)}% sinh mệnh.`); counter(); return; }
     if (s.rage) { e.rage = 1 + s.rage; e.rageT = 3; log(st, `😡 **${e.name}** dùng **${s.name}** — công kích +${Math.round(s.rage * 100)}% trong 3 lượt.`); counter(); return; }
@@ -279,6 +352,12 @@ function enemyTurn(st) {
     return;
   }
   counter();
+}
+/** v22.4.2: giảm phòng thủ (kẻ địch gây thêm sát thương lên người này). */
+function applyDefDown(st, m, pct, turns) {
+  if (!m.alive) return;
+  if (m.perks && m.perks.effRes > 0 && random() < m.perks.effRes) { log(st, `🔱 **Thiên Đạo Bất Xâm**: ${m.name} kháng được hiệu ứng xấu!`); return; }
+  m.defDown = { pct, turns }; log(st, `🔻 **${m.name}** bị phá giáp: nhận thêm ${Math.round(pct * 100)}% sát thương trong ${turns} lượt.`);
 }
 function applyWeakPlayer(st, m, pct, turns) {
   if (!m.alive) return;
@@ -289,7 +368,7 @@ function applyWeakPlayer(st, m, pct, turns) {
 
 /** Điều kiện dùng 1 hành động. Trả chuỗi lỗi hoặc null. */
 function canAct(st, m, a) {
-  const e = st.enemy; const bc = bcOf(st.bc);
+  const e = st.enemy; const bc = bcOfSt(st);
   if (!ACT[a]) return 'Hành động không hợp lệ.';
   if (a === 'race') { const K0 = CUR && CUR.m === m ? CUR.L : null; if (!K0) return 'Kỹ năng chủng tộc chưa bật ở Bí Cảnh (Combat Kernel đang tắt).'; return KN.raceCheck(K0) || (e ? null : 'Không có kẻ địch.'); }
   if (a === 'item') { if ((m.items || 0) >= CFG.ITEMS_MAX) return `Đã dùng đủ ${CFG.ITEMS_MAX} vật phẩm trong lần vào này.`; if (!(st.itemHeal > 0)) return 'Bạn không có Huyết Nguyên Đan.'; if (m.hp >= m.maxHp) return 'Sinh mệnh đang đầy.'; return null; }
@@ -339,11 +418,12 @@ function stepCore(st, uid, a) {
     m.hp = Math.max(1, m.hp - bk.dotA); kStun = bk.stunned;
     if (bk.dotB > 0) { hurtEnemy(e, bk.dotB); m.dealt += bk.dotB; log(st, `🔥 Hiệu ứng gây thêm **${fmt(bk.dotB)}** sát thương lên ${e.name}.`); }
   }
+  let dealtNow = 0; let ctrDone = false; const ctrWas = !!AI.counterStance(e);
   // ---- thực hiện hành động
   if (kStun) { /* Choáng Váng: mất lượt */ }
   else if (a === 'guard') {
     m.guard = 1; m.ll = Math.min(100, m.ll + 10);
-    if (m.perks.binh === 'chung') { e.weak = { pct: 0.15, turns: 2 }; log(st, `🔔 **Hỗn Độn Chấn Hồn**: ${e.name} yếu đi 15% trong 2 lượt!`); }
+    if (m.perks.binh === 'chung') { if (AI.resists(e)) log(st, `🔰 ${e.name} kháng được **Hỗn Độn Chấn Hồn**!`); else { e.weak = { pct: 0.15, turns: 2 }; log(st, `🔔 **Hỗn Độn Chấn Hồn**: ${e.name} yếu đi 15% trong 2 lượt!`); } }
     log(st, `🛡️ **${m.name}** thủ thế — đòn kế tiếp giảm ${Math.round(CFG.GUARD_CUT * 100)}%, hồi 10% Linh Lực.`);
   } else if (a === 'item') {
     const got = heal(m, m.maxHp * st.itemHeal); m.items = (m.items || 0) + 1; st.itemHeal = 0;
@@ -366,18 +446,29 @@ function stepCore(st, uid, a) {
     }
     const selfRace = a === 'race' && kRace && kRace.kind === 'self';          // v22.1: kỹ năng tự thân thay cho đòn đánh
     if (selfRace) log(st, `🧬 **${m.name}** dùng **${kRace.name}**.`);
-    else {
+    else if (AI.tryDodge(e, a === 'tuyet' || a === 'bi' || a === 'than')) {                // v22.4.2: kẻ địch NÉ (có giới hạn lần + hồi chiêu; không né khi đang tụ lực)
+      const ll0 = (A.ll || 0); const heavyA = a === 'tuyet' || a === 'bi' || a === 'than';
+      m.ll = Math.min(100, m.ll + Math.floor(ll0 * (heavyA ? 1 : 0.5)));                   // hoàn Linh Lực (đòn nặng hoàn đủ) để bị né không quá thiệt
+      if (heavyA && A.cd) m.cd[a] = Math.max(1, Math.ceil(A.cd / 2));
+      m.first = false; dealtNow = 0;
+      log(st, `💨 **${e.name}** né được **${sig ? sig.name : A.name}** của ${m.name}! _(Linh Lực được hoàn lại)_`);
+    } else {
       const r = playerDamage(st, m, e, mult, opts);
       if (KL) { r.dmg = Math.max(1, Math.floor(r.dmg * KN.outMult(KL))); for (const l of KN.after(KL, { damage: r.dmg, is_crit: r.crit })) log(st, l); }
-      hurtEnemy(e, r.dmg); m.dealt += r.dmg;
+      const tm = AI.takeMult(e); if (tm < 1) { r.dmg = Math.max(1, Math.floor(r.dmg * tm)); r.lines.push(`🔰 **Kim Thân** của ${e.name} làm giảm ${Math.round((1 - tm) * 100)}% sát thương!`); }   // v22.4.2
+      hurtEnemy(e, r.dmg); m.dealt += r.dmg; dealtNow = r.dmg;
       log(st, `${A.icon} **${m.name}** dùng **${sig ? sig.name : A.name}**: −${fmt(r.dmg)} sinh lực ${e.name}${r.crit ? ' 💥 chí mạng' : ''}`);
       for (const l of r.lines) log(st, l);
       if (m.ls > 0) { const h = heal(m, Math.min(r.dmg * m.ls, m.maxHp * 0.10)); if (h > 0) log(st, `🩸 Hút máu: **${m.name}** hồi ${fmt(h)}.`); }
-      if (sig && sig.weaken && random() < sig.chance) { e.weak = { pct: sig.weaken[0], turns: sig.weaken[1] }; log(st, `⬇️ **${sig.name}** làm ${e.name} suy yếu ${Math.round(sig.weaken[0] * 100)}% trong ${sig.weaken[1]} lượt!`); }
+      if (sig && sig.weaken && random() < sig.chance) { if (AI.resists(e)) log(st, `🔰 ${e.name} kháng được hiệu ứng suy yếu!`); else { e.weak = { pct: sig.weaken[0], turns: sig.weaken[1] }; log(st, `⬇️ **${sig.name}** làm ${e.name} suy yếu ${Math.round(sig.weaken[0] * 100)}% trong ${sig.weaken[1]} lượt!`); } }
       if (A.recoil) { const rc = Math.min(m.hp - 1, Math.floor(m.maxHp * A.recoil)); m.hp -= rc; log(st, `☠️ Phản phệ: **${m.name}** mất ${fmt(rc)} sinh mệnh.`); }
       checkPhase(st, e);
+      const cs = AI.counterStance(e);                                                      // v22.4.2: kẻ địch đang lập thế phản kích → đánh trả ngay người vừa ra đòn
+      if (cs && e.hp > 0 && m.alive) { ctrDone = true; log(st, `⚔️ **${e.name}** phản kích **${m.name}**!`); const rc2 = enemyDamage(st, e, m, e.atkPct * cs.mult, {}); if (!rc2.miss) log(st, `💢 **${m.name}** −${fmt(rc2.dmg)} sinh mệnh${rc2.crit ? ' (chí mạng)' : ''} → còn ${fmt(m.hp)}/${fmt(m.maxHp)}`); }
     }
   }
+  AI.observe(e, a, dealtNow);                                                                // v22.4.2: kẻ địch ghi nhận cách người chơi đánh (thích nghi)
+  if (ctrWas && !ctrDone && e.hp > 0) log(st, `🌀 Thế phản kích của **${e.name}** hụt — ${m.name} không để lộ sơ hở.`);
   m.t += 1;
   if (m.pendingHeal) { heal(m, m.maxHp * m.pendingHeal); m.pendingHeal = 0; }
   // ---- kẻ địch gục?
@@ -406,7 +497,8 @@ function endTurnTicks(st, m) {
   for (const k of Object.keys(m.cd)) if (m.cd[k] > 0) m.cd[k] -= 1;
   m.guard = 0;
   if (m.weak) { m.weak.turns -= 1; if (m.weak.turns <= 0) m.weak = null; }
-  const e = st.enemy;
+  if (m.defDown) { m.defDown.turns -= 1; if (m.defDown.turns <= 0) m.defDown = null; }
+  const e = st.enemy; if (e) AI.tick(e);                                                  // v22.4.2: hồi chiêu / thế phòng thủ của kẻ địch
   if (e) { if (e.weak) { e.weak.turns -= 1; if (e.weak.turns <= 0) e.weak = null; } if (e.rageT > 0) { e.rageT -= 1; if (e.rageT <= 0) e.rage = 1; } }
   // chuyển lượt cho người còn sống kế tiếp
   const n = st.members.length;
@@ -416,7 +508,7 @@ function endTurnTicks(st, m) {
 
 // ---------------------------------------------------------------- tiến trình tầng / bí cảnh
 function newFloor(st) {
-  const F = B.FLOORS[st.floor - 1]; st.wave = 0; st.event = null; st.eventAtk = 0;
+  const F = floorsOf(st)[st.floor - 1]; st.wave = 0; st.event = null; st.eventAtk = 0;
   const ev = st.floor === 1 ? null : choice(B.EVENTS);
   if (ev) {
     st.event = ev.key; log(st, ev.text);
@@ -431,32 +523,33 @@ function newFloor(st) {
   st.enemy = spawnEnemy(st);
   for (const m of st.members) m.first = true;
   log(st, `🗺️ **Tầng ${F.n} — ${F.name}**: ${F.desc}`);
-  log(st, `👾 Gặp **${st.enemy.name}** (${B.FLOORS[st.floor - 1].waves[st.wave] === 'normal' ? 'quái thường' : kindName(st.enemy.kind)})!`);
+  log(st, `👾 Gặp **${st.enemy.name}** (${floorsOf(st)[st.floor - 1].waves[st.wave] === 'normal' ? 'quái thường' : kindName(st.enemy.kind)})!`);
 }
 const kindName = (k) => ({ normal: 'quái thường', elite: 'tinh anh', mini: 'mini Boss', guard: 'Boss canh cửa', final: 'BOSS CUỐI' })[k];
 /** Gọi khi kẻ địch hiện tại chết: sang lượt kế / hoàn tất tầng / thắng. Trả { ok, floorClear?, won? }. */
 function advance(st) {
-  const F = B.FLOORS[st.floor - 1]; st.wave += 1;
+  const F = floorsOf(st)[st.floor - 1]; st.wave += 1;
   if (st.wave < F.waves.length) { st.enemy = spawnEnemy(st); for (const m of st.members) m.first = true; log(st, `👾 Gặp **${st.enemy.name}** (${kindName(st.enemy.kind)})!`); return { ok: true }; }
   st.cleared = st.floor; st.pendingReward = st.floor;       // UI/vỏ sẽ trao thưởng rồi gọi nextFloor
-  if (st.floor >= 5) { st.over = 'won'; log(st, `🎉 **CHINH PHỤC ${bcOf(st.bc).name.toUpperCase()}!**`); return { ok: true, won: true, floorClear: true }; }
+  if (st.floor >= floorsOf(st).length) { st.over = 'won'; log(st, `🎉 **CHINH PHỤC ${bcOfSt(st).name.toUpperCase()}!**`); return { ok: true, won: true, floorClear: true }; }
   log(st, `✅ Hoàn thành **Tầng ${F.n} — ${F.name}**!`);
   return { ok: true, floorClear: true };
 }
 function nextFloor(st) {
-  if (st.over || st.floor >= 5) return;
+  if (st.over || st.floor >= floorsOf(st).length) return;
   st.floor += 1;
   for (const m of st.members) {
     if (!m.alive) { m.alive = true; m.hp = Math.max(1, Math.floor(m.maxHp * CFG.REVIVE_HP)); m.ll = Math.max(m.ll, 40); log(st, `✨ **${m.name}** được hồi sinh với ${Math.round(CFG.REVIVE_HP * 100)}% sinh mệnh.`); }
     else { heal(m, m.maxHp * CFG.FLOOR_HEAL); m.ll = Math.min(100, m.ll + CFG.FLOOR_LL); }
-    m.atkBuff = 0; m.guard = 0; m.weak = null; m.shield = 0; m.cd = { tuyet: 0, bi: 0, sk: 0, rest: 0, p_shield: 0, p_surv: m.cd.p_surv, p_stop: 0 };
+    m.atkBuff = 0; m.guard = 0; m.weak = null; m.defDown = null; m.shield = 0; m.cd = { tuyet: 0, bi: 0, sk: 0, rest: 0, p_shield: 0, p_surv: m.cd.p_surv, p_stop: 0 };
   }
   st.ltBonus = 0; st.pendingReward = 0; newFloor(st);
 }
 /** Trạng thái khởi tạo từ danh sách ảnh chụp thành viên. */
-function newState(bcIdx, members) {
+function newState(bcIdx, members, prof = null) {
   const st = { v: 1, bc: bcIdx, floor: 1, wave: 0, members, turn: 0, turnAt: now(), enemy: null, log: [], turnLog: [], over: null, event: null, ltBonus: 0, pendingReward: 0, cleared: 0, rewards: {}, startedAt: now(), turns: 0 };
-  log(st, `🌌 Bước vào **${bcOf(bcIdx).name}** — ${bcOf(bcIdx).desc}`);
+  if (prof) st.prof = prof;                                                                  // v22.4.2: Bí Cảnh Nhân/Linh Giới
+  log(st, `🌌 Bước vào **${(prof || bcOf(bcIdx)).name}** — ${(prof || bcOf(bcIdx)).desc}`);
   newFloor(st); return st;
 }
 
@@ -721,6 +814,7 @@ function rollMember(st, uid, mult, floor, share) {
 const I19ItemEmoji = (id) => { try { return require('../ui/emo17').item(id); } catch (_) { return '📦'; } };
 /** Trao thưởng 1 tầng cho cả đội. Trả chuỗi tóm tắt (cũng lưu st.rewards). */
 function payFloor(st) {
+  if (st.prof) return require('./bcFight').payWin(st);                                      // v22.4.2: Nhân/Linh Giới — thưởng chỉ khi THẮNG, bằng hàm phần thưởng cũ
   const floor = st.pendingReward; st.pendingReward = floor; // giữ để chờ "Sang tầng kế"
   const N = st.members.length; const totalDealt = Math.max(1, st.members.reduce((s, m) => s + (m.dealt || 0), 0)); const out = [];
   const F = B.FLOORS[floor - 1];
@@ -742,6 +836,7 @@ function payFloor(st) {
 }
 const ACH = { first: '🏅 Chinh phục lần đầu', c5: '🔁 Chinh phục 5 lần', c20: '♾️ Chinh phục 20 lần', flawless: '✨ Toàn thắng không ai gục', solo: '🗡️ Độc hành chinh phục', all19: '👑 Chinh phục cả 19 bí cảnh' };
 function finishWin(st) {
+  if (st.prof) return;                                                                      // v22.4.2: không ghi tiến trình 19 bí cảnh Tiên Giới
   const idx = st.bc; const flawless = st.members.every((m) => m.alive && !m.left); const solo = st.members.length === 1;
   const ids = st.members.filter((m) => !m.left).map((m) => m.uid);
   for (const uid of ids) {
@@ -757,6 +852,7 @@ function finishWin(st) {
 }
 /** Ghi nhận tầng cao nhất đã qua khi thua/rút lui (để hiển thị tiến độ). */
 function recordBest(st) {
+  if (st.prof) return;
   for (const m of st.members) if (st.cleared > 0) D.run('INSERT INTO bc19_prog (user_id, bc_idx, clears, best_floor) VALUES (?,?,0,?) ON CONFLICT(user_id, bc_idx) DO UPDATE SET best_floor = MAX(best_floor, ?)', m.uid, st.bc, st.cleared, st.cleared);
 }
 function progOf(uid) {

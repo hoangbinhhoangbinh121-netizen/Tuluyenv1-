@@ -63,6 +63,26 @@
       [
         "chuoi",
         "Chuỗi Đồng Tu — cùng một đạo hữu đồng tu mỗi ngày để giữ chuỗi (streak), nhận tu vi và thưởng mốc."
+      ],
+      [
+        "hoihp",
+        "Xem tiến trình hồi Sinh Mệnh theo thời gian"
+      ],
+      [
+        "huongdan",
+        "Hướng dẫn chi tiết các lệnh, chia theo nhóm"
+      ],
+      [
+        "lenhchu",
+        "Hướng dẫn dùng lệnh bằng tiền tố ! và ? (prefix)"
+      ],
+      [
+        "thientongcode",
+        "Thiên Tông Bảo Điển — liệt kê toàn bộ mã code hiện có"
+      ],
+      [
+        "chungtoc",
+        "Chủng Tộc: chọn tộc, thức tỉnh, huyết mạch, tiến hóa (6 tộc)"
       ]
     ]
   },
@@ -136,11 +156,11 @@
       ],
       [
         "bicanh",
-        "Khám phá Bí Cảnh thường và Bí Cảnh Linh Giới."
+        "Bí Cảnh: chọn bậc/Nhân Giới/Linh Giới rồi CHIẾN ĐẤU THEO LƯỢT thật (đánh thường/chiêu/thủ/dùng đan…). Thắng mới nhận thưởng; thua hoặc rút lui KHÔNG có thưởng và không hoàn Vé/hồi chiêu. Quái & Boss có AI: né, hồi, khiên, phản kích, nổi giận, Kim Thân."
       ],
       [
         "bicanhlinhgioi",
-        "Khám phá Bí Cảnh Linh Giới (đã gộp chung với /bicanh)."
+        "Bí Cảnh Linh Giới (gộp chung /bicanh): 3 tầng phụ + Boss Thượng Cổ, đánh theo lượt như Bí Cảnh thường."
       ],
       [
         "danhboss",
@@ -149,6 +169,26 @@
       [
         "bangxephang",
         "Xem Thiên Kiêu Bảng (bảng xếp hạng người chơi)."
+      ],
+      [
+        "trangthaiboss",
+        "Xem bảng Boss Thế Giới đang hoạt động"
+      ],
+      [
+        "mopvp",
+        "Mở PvP (đấu pháp) cho mọi người chơi"
+      ],
+      [
+        "khoapvp",
+        "Khoá PvP tạm thời (bảo trì/cân bằng)"
+      ],
+      [
+        "thongkepvp",
+        "Xem thống kê thắng/thua đấu pháp của bạn hoặc người khác"
+      ],
+      [
+        "lichsupvp",
+        "Xem các trận đấu pháp gần nhất, hoặc nhật ký đầy đủ của 1 trận (mã trận)"
       ]
     ]
   },
@@ -163,7 +203,7 @@
       ],
       [
         "luyendan",
-        "Mở bảng Đan Sư (16 loại đan có tác dụng thật). Mẻ đan CŨ còn đang luyện vẫn thu được ở đây."
+        "Mở bảng Đan Sư: 16 loại đan. Luyện xong bấm Nhận để lấy đan + EXP nghề (EXP tích luỹ không còn bị chặn ở ngưỡng; đủ EXP + điều kiện thì Thăng cấp)."
       ],
       [
         "luyenkhi",
@@ -171,7 +211,7 @@
       ],
       [
         "danduoc",
-        "Mở menu Dùng Đan Dược — cắn đan theo phẩm, xem buff đang chạy (có giới hạn mỗi ngày). (= /dungdan)"
+        "Menu Dùng Đan Dược — cắn đan theo phẩm, xem buff đang chạy (tên đan hiển thị đúng; giới hạn mỗi ngày). (= /dungdan)"
       ],
       [
         "trangbi",
@@ -200,6 +240,10 @@
       [
         "doilinhtinh",
         "Đổi Linh Thạch lấy Linh Tinh."
+      ],
+      [
+        "dungdan",
+        "(= /danduoc) Mở menu Dùng Đan Dược"
       ]
     ]
   },
@@ -245,7 +289,7 @@
     "commands": [
       [
         "dieukienphithang",
-        "Xem checklist điều kiện Phi Thăng (Linh Giới hoặc Tiên Giới)."
+        "Checklist điều kiện Phi Thăng. Tiên Giới cần Lực Chiến tối thiểu 5 tỷ (hạ từ 10 tỷ)."
       ],
       [
         "vuotthienkiep",
@@ -278,6 +322,10 @@
       [
         "dongphu",
         "Xem/khai phá/thu hoạch động phủ riêng."
+      ],
+      [
+        "phithangamtham",
+        "Bật/tắt Phi Thăng âm thầm (Linh Giới / Tiên Giới chỉ mình bạn thấy)"
       ]
     ]
   },
@@ -352,6 +400,82 @@
       [
         "doichieuv17",
         "[Admin] Bảng đối chiếu V16→V17: tình trạng migration + tổng số từng loại vật phẩm (xuất file)."
+      ],
+      [
+        "trieuhoiboss",
+        "Triệu hồi Boss Thế Giới (cấp 1-9, HP, số phút tồn tại)"
+      ],
+      [
+        "huyboss",
+        "Hủy Boss Thế Giới đang hoạt động (không chia thưởng)"
+      ],
+      [
+        "datkenhthegioi",
+        "Đặt kênh này làm nơi nhận thông báo toàn thế giới"
+      ],
+      [
+        "quantri",
+        "Bảng quản trị: vật phẩm & nghề, nhân vật, kinh tế, sự kiện, thông báo, nhật ký"
+      ],
+      [
+        "nap",
+        "Nạp Nguyên Bảo (gói 10k / 20k / 50k / 100k)"
+      ],
+      [
+        "od",
+        "Tạo đơn mua vật phẩm: .od <tên> [xSL] [p1-5] [@khách]"
+      ],
+      [
+        "bxh",
+        "(Admin, lệnh chữ !bxh) Ẩn/xoá 1 người khỏi bảng xếp hạng; bật/tắt tính năng ẩn — an | xoa | hien | ds | bat | tat."
+      ],
+      [
+        "tangexp",
+        "(Admin, !tangexp) Tăng tốc tu vi riêng cho 1 người hoặc tất cả — dat | xoa | ds | tat | bat | all."
+      ],
+      [
+        "kernel",
+        "(Admin, !kernel) Combat Kernel: bật/tắt hiệu ứng + Kỹ Năng Tộc (nút trong trận) cho Boss / Bí Cảnh / Chứng Đạo / Tông Chiến. Công tắc khẩn: bcfight (Bí Cảnh Nhân/Linh đánh theo lượt) và bcai (AI quái) trong cài đặt."
+      ],
+      [
+        "socai",
+        "(Admin, !socai) Xem Sổ Cái Linh Thạch/Linh Tinh của 1 người — 15 dòng gần nhất."
+      ],
+      [
+        "pvpset",
+        "(Admin, !pvpset) Xem/đổi cấu hình PvP: HP thật, hồi phục, khôi phục trận, hiệu ứng, hồi chiêu Sát Chiêu."
+      ],
+      [
+        "phienban",
+        "(Admin, !phienban) Xem mã bản, phiên bản, host của bot đang trả lời — phát hiện 2 bản bot chạy chung token."
+      ],
+      [
+        "loigannhat",
+        "Xem các lỗi gần nhất của bot (kèm mã lỗi người chơi báo)"
+      ],
+      [
+        "dungluong",
+        "Xem dung lượng DB / bản sao lưu / ổ đĩa và dọn bản sao lưu thừa"
+      ],
+      [
+        "backupdb",
+        "Sao lưu database hiện tại"
+      ],
+      [
+        "restore_db",
+        "Khôi phục database từ file .db đính kèm, hoặc bản sao lưu gần nhất"
+      ],
+      [
+        "nhapdb",
+        "Nhập TOÀN BỘ dữ liệu từ file .db cũ vào bot (không cần khởi động lại)"
+      ],
+      [
+        "listdb",
+        "Xem danh sách các bản sao lưu database đã lưu"
+      ],
+      [
+        "usedb",
+        "Khôi phục database từ 1 bản sao lưu trong /listdb"
       ]
     ]
   },
@@ -383,6 +507,14 @@
       [
         "huongdanchungdao",
         "Bản hướng dẫn lụm vật phẩm Chứng Đạo: chỗ rơi, số lượt cần, sự kiện (lệnh chữ ?huongdanchungdao hoặc nút trong /chungdao)."
+      ],
+      [
+        "mosukienphu",
+        "Mở sự kiện MỘT NGÀY ĐẠI PHÚ cho server (đếm ngược 24 giờ)"
+      ],
+      [
+        "sukienphu",
+        "Xem/tham gia sự kiện MỘT NGÀY ĐẠI PHÚ"
       ]
     ]
   }

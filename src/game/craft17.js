@@ -29,13 +29,14 @@ const levelDef = (lv) => C.LEVELS[clamp(lv, 1, 9) - 1];
 const levelName = (lv) => levelDef(lv).name;
 const nextDef = (lv) => (lv >= 9 ? null : C.LEVELS[lv]);
 const expCap = (st) => { const n = nextDef(st.level); return n ? n.exp : 1e12; };
-/** Cộng EXP nghề (không vượt ngưỡng cấp kế cho tới khi thăng cấp). Trả EXP thực nhận. */
+/** Cộng EXP nghề. v22.4.2: KHÔNG chặn trần nữa — EXP cứ tích luỹ (trước đây chạm ngưỡng cấp kế là "+0 EXP"). Trả EXP thực nhận. */
 function addExp(user, prof, n) {
   n = Math.max(0, int(n)); if (!n) return 0;
-  const st = state(user, prof); const cap = expCap(st); const nx = Math.min(cap, st.exp + n);
-  D.run('UPDATE prof_state SET exp = ? WHERE user_id = ? AND prof_id = ?', nx, uid(user), prof);
-  return nx - st.exp;
+  D.run('UPDATE prof_state SET exp = exp + ? WHERE user_id = ? AND prof_id = ?', n, uid(user), prof);
+  return n;
 }
+/** EXP đã đủ ngưỡng thăng cấp kế (còn thiếu điều kiện khác thì xem promoteInfo). */
+const expFull = (user, prof) => { const st = state(user, prof); const nx = nextDef(st.level); return !!nx && st.exp >= nx.exp; };
 function bumpExtra(user, prof, key, n = 1, mode = 'add') {
   const st = state(user, prof); const ex = st.ex; ex[key] = mode === 'max' ? Math.max(ex[key] || 0, n) : (ex[key] || 0) + n;
   D.run('UPDATE prof_state SET extra = ? WHERE user_id = ? AND prof_id = ?', JSON.stringify(ex), uid(user), prof);
@@ -164,7 +165,7 @@ function claim(user, jobId) {
     const back = Inv.addMany(user, refund, `hoàn ${r.id}`);
     // EXP + thống kê
     const st = cal.st; const d = Math.max(0, st.level - r.lv); const dm = [1, 0.8, 0.6, 0.4, 0.2][Math.min(4, d)];
-    const gain = Math.round(r.exp * dm * (ok + bad * 0.3));
+    const gain = Math.max(1, Math.round(r.exp * dm * (ok + bad * 0.3)));   // v22.4.2: tối thiểu +1 EXP mỗi lần nhận
     const real = addExp(user, r.prof, gain);
     D.run('UPDATE prof_state SET crafts = crafts + ?, successes = successes + ?, fails = fails + ?, best_q = MAX(best_q, ?) WHERE user_id = ? AND prof_id = ?', job.qty, ok, bad, bestQ, uid(user), r.prof);
     D.run('INSERT INTO prof_mastery (user_id, recipe_id, n) VALUES (?,?,?) ON CONFLICT(user_id, recipe_id) DO UPDATE SET n = n + excluded.n', uid(user), r.id, job.qty);
@@ -179,7 +180,7 @@ function claim(user, jobId) {
       else lines.push(`✅ Thành công **${ok}/${job.qty}**: ${Object.entries(qs).filter(([, n]) => n > 0).map(([k, n]) => { const [id, q] = k.split('|'); return `${n} × ${I.BY_ID[id].name}${Number(q) ? ` (${I.qName(Number(q))})` : ''}`; }).join(', ') || '—'}`);
     }
     if (bad) lines.push(`💥 Thất bại ${bad}/${job.qty}${Object.keys(back).length ? ` — hoàn lại ${Object.entries(back).map(([k, n]) => `${n} × ${I.BY_ID[k].name}`).join(', ')}` : ' — mất nguyên liệu'}`);
-    lines.push(`📈 +${fmtNum(real)} EXP ${C.PROFS[r.prof].name}${real < gain ? ' (đã chạm ngưỡng — hãy **Thăng cấp**)' : ''}`);
+    lines.push(`📈 +${fmtNum(real)} EXP ${C.PROFS[r.prof].name}${expFull(user, r.prof) ? ' — ✅ đủ EXP, bấm **Thăng cấp** khi đủ điều kiện' : ''}`);
     return { ok: true, win: ok > 0, ok_n: ok, bad_n: bad, bestQ, msg: `🔔 **${r.name}** ×${job.qty}\n${lines.join('\n')}${achMsg}` };
   });
 }
@@ -214,11 +215,11 @@ function useTanQuyen(user) {
     if (!Inv.take(user, 'tdc_tan_quyen_dan_phuong', 1, { why: 'đọc tàn quyển' })) return { ok: false, msg: 'Bạn không có Tàn Quyển Đan Phương.' };
     Inv.dailyAdd(user, 'tanquyen', 1);
     const st = state(user, 'dan'); const g = addExp(user, 'dan', 40 + 25 * st.level);
-    return { ok: true, msg: `📜 Nghiền ngẫm Tàn Quyển Đan Phương: **+${fmtNum(g)} EXP Đan Sư**${g === 0 ? ' (đã chạm ngưỡng — hãy Thăng cấp)' : ''}.` };
+    return { ok: true, msg: `📜 Nghiền ngẫm Tàn Quyển Đan Phương: **+${fmtNum(g)} EXP Đan Sư**${expFull(user, 'dan') ? ' (đủ EXP — hãy Thăng cấp)' : ''}.` };
   });
 }
 
 module.exports = {
-  state, levelDef, levelName, nextDef, addExp, bumpExtra, promoteInfo, promote, techFx, masteryN, masteryTier, MASTERY_NAMES, calc, qualityDist, rollQuality, catalystOf,
+  state, levelDef, levelName, nextDef, addExp, expFull, bumpExtra, promoteInfo, promote, techFx, masteryN, masteryTier, MASTERY_NAMES, calc, qualityDist, rollQuality, catalystOf,
   cdLeft, check, start, claim, claimAll, jobsOf, historyOf, checkAch, achList, useTanQuyen, needList, activeJobs,
 };

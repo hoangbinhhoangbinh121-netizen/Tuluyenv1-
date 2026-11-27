@@ -25,9 +25,9 @@ const row = mk(2001, 14); let prevAtk = 0;
 for (let i = 0; i < 19; i += 1) {
   const st2 = BC.newState(i, [BC.snapMember(row, row.user_id, 'T', B.BCS[i])]); st2.floor = 4; st2.wave = 0; st2.pendingReward = 4; st2.cleared = 4; BC.nextFloor(st2);   // sang tầng 5 = Boss cuối
   const e = st2.enemy; ok(e && e.kind === 'final', `bí cảnh ${i}: tầng 5 là Boss cuối`);
-  const meanAtk = st2.members[0].atk; const ratio = e.maxHp / (meanAtk * 40);   // hpMult ∈ [35,45] → ratio ≈ hpE × pow.hp × [0,875..1,125]
+  const meanAtk = st2.members[0].atk; const ratio = e.maxHp / (meanAtk * 40);   // hpMult ∈ [35,45] → ratio ≈ hpE × pow.hp × [0,875..1,125] × defF(0,92..1,08) × nhiễu v22.4.2 (0,93..1,07)
   const hpE = 1 + (B.BCS[i].diff.hp - 1) * BC.CFG.HP_EASE; const pw = BC.bossPower(i, 'final');
-  ok(ratio >= hpE * pw.hp * 0.85 && ratio <= hpE * pw.hp * 1.17, `bí cảnh ${i}: HP Boss cuối ≈ hệ số × công người chơi (${ratio.toFixed(2)})`);
+  ok(ratio >= hpE * pw.hp * 0.72 && ratio <= hpE * pw.hp * 1.32, `bí cảnh ${i}: HP Boss cuối ≈ hệ số × công người chơi (${ratio.toFixed(2)})`);
   ok(ratio >= 8 * hpE, `bí cảnh ${i}: Boss cuối trâu ≥ ×8 so với bản cũ`);
   ok(e.atkPct > prevAtk || i === 0, `bí cảnh ${i}: ATK Boss cuối tăng dần`); prevAtk = e.atkPct;
 }

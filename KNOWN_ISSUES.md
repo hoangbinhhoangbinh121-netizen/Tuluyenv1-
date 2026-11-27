@@ -150,3 +150,10 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Chỉ hạ mốc tu vi đột phá của người được đặt; cơ hội thành công, Cửu Lôi Kiếp và các cửa ải khác giữ nguyên.
 - Phần thưởng Bí Cảnh và trần tu vi Hóa Thần vẫn tính theo mốc gốc.
 - Discord thật: **NOT TESTED**.
+
+## V22.4.2 — Combat Engine + AI + Bí Cảnh theo lượt + sửa EXP luyện đan (chi tiết: BAO_CAO_V22_4_2.md)
+- Bí Cảnh Nhân/Linh đánh theo lượt **1 người**; Vé/hồi chiêu trừ lúc vào, thua/rút lui không hoàn, không thưởng. Công tắc khẩn: `bcfight=off`, `bcai=off`.
+- Bí Cảnh Tiên Giới khó hơn/dài hơn do AI mới (nhân vật trần ~76% ở bậc đầu); số cân bằng là đề xuất.
+- Phi Thăng Tiên Giới: Lực Chiến yêu cầu hạ 10 tỷ → 5 tỷ theo yêu cầu chủ bot (ghi đè spec txt).
+- EXP nghề không còn bị chặn trần; luật thăng cấp nghề giữ nguyên.
+- Discord thật: **NOT TESTED**.

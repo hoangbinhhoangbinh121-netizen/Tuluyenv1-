@@ -31,7 +31,12 @@ const pc = (v) => `${Math.round(v * 100)}%`;
 const recName = (rid) => (C.RBY[rid] ? C.RBY[rid].name : rid);
 const itName = (id) => (I.BY_ID[id] ? I.BY_ID[id].name : id);
 /** Tên đan theo khoá buff (pill:<key>) — tra ngược từ bảng PILLS. */
-const pillByKey = (key) => { const id = Object.keys(C.PILLS).find((k) => C.PILLS[k].key === key); return id ? itName(id) : key; };
+const pillByKey = (key) => {
+  key = String(key == null ? '' : key).replace(/^pill:/, '');
+  const ids = Object.keys(C.PILLS);
+  const id = ids.find((k) => C.PILLS[k].key === key) || (key === 'tam_canh' ? ids.find((k) => C.PILLS[k].k === 'tamcanh' && !C.PILLS[k].key) : null);
+  return id ? itName(id) : key;
+};
 
 // ---------------------------------------------------------------- khung chung (thanh điều hướng + nội dung)
 const NAV = [
@@ -93,7 +98,7 @@ function viewHome(uid) {
   }
   e.setDescription(`${lines.join('\n')}\n\n_Chọn mục ở menu phía trên: nghề, Dùng Đan, Trang Bị, Trận Pháp, Linh Điền, Kho Đồ phân loại, NPC._`);
   const act = Dan.activeList(uid); const tr = Tr.active(uid);
-  const bf = [...act.map((b) => `💊 ${pillByKey(b.key.split(':')[1])} — còn ${fmtT(b.left)}`), ...tr.personal.map((b) => `🧿 ${itName(b.id)} — còn ${fmtT(b.left)}`)];
+  const bf = [...act.map((b) => `💊 ${pillByKey(b.key)} — còn ${fmtT(b.left)}`), ...tr.personal.map((b) => `🧿 ${itName(b.id)} — còn ${fmtT(b.left)}`)];
   if (tr.sect) bf.push(`🏯 Hộ Tông ${itName(tr.sect.id)} — còn ${fmtT(tr.sect.left)}`);
   if (bf.length) e.addFields({ name: '✨ Hiệu ứng đang chạy', value: listFit(bf, 1000) });
   e.addFields({ name: '💰 Linh Thạch', value: fmtNum(me ? me.linh_thach : 0), inline: true });
@@ -210,7 +215,7 @@ function viewPill(uid, sel = '') {
   const e = E0('💊 Dùng Đan Dược', 0xe74c3c);
   const act = Dan.activeList(uid);
   e.setDescription(owned.length ? `Chọn đúng viên đang có để xem tác dụng và cắn. Buff **không cộng dồn** — dùng lại cùng loại là làm mới.\nĐan dùng nhiều trong ngày sẽ giảm hiệu lực rồi bị chặn (xem từng loại).` : 'Kho chưa có đan dược. Luyện ở **Đan Sư** hoặc mua ở Cửa Hàng Đan Dược.');
-  e.addFields({ name: '✨ Buff đang chạy', value: act.length ? listFit(act.map((b) => `• **${pillByKey(b.key.split(':')[1])}** — còn ${fmtT(b.left)}${b.charges ? ` · ${b.charges} lượt` : ''}`), 1000) : 'Không có.' });
+  e.addFields({ name: '✨ Buff đang chạy', value: act.length ? listFit(act.map((b) => `• **${pillByKey(b.key)}** — còn ${fmtT(b.left)}${b.charges ? ` · ${b.charges} lượt` : ''}`), 1000) : 'Không có.' });
   let pick = null; if (sel) { const [id, q] = sel.split(':'); pick = owned.find((x) => x.id === id && String(x.q) === String(q)) || null; }
   if (pick) {
     const it = pick.item; const p = C.PILLS[pick.id];

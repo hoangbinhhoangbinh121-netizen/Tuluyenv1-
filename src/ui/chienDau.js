@@ -5,6 +5,7 @@ const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const K = require('../game/constants');
 const Cu = require('../game/cultivator');
 const B = require('../game/bicanh');
+const BF = require('../game/bcFight');
 const Boss = require('../game/boss');
 const { E } = require('../game/emoji');
 const { View, EPHEMERAL } = require('./kit');
@@ -48,6 +49,11 @@ function bicanhAllView(userId, row) {
   v.select({ key: 'bc', placeholder: 'Chọn Bí Cảnh muốn khám phá...', options }, async (i, values) => {
     await i.deferReply({ flags: EPHEMERAL });
     const [kind, payload] = [values[0].split(':')[0], values[0].split(':').slice(1).join(':')];
+    // v22.4.2: khám phá = TRẬN CHIẾN ĐẤU theo lượt (thưởng chỉ khi thắng). Công tắc `bcfight` = off → khám phá tức thì như cũ.
+    const f = BF.begin(userId, kind === 'std' ? 'std' : 'lg', kind === 'std' ? Number(payload) : payload, { name: (i.member && i.member.displayName) || i.user.globalName || i.user.username, channelId: i.channelId });
+    if (f.ok) return i.followUp({ ...require('./bicanh19Views').runView(f.runId), flags: EPHEMERAL });
+    if (f.runId) return i.followUp({ ...require('./bicanh19Views').runView(f.runId), content: `❌ ${f.error}`, flags: EPHEMERAL });
+    if (f.error) return i.followUp({ embeds: [require('./templates/dungeon').result(f.error)], flags: EPHEMERAL });
     const result = kind === 'std' ? B.doBicanh(userId, Number(payload)) : B.doBicanhLinhgioi(userId, payload);
     await i.followUp({ embeds: [require('./templates/dungeon').result(result)], flags: EPHEMERAL });
   });
@@ -55,6 +61,10 @@ function bicanhAllView(userId, row) {
 }
 
 async function sendDacBietResult(i, userId, group) {
+  const f = BF.begin(userId, 'db', group, { name: (i.member && i.member.displayName) || i.user.globalName || i.user.username, channelId: i.channelId });   // v22.4.2: trận chiến thật; Vé trừ khi vào trận
+  if (f.ok) return i.reply({ ...require('./bicanh19Views').runView(f.runId), flags: EPHEMERAL });
+  if (f.runId) return i.reply({ ...require('./bicanh19Views').runView(f.runId), content: `❌ ${f.error}`, flags: EPHEMERAL });
+  if (f.error) return i.reply({ content: f.error, flags: EPHEMERAL });
   const msg = B.doBicanhDacBiet(userId, group);
   const g = B.DACBIET_GROUPS[group] || {};
   const p = g.image && path.join(ASSETS, g.image);

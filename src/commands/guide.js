@@ -18,9 +18,11 @@ function overviewEmbed() {
 }
 function categoryEmbed(cat) {
   const e = new EmbedBuilder().setTitle(cat.label).setDescription(cat.desc).setColor(GOLD);
-  const lines = cat.commands.map(([n, d]) => `**/${n}** — ${d}`); const joined = lines.join('\n');
-  if (joined.length <= 1024) e.addFields({ name: 'Danh sách lệnh', value: joined, inline: false });
-  else { const mid = Math.floor(lines.length / 2); e.addFields({ name: 'Danh sách lệnh (1/2)', value: lines.slice(0, mid).join('\n'), inline: false }, { name: 'Danh sách lệnh (2/2)', value: lines.slice(mid).join('\n'), inline: false }); }
+  const lines = cat.commands.map(([n, d]) => `**/${n}** — ${d}`.slice(0, 1000));
+  const chunks = []; let cur = '';   // v22.4.2: tách theo dòng, mỗi field ≤ 1024 ký tự (nhóm nhiều lệnh như Admin không còn vượt giới hạn)
+  for (const l of lines) { if (cur && cur.length + l.length + 1 > 1000) { chunks.push(cur); cur = ''; } cur += (cur ? '\n' : '') + l; }
+  if (cur) chunks.push(cur);
+  chunks.forEach((c, k) => e.addFields({ name: chunks.length > 1 ? `Danh sách lệnh (${k + 1}/${chunks.length})` : 'Danh sách lệnh', value: c, inline: false }));
   return e.setFooter({ text: 'Chọn nhóm khác trong dropdown bên dưới, hoặc gõ /huongdan để mở lại từ đầu.' });
 }
 function guideView() {
@@ -71,3 +73,5 @@ defineCommand({
     return c.send({ embeds: [e] });
   },
 });
+
+module.exports = { overviewEmbed, categoryEmbed };

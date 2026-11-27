@@ -50,7 +50,7 @@ function expOne(uid, sys, n) {
     case 'tuvi': { const nv = Math.min(9e15, row.tu_vi + n); Cu.updateCultivator(uid, { tu_vi: nv }); return { ok: true, got: nv - row.tu_vi, text: `+${fmtNum(nv - row.tu_vi)} tu vi` }; }
     case 'nghe': {
       const X = require('./craft17'); const profs = sys.prof ? [sys.prof] : PROF_KEYS(); const parts = []; let tot = 0;
-      for (const p of profs) { X.state(uid, p); const got = X.addExp(uid, p, n); tot += got; parts.push(`${C.PROFS[p].name} +${fmtNum(got)}${got < n ? ' (chạm ngưỡng cấp — cần thăng cấp nghề)' : ''}`); }
+      for (const p of profs) { X.state(uid, p); const got = X.addExp(uid, p, n); tot += got; parts.push(`${C.PROFS[p].name} +${fmtNum(got)}${X.expFull(uid, p) ? ' (đủ EXP thăng cấp nghề)' : ''}`); }
       return { ok: true, got: tot, text: parts.join(' · ') };
     }
     case 'thu': {

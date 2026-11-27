@@ -43,14 +43,24 @@ const DACBIET_GROUPS = {
 const rr = (r) => randInt(r[0], r[1]);
 const cpName = (CP, tier) => CP.currentName(tier);
 
-function doBicanh(userId, tierIdx = 0) {
+/** v22.4.2: kiểm tra điều kiện vào Bí Cảnh thường (dùng chung cho khám phá tức thì và lớp chiến đấu game/bcFight.js). null = hợp lệ. */
+function checkBicanh(row, tierIdx, { skipCd = false } = {}) {
+  const tier = K.BICANH_TIERS[tierIdx]; if (!tier) return '❌ Bí Cảnh không tồn tại.';
+  if (row.realm_index < tier.require_realm) return `🔒 **${tier.name}** yêu cầu đạt ${K.REALMS[tier.require_realm].name} trở lên (bí cảnh giới hạn theo tu vi/cảnh giới).`;
+  const remain = CD.COOLDOWN_BICANH - (now() - row.last_bicanh);
+  if (!skipCd && remain > 0) return `⏳ Còn ${F.fmtTime(remain)} nữa mới khám phá bí cảnh tiếp được.`;
+  return null;
+}
+/**
+ * opts (v22.4.2, chỉ do game/bcFight.js truyền sau khi người chơi THẮNG trận): paid = true → điều kiện + hồi chiêu đã được kiểm tra/ghi lúc VÀO trận nên không kiểm tra/ghi lại;
+ * boss = true/false → Boss Vạn Linh Cốc đã được quyết định lúc vào trận (thay cho tung xúc xắc tại đây). Không truyền opts ⇒ hành vi cũ y nguyên.
+ */
+function doBicanh(userId, tierIdx = 0, opts = {}) {
   const CP = require('./congphap');
   const row = Cu.getCultivator(userId);
   const tier = K.BICANH_TIERS[tierIdx];
-  if (row.realm_index < tier.require_realm) return `🔒 **${tier.name}** yêu cầu đạt ${K.REALMS[tier.require_realm].name} trở lên (bí cảnh giới hạn theo tu vi/cảnh giới).`;
+  const bad = checkBicanh(row, tierIdx, { skipCd: !!opts.paid }); if (bad) return bad;
   const t = now();
-  const remain = CD.COOLDOWN_BICANH - (t - row.last_bicanh);
-  if (remain > 0) return `⏳ Còn ${F.fmtTime(remain)} nữa mới khám phá bí cảnh tiếp được.`;
   const realmIdx = row.realm_index;
   const cpBonus = Cu.cpTuMult(row);
   const PF = BAL.paceFactor(row);
@@ -59,11 +69,11 @@ function doBicanh(userId, tierIdx = 0) {
   const tuViGain = int(tuViBase * lootM);
   const nlGain = rr(tier.nl_range);
   const ltGain = int(tuViBase / PF * 200 * (1 + require('./talent').bundle(row).thach));   // linh thạch giữ công thức cũ (không lạm phát); v16.2: + hiệu ứng 'thach' của công pháp mới
-  const up = { tu_vi: row.tu_vi + tuViGain, nguyen_lieu: row.nguyen_lieu + nlGain, linh_thach: row.linh_thach + ltGain, last_bicanh: t, ...TO.progFields(row, { lc: 2, tc: 1 }) };
+  const up = { tu_vi: row.tu_vi + tuViGain, nguyen_lieu: row.nguyen_lieu + nlGain, linh_thach: row.linh_thach + ltGain, ...(opts.paid ? {} : { last_bicanh: t }), ...TO.progFields(row, { lc: 2, tc: 1 }) };
   const cpNote = cpBonus > 1 ? ` (đã gồm +${int((cpBonus - 1) * 100)}% công pháp)` : '';
   const isVLC = !!tier.van_linh_coc; let isBoss = false; let enc = '';
   if (isVLC) {
-    isBoss = random() < K.VANLINHCOC_BOSS_CHANCE;
+    isBoss = opts.boss !== undefined ? !!opts.boss : random() < K.VANLINHCOC_BOSS_CHANCE;
     if (isBoss) {
       enc = `\n👑 Chạm trán **${K.VANLINHCOC_BOSS}**! Sau trận huyết chiến, bạn thu được chiến lợi phẩm dồi dào hơn hẳn.`;
       const bt = int(tuViGain * 0.6); const bl = int(ltGain * 0.6);
@@ -71,7 +81,7 @@ function doBicanh(userId, tierIdx = 0) {
       enc += ` (+${bt} tu vi, +${fmtNum(bl)} ${E.linhthach} thưởng thêm từ Boss)`;
     } else enc = `\n👾 Đánh bại **${choice(K.VANLINHCOC_QUAI)}** trấn giữ Vạn Linh Cốc.`;
   }
-  let msg = `${E.bicanh} Khám phá **${tier.name}**: nhận **${tuViGain}** tu vi, **${nlGain}** ${E.nguyenlieu} nguyên liệu, **${fmtNum(ltGain)}** ${E.linhthach} Linh Thạch.${cpNote}${enc}`;
+  let msg = `${E.bicanh} ${opts.paid ? '🏆 Chiến thắng! ' : ''}Khám phá **${tier.name}**: nhận **${tuViGain}** tu vi, **${nlGain}** ${E.nguyenlieu} nguyên liệu, **${fmtNum(ltGain)}** ${E.linhthach} Linh Thạch.${cpNote}${enc}`;
   if (tier.manhghep_chance > 0 && random() < tier.manhghep_chance) {
     const g = randInt(1, 3); const nm = row.manh_ghep_phithang + g; up.manh_ghep_phithang = nm;
     msg += `\n🧩 Nhặt được **${g}** mảnh ghép Phi Thăng Lệnh (${nm}/${K.MANHGHEP_PHITHANG_CAN}, đủ ${K.MANHGHEP_PHITHANG_CAN} thì \`/chephithanglenh\` để chế thành 1 ${E.linhgioilenh}).`;
@@ -111,25 +121,35 @@ function doBicanh(userId, tierIdx = 0) {
   return msg + mat17 + TO.rollDrops(userId, 'bicanh', lootM) + Pets.onBicanh(userId, PB.SOURCE_IDX.thuong(tierIdx));   // v14.0: Linh Thú — trứng/thú hoang/vật phẩm/EXP
 }
 
-function doBicanhDacBiet(userId, group) {
+/** v22.4.2: kiểm tra điều kiện (không trừ Vé). null = hợp lệ. */
+function checkDacBiet(row, userId, group) {
+  const g = DACBIET_GROUPS[group]; if (!g) return '❌ Loại Bí Cảnh Đặc Biệt không hợp lệ.';
+  const ve = row.ve_bicanh_dac_biet || 0;
+  if (ve <= 0 && !(require('./tran17').chargesLeft(userId, 'tp_khong_gian') > 0)) return `❌ Bạn không có ${E.vebicanhdacbiet} Vé Bí Cảnh Đặc Biệt nào — hạ gục Boss Thế Giới (ra đòn kết liễu) để có 10% cơ hội rơi ra.`;
+  const ri = row.realm_index;
+  if (!(g.min_realm <= ri && ri <= g.max_realm)) return `🔒 **${g.label}** chỉ dành cho người tu luyện từ ${K.REALMS[g.min_realm].name} đến ${K.REALMS[g.max_realm].name}.`;
+  return null;
+}
+/** opts.paid (v22.4.2): Vé / Trận Bàn đã bị trừ lúc VÀO trận — không kiểm tra / trừ lại. */
+function doBicanhDacBiet(userId, group, opts = {}) {
   const CP = require('./congphap');
   const row = Cu.getCultivator(userId);
   const g = DACBIET_GROUPS[group];
   if (!g) return '❌ Loại Bí Cảnh Đặc Biệt không hợp lệ.';
   const ve = row.ve_bicanh_dac_biet || 0;
   const hasTele = ve <= 0 && require('./tran17').chargesLeft(userId, 'tp_khong_gian') > 0;   // v17: Không Gian Trận Bàn thay vé
-  if (ve <= 0 && !hasTele) return `❌ Bạn không có ${E.vebicanhdacbiet} Vé Bí Cảnh Đặc Biệt nào — hạ gục Boss Thế Giới (ra đòn kết liễu) để có 10% cơ hội rơi ra.`;
+  if (!opts.paid && ve <= 0 && !hasTele) return `❌ Bạn không có ${E.vebicanhdacbiet} Vé Bí Cảnh Đặc Biệt nào — hạ gục Boss Thế Giới (ra đòn kết liễu) để có 10% cơ hội rơi ra.`;
   const ri = row.realm_index;
   if (!(g.min_realm <= ri && ri <= g.max_realm)) return `🔒 **${g.label}** chỉ dành cho người tu luyện từ ${K.REALMS[g.min_realm].name} đến ${K.REALMS[g.max_realm].name}.`;
   let viaTele = false;
-  if (ve <= 0) { if (!require('./tran17').teleportTicket(userId)) return '❌ Hết lượt Không Gian Trận Bàn.'; viaTele = true; }
+  if (!opts.paid && ve <= 0) { if (!require('./tran17').teleportTicket(userId)) return '❌ Hết lượt Không Gian Trận Bàn.'; viaTele = true; }
   const cpBonus = Cu.cpTuMult(row);
   const PFD = group === 'linh_gioi' ? 1 : BAL.paceFactor(row);
   const tuVi = int(rr(g.base_tu_vi) * (1 + ri * 0.25) * cpBonus * K.BICANH_DACBIET_MULT * PFD);
   const lt = int(tuVi / PFD * 200);
-  const up = { tu_vi: row.tu_vi + tuVi, linh_thach: row.linh_thach + lt, ve_bicanh_dac_biet: Math.max(0, ve - 1), ...TO.progFields(row, { lc: 3, tc: 2 }) };
+  const up = { tu_vi: row.tu_vi + tuVi, linh_thach: row.linh_thach + lt, ve_bicanh_dac_biet: opts.paid ? ve : Math.max(0, ve - 1), ...TO.progFields(row, { lc: 3, tc: 2 }) };
   const cpNote = cpBonus > 1 ? ` (đã gồm +${int((cpBonus - 1) * 100)}% công pháp)` : '';
-  let msg = `${E.bicanh}✨ Khám phá **${g.label}**! ${viaTele ? '🌀 Dịch chuyển bằng Không Gian Trận Bàn (thay Vé).' : `Dùng hết 1 ${E.vebicanhdacbiet} Vé (còn ${ve - 1}).`} Nhận **${fmtNum(tuVi)}** tu vi, **${fmtNum(lt)}** ${E.linhthach} Linh Thạch.${cpNote}`;
+  let msg = `${E.bicanh}✨ Khám phá **${g.label}**! ${opts.paid ? '🏆 Chiến thắng! (Vé / Trận Bàn đã dùng khi vào trận).' : viaTele ? '🌀 Dịch chuyển bằng Không Gian Trận Bàn (thay Vé).' : `Dùng hết 1 ${E.vebicanhdacbiet} Vé (còn ${ve - 1}).`} Nhận **${fmtNum(tuVi)}** tu vi, **${fmtNum(lt)}** ${E.linhthach} Linh Thạch.${cpNote}`;
   if (random() < BICANH_DACBIET_CONGPHAP_CHANCE) {
     const owned = Cu.ownedCongphapTiers(row);
     const elig = K.CONG_PHAP_TIER_DEF.filter((t) => !owned.has(t.tier) && !t.boss_drop_only && row.realm_index >= t.require_realm && row.world_tier >= t.require_world);
@@ -174,21 +194,29 @@ function loadLinhgioiProgress(row) {
   return out;
 }
 
-function doBicanhLinhgioi(userId, subKey) {
-  const row = Cu.getCultivator(userId);
+/** v22.4.2: kiểm tra điều kiện vào Bí Cảnh Linh Giới. null = hợp lệ. */
+function checkLinhgioi(row, subKey, { skipCd = false } = {}) {
   if (row.world_tier < 1) return '🔒 Hệ Thống Bí Cảnh Linh Giới chỉ mở sau khi **Phi Thăng Linh Giới**. Hãy hoàn thành Phi Thăng trước.';
   const entry = allLinhgioiSubtiers().find((e) => e.sub_key === subKey);
   if (!entry) return '❌ Bí Cảnh không tồn tại.';
   const { chain, sub_idx: subIdx, sub_name: subName } = entry;
   if (row.realm_index < chain.require_realm) return `🔒 **${chain.name}** yêu cầu đạt ${K.REALMS[chain.require_realm].name} trở lên.`;
   if (row.realm_index === chain.require_realm && row.stage_index < subIdx) return `🔒 **${subName}** yêu cầu tiểu cảnh giới **${K.SUB_4[subIdx]}** trở lên của ${K.REALMS[chain.require_realm].name} (hiện tại: ${K.SUB_4[row.stage_index]}).`;
+  const remain = CD.COOLDOWN_BICANH_LINHGIOI - (now() - row.last_bicanh_linhgioi);
+  if (!skipCd && remain > 0) return `⏳ Còn ${F.fmtTime(remain)} nữa mới khám phá Bí Cảnh Linh Giới tiếp được.`;
+  return null;
+}
+/** opts (v22.4.2): paid = điều kiện + hồi chiêu đã xử lý lúc vào trận; boss = Boss cuối chuỗi đã được quyết định lúc vào trận. Không truyền ⇒ hành vi cũ. */
+function doBicanhLinhgioi(userId, subKey, opts = {}) {
+  const row = Cu.getCultivator(userId);
+  const bad = checkLinhgioi(row, subKey, { skipCd: !!opts.paid }); if (bad) return bad;
+  const entry = allLinhgioiSubtiers().find((e) => e.sub_key === subKey);
+  const { chain, sub_idx: subIdx, sub_name: subName } = entry;
   const t = now();
-  const remain = CD.COOLDOWN_BICANH_LINHGIOI - (t - row.last_bicanh_linhgioi);
-  if (remain > 0) return `⏳ Còn ${F.fmtTime(remain)} nữa mới khám phá Bí Cảnh Linh Giới tiếp được.`;
 
   const scale = BICANH_LINHGIOI_SCALE[subIdx];
   const tuVi = int(rr(chain.tu_vi) * scale); const lt = int(rr(chain.linh_thach) * scale * (1 + require('./talent').bundle(row).thach));
-  const up = { tu_vi: row.tu_vi + tuVi, linh_thach: row.linh_thach + lt, last_bicanh_linhgioi: t };
+  const up = { tu_vi: row.tu_vi + tuVi, linh_thach: row.linh_thach + lt, ...(opts.paid ? {} : { last_bicanh_linhgioi: t }) };
   const loot = [`**${fmtNum(tuVi)}** tu vi`, `**${fmtNum(lt)}** ${E.linhthach} Linh Thạch`];
   const pc = R.phuCol(row.world_tier);
   if (row[pc] < K.PHITHANG_LINH_PHU_CAN && random() < LINHPHU_RATE.linhgioi) {
@@ -203,7 +231,7 @@ function doBicanhLinhgioi(userId, subKey) {
   if (chain.diem_linh_ngo) diem = Math.max(1, int(rr(chain.diem_linh_ngo) * scale));
   let bossNote = '';
   const bc = chain.boss_on_last;
-  if (bc && subIdx === chain.sub_names.length - 1 && random() < bc.chance) {
+  if (bc && subIdx === chain.sub_names.length - 1 && (opts.boss !== undefined ? !!opts.boss : random() < bc.chance)) {
     bossNote = `\n👑 **Chạm trán ${bc.name}!** Sau trận huyết chiến kinh thiên động địa, bạn đánh bại được nó.`;
     const bl = [];
     for (const [field, rng] of Object.entries(bc.extra)) {
@@ -250,10 +278,10 @@ function doBicanhLinhgioi(userId, subKey) {
   let mat17 = '';
   try { const DR = require('./drops17'); mat17 = DR.text(userId, `chain_${chain.key}`, { extra: require('./talentOps').lootMultOf(row) - 1 }); if (bossNote) mat17 += DR.text(userId, 'chain_dokiep_boss'); } catch (e) { console.error('⚠️ rơi nguyên liệu Bí Cảnh Linh Giới v17:', e.message); }
   Cu.updateCultivator(userId, up);
-  return `${E.bicanhlinhgioi} Khám phá **${subName}** (${chain.name}): nhận ${loot.join(', ')}.${bossNote}${ach}${tc}${cpDrop}${mat17}${allDone}${Pets.onBicanh(userId, PB.SOURCE_IDX.linhgioi[chain.key] || 6)}`;
+  return `${E.bicanhlinhgioi} ${opts.paid ? '🏆 Chiến thắng! ' : ''}Khám phá **${subName}** (${chain.name}): nhận ${loot.join(', ')}.${bossNote}${ach}${tc}${cpDrop}${mat17}${allDone}${Pets.onBicanh(userId, PB.SOURCE_IDX.linhgioi[chain.key] || 6)}`;
 }
 
 module.exports = {
   LINHPHU_RATE, BICANH_LINHGIOI_SCALE, CHAINS, DACBIET_GROUPS, DIEM_LINH_NGO_MAX, BICANH_THUONGCO_CAN, ITEM_EMOJI, ITEM_COL, ITEM_LABEL,
-  doBicanh, doBicanhDacBiet, doChePhithangLenh, allLinhgioiSubtiers, loadLinhgioiProgress, doBicanhLinhgioi,
+  checkBicanh, checkDacBiet, checkLinhgioi, doBicanh, doBicanhDacBiet, doChePhithangLenh, allLinhgioiSubtiers, loadLinhgioiProgress, doBicanhLinhgioi,
 };

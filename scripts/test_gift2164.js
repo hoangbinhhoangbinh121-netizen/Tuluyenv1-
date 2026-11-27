@@ -18,7 +18,7 @@ ok(/Hệ thống không hợp lệ/.test(G21.expGrant(ADMIN, U1, 'xyz', '10')), 
 ok(/Tối đa/.test(G21.expGrant(ADMIN, U1, 'tuvi', '99999999999999')), 'trần mỗi lần'); ok(/chưa bắt đầu/.test(G21.expGrant(ADMIN, '999999999999999999', 'tuvi', '5')), 'người lạ');
 // ---- EXP: nghề (cả 4 + từng nghề; không vượt ngưỡng cấp kế)
 { const r = G21.expGrant(ADMIN, U1, 'nghe', '100'); ok(Object.keys(C.PROFS).every((p) => X.state(U1, p).exp === 100) && Object.values(C.PROFS).every((p) => r.includes(p.name)), 'EXP cả 4 nghề');
-  const r2 = G21.expGrant(ADMIN, U1, 'Đan Sư', '99999999'); const cap = C.LEVELS[X.state(U1, 'dan').level].exp; ok(X.state(U1, 'dan').exp === cap && /ngưỡng cấp/.test(r2), 'nghề bị chặn ở ngưỡng cấp kế (không phá luật thăng cấp)'); ok(X.state(U1, 'khi').exp === 100, 'chỉ 1 nghề được cộng'); }
+  const r2 = G21.expGrant(ADMIN, U1, 'Đan Sư', '99999999'); ok(X.state(U1, 'dan').exp === 100000099 && /đủ EXP/.test(r2) && X.state(U1, 'dan').level === 1, 'v22.4.2: EXP nghề tích luỹ, KHÔNG tự lên cấp (thăng cấp vẫn cần điều kiện)'); ok(X.state(U1, 'khi').exp === 100, 'chỉ 1 nghề được cộng'); }
 // ---- EXP: linh thú / tông môn / bản mệnh / dị hỏa / đạo lữ — chưa có thì bỏ qua đúng cách
 { const r = G21.expGrant(ADMIN, U1, 'thu', '500'); ok(/chưa có linh thú/.test(r) && /Không hệ thống nào/.test(r), 'chưa có thú → bỏ qua');
   ok(/chưa vào tông môn/.test(G21.expGrant(ADMIN, U1, 'tongmon', '500')), 'chưa có tông môn'); ok(/chưa có Công Pháp Bản Mệnh/.test(G21.expGrant(ADMIN, U1, 'benmenh', '5')), 'chưa có bản mệnh');

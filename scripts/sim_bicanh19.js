@@ -10,6 +10,8 @@ const mk = (realm, stage = 0, books = []) => {
   return String(uid);
 };
 if (process.env.CFG) Object.assign(BC.CFG, JSON.parse(process.env.CFG));
+if (process.env.AICFG) Object.assign(require('../src/game/combatAI').CFG, JSON.parse(process.env.AICFG));   // v22.4.2: núm cân bằng AI (xem combatAI.CFG)
+if (process.env.NOAI) require('../src/game/settings').set('bcai', 'off');                                        // v22.4.2: so sánh với hành vi V22.4.1
 const runOnce = (idx, N, opts = {}) => {
   const rows = []; for (let i = 0; i < N; i += 1) { const u = mk(B.BCS[idx].realm, opts.stage ?? 1); rows.push(Cu.getCultivator(u)); }
   const bc = B.BCS[idx]; const mem = rows.map((r) => BC.snapMember(r, r.user_id, `P${r.user_id}`, bc));
