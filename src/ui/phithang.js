@@ -18,6 +18,7 @@ function buildTiengioiEmbed(row) {
   return e.setFooter({ text: 'Đủ mọi điều kiện thì bấm Phi Thăng hoặc dùng /phithang. Muốn Phi Thăng âm thầm: nút 🤫 hoặc ?phithangamtham.' });
 }
 function buildAscensionStatusEmbed(row) {
+  if (row.world_tier >= R.maxWorldTier()) return new EmbedBuilder().setTitle(`${E.phithang} Thần Giới — chưa mở`).setColor(0x7f8c8d).setDescription(R.THAN_GIOI_MSG);   // v22.4.3
   if (row.world_tier >= 1) return buildTiengioiEmbed(row);
   const gateOk = A.isAtAscensionGate(row);
   const lc = Cu.calcLucChien(row); const lcol = R.lenhCol(row.world_tier); const pcol = R.phuCol(row.world_tier);

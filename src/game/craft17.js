@@ -188,6 +188,24 @@ function claimAll(user, prof = null) {
   const out = []; for (const j of activeJobs(user, prof)) if (j.ready_at <= now()) { const c = claim(user, j.job_id); if (c.msg) out.push(c.msg); }
   return out;
 }
+// ---- v22.4.3: TỰ ĐỘNG NHẬN thành phẩm khi lò xong (trước đây phải bấm "Nhận thành phẩm" → người chơi tưởng "luyện xong không cộng")
+const NOTICES = new Map();   // user_id → [thông báo chờ hiện lần mở bảng kế tiếp] (bộ nhớ; kết quả đã nằm trong kho/EXP/lịch sử nên mất khi restart cũng không mất đồ)
+const autoOn = () => { try { return String(require('./settings').get('autoclaim', 'on')) !== 'off'; } catch (_) { return true; } };
+function autoClaimReady(limit = 200) {
+  if (!autoOn()) return 0;
+  const rows = D.all("SELECT job_id, user_id FROM craft_jobs WHERE state = 'brewing' AND ready_at <= ? ORDER BY ready_at ASC LIMIT ?", now(), limit); let n = 0;
+  for (const r of rows) {
+    try { const c = claim(r.user_id, r.job_id); if (c.ok && c.msg) { const a = NOTICES.get(String(r.user_id)) || []; a.push(c.msg); if (a.length > 6) a.splice(0, a.length - 6); NOTICES.set(String(r.user_id), a); n += 1; } }
+    catch (e) { console.error('⚠️ auto-nhận lệnh chế lỗi:', e.message); }
+  }
+  return n;
+}
+/** Lấy (và xoá) thông báo tự nhận + nhận nốt mọi lệnh đã xong của người này. Trả mảng chuỗi. */
+function collectReady(user) {
+  const out = NOTICES.get(uid(user)) || []; NOTICES.delete(uid(user));
+  if (autoOn()) out.push(...claimAll(user));
+  return out;
+}
 const jobsOf = (user, prof = null) => activeJobs(user, prof).map((j) => ({ ...j, r: C.RBY[j.recipe_id], left: Math.max(0, j.ready_at - now()) }));
 const historyOf = (user, prof, n = 10) => D.all('SELECT * FROM craft_log WHERE user_id = ? AND prof_id = ? ORDER BY id DESC LIMIT ?', uid(user), prof, n);
 
@@ -220,6 +238,6 @@ function useTanQuyen(user) {
 }
 
 module.exports = {
-  state, levelDef, levelName, nextDef, addExp, expFull, bumpExtra, promoteInfo, promote, techFx, masteryN, masteryTier, MASTERY_NAMES, calc, qualityDist, rollQuality, catalystOf,
+  state, levelDef, levelName, nextDef, addExp, expFull, autoClaimReady, collectReady, bumpExtra, promoteInfo, promote, techFx, masteryN, masteryTier, MASTERY_NAMES, calc, qualityDist, rollQuality, catalystOf,
   cdLeft, check, start, claim, claimAll, jobsOf, historyOf, checkAch, achList, useTanQuyen, needList, activeJobs,
 };

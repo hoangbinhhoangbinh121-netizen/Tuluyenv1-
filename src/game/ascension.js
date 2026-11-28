@@ -27,6 +27,7 @@ const hpOr = (row) => (row.cur_hp === null || row.cur_hp === undefined ? Cu.effe
 
 function doVuotthienkiep(userId) {
   let row = Cu.getCultivator(userId);
+  if (row.world_tier >= R.maxWorldTier()) return R.THAN_GIOI_MSG;   // v22.4.3
   const [gr, gs] = gateFor(row.world_tier);
   const isTG = row.world_tier >= 1;
   const label = isTG ? 'Thiên Kiếp Tiên Giới' : 'Phi Thăng Thiên Kiếp';
@@ -64,6 +65,7 @@ function doVuotthienkiep(userId) {
 
 function doDanhPhithangSugia(userId) {
   let row = Cu.getCultivator(userId);
+  if (row.world_tier >= R.maxWorldTier()) return R.THAN_GIOI_MSG;   // v22.4.3
   const [gr, gs] = gateFor(row.world_tier);
   const isTG = row.world_tier >= 1;
   const label = isTG ? 'Tiên Giới Sứ Giả' : 'Phi Thăng Sứ Giả';
@@ -185,6 +187,7 @@ function doVuotThiennhanngusuy(userId) {
 }
 
 function phithangFailMessage(row) {
+  if (row.world_tier >= R.maxWorldTier()) return R.THAN_GIOI_MSG;   // v22.4.3
   const [gr, gs] = gateFor(row.world_tier);
   if (!isAtAscensionGate(row)) return `❌ Cần đạt ${R.realmDisplay(gr, gs)} mới có thể phi thăng.`;
   if (row.world_tier >= K.WORLD_TIERS.length - 1) return `♾️ Bạn đã ở ${R.worldTierName(row.world_tier)}, cảnh giới tối cao của vũ trụ này.`;
@@ -205,6 +208,7 @@ function phithangFailMessage(row) {
 /** Lõi phi thăng: trả chuỗi (thất bại) hoặc đối tượng { ok, tier, from, rank, title, text } (thành công). */
 function phithangCore(userId, guildId = 0) {
   const row = Cu.getCultivator(userId);
+  if (row.world_tier >= R.maxWorldTier()) return R.THAN_GIOI_MSG;   // v22.4.3: Thần Giới chưa mở
   const [gr, gs] = gateFor(row.world_tier);
   if (!isAtAscensionGate(row)) return `❌ Cần đạt ${R.realmDisplay(gr, gs)} mới có thể phi thăng.`;
   if (row.world_tier >= K.WORLD_TIERS.length - 1) return `♾️ Bạn đã ở ${R.worldTierName(row.world_tier)}, cảnh giới tối cao của vũ trụ này.`;

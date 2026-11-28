@@ -66,9 +66,20 @@ function enforceHoathanCap(row) {
   return row;
 }
 
+/** v22.4.3: Thần Giới chưa mở → ai đang ở bậc thế giới > mức đang mở thì tự hạ về Tiên Giới (bảo hiểm cho người lọt qua giữa 2 lần khởi động). */
+function enforceWorldCap(row) {
+  const mx = R.maxWorldTier();
+  if (row.world_tier > mx) {
+    const t = String(row.title || '').includes('Thần Giới') ? '' : row.title;
+    D.run('UPDATE cultivators SET world_tier = ?, title = ? WHERE user_id = ?', mx, t, row.user_id);
+    row = D.get('SELECT * FROM cultivators WHERE user_id = ?', row.user_id);
+  }
+  return row;
+}
+
 function getCultivator(userId) {
   let row = D.get('SELECT * FROM cultivators WHERE user_id = ?', userId);
-  if (row) { row = normalizeRealmStageOverflow(row); row = enforceHoathanCap(row); }
+  if (row) { row = enforceWorldCap(row); row = normalizeRealmStageOverflow(row); row = enforceHoathanCap(row); }
   return row || null;
 }
 

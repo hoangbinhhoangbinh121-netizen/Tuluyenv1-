@@ -24,6 +24,8 @@ function startBackground(client) {
   const TQ = require('./game/treoquan');
   setInterval(guard('treo_sweep', () => TQ.sweepExpired()), 60 * 1000).unref();
   guard('treo_sweep', () => TQ.sweepExpired())();
+  // v22.4.3: tự nhận thành phẩm nghề (đan/khí/trận…) khi lò xong — kho + EXP được cộng ngay, không cần bấm "Nhận".
+  { const X = require('./game/craft17'); setInterval(guard('craft_autoclaim', () => X.autoClaimReady()), 20 * 1000).unref(); }
   // Vòng chấm điểm Tông Môn Chiến — mỗi 10 giây cho mọi trận đang active.
   const W = require('./game/sectwar'); const SV = require('./ui/sectWarViews');
   setInterval(async () => {

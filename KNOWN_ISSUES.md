@@ -157,3 +157,9 @@ Toàn bộ lớp Discord (nút, menu, modal, embed, lệnh slash) mới chỉ đ
 - Phi Thăng Tiên Giới: Lực Chiến yêu cầu hạ 10 tỷ → 5 tỷ theo yêu cầu chủ bot (ghi đè spec txt).
 - EXP nghề không còn bị chặn trần; luật thăng cấp nghề giữ nguyên.
 - Discord thật: **NOT TESTED**.
+
+## V22.4.3 — Lôi Kiếp / Thần Giới / tự nhận thành phẩm (chi tiết: BAO_CAO_V22_4_3.md)
+- Lôi Kiếp Chứng Đạo khó hơn nhiều (số cân bằng là đề xuất từ mô phỏng); chỉnh bằng `chungdao19.CFG`.
+- Thần Giới đóng: `bot_settings.thangioi = on` để mở lại; người bị hạ nằm trong `bot_flags.v2243_thangioi_demoted`.
+- Tự nhận thành phẩm: tắt bằng `bot_settings.autoclaim = off`. Thông báo tự nhận chỉ nằm trong bộ nhớ.
+- Discord thật: **NOT TESTED**.

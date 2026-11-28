@@ -30,13 +30,15 @@ const REQ = { tdc19_de_dao_ban_nguyen: 100, tdc19_de_dao_chung_nhan: 1, tdc19_ba
 const REFUND = 0.5;            // hoàn lại khi thất bại (trừ Chứng Nhận)
 const STAGE_NAMES = ['Thiên Địa Kiếp', 'Hỗn Độn Kiếp', 'Đế Đạo Kiếp', 'Chung Cực Kiếp'];
 const LOI = [
-  [1, 'Cửu Tiêu Thần Lôi', 8], [2, 'Tử Tiêu Thiên Lôi', 9], [3, 'Diệt Hồn Thần Lôi', 10],
-  [4, 'Hỗn Độn Thiên Lôi', 11], [5, 'Vạn Kiếp Diệt Thế Lôi', 12], [6, 'Đại Đạo Thần Lôi', 13],
-  [7, 'Đế Uy Thiên Lôi', 14], [8, 'Vô Thượng Phá Đạo Lôi', 15], [9, 'Cửu Thiên Đế Kiếp', 16],
-  [10, 'Hỗn Nguyên Diệt Thế Lôi', 18], [11, 'Vĩnh Hằng Phá Diệt Lôi', 20], [12, 'Chung Cực Chứng Đạo Lôi', 25],
-].map(([n, name, pct]) => ({ n, name, pct: pct / 100, stage: Math.floor((n - 1) / 3), pierce: n === 12 ? 0.25 : 0 }));
-const LOI_K = 1.25;   // hệ số hiệu chỉnh cân bằng (mô phỏng: không ứng phó thì chết; có công pháp + trang bị + đủ cách ứng phó thì qua được, thiếu đồ phải dùng đan)
-const DEF_CAP = 70; const MIN_TAKE = 0.25;   // sát thương tối thiểu = 25% sát thương cơ sở (giảm tổng hợp có trần → không bất tử)
+  [1, 'Cửu Tiêu Thần Lôi', 8], [2, 'Tử Tiêu Thiên Lôi', 9], [3, 'Diệt Hồn Thần Lôi', 11],
+  [4, 'Hỗn Độn Thiên Lôi', 12], [5, 'Vạn Kiếp Diệt Thế Lôi', 13], [6, 'Đại Đạo Thần Lôi', 15],
+  [7, 'Đế Uy Thiên Lôi', 16], [8, 'Vô Thượng Phá Đạo Lôi', 18], [9, 'Cửu Thiên Đế Kiếp', 20],
+  [10, 'Hỗn Nguyên Diệt Thế Lôi', 23], [11, 'Vĩnh Hằng Phá Diệt Lôi', 26], [12, 'Chung Cực Chứng Đạo Lôi', 32],
+].map(([n, name, pct]) => ({ n, name, pct: pct / 100, stage: Math.floor((n - 1) / 3), pierce: n === 12 ? 0.25 : (n >= 10 ? 0.15 : 0) }));
+// v22.4.3: Lôi Kiếp nặng hơn hẳn — đòn đau, có thể giáng chí mạng, tỉ lệ thất bại cao (xem scripts/sim_chungdao19.js). Núm chỉnh runtime: CFG.
+const CFG = { K: 1.6, PCT_MUL: 1.0, CRIT_P: 0.15, CRIT_M: 1.4, MIN_TAKE: 0.47, PIERCE_MUL: 2.2 };   // cũ (v22.4.2): K 1.25, MIN_TAKE 0.25, không chí mạng, đạo 1–12 = 8…25%
+const pierceOf = (L) => Math.min(0.9, L.pierce * CFG.PIERCE_MUL);
+const DEF_CAP = 70;   // sát thương tối thiểu = 25% sát thương cơ sở (giảm tổng hợp có trần → không bất tử)
 const DAN_ID = 'dan_huyet_nguyen'; const DAN_MAX = 3; const DAN_CD = 2;
 
 const RESP = {
@@ -88,11 +90,11 @@ function whyCannot(row) {
 const reqText = (uid) => Object.entries(REQ).map(([id, n]) => `${Inv.qty(uid, id)}/${n} ${itemName(id)}`);
 
 // ================================================================ mô phỏng 1 đạo lôi
-const defPctOf = (k, n) => clamp(100 * k.def / (k.atk + k.def + 1), 0, DEF_CAP) * (1 - LOI[n - 1].pierce);
+const defPctOf = (k, n) => clamp(100 * k.def / (k.atk + k.def + 1), 0, DEF_CAP) * (1 - pierceOf(LOI[n - 1]));
 /** Sát thương cơ sở chưa tính ứng phó của đạo n (để UI cảnh báo trước). */
 function loiPreview(k, n) {
-  const L = LOI[n - 1]; const base = L.pct * LOI_K * k.maxHp; const red = Math.min(0.5, k.dr + k.kiepRes);
-  const eff = Math.max(base * MIN_TAKE, base * (100 / (100 + defPctOf(k, n))) * (1 - red));
+  const L = LOI[n - 1]; const base = L.pct * CFG.K * CFG.PCT_MUL * k.maxHp; const red = Math.min(0.5, k.dr + k.kiepRes);
+  const eff = Math.max(base * CFG.MIN_TAKE, base * (100 / (100 + defPctOf(k, n))) * (1 - red));
   return { base: Math.floor(base), eff: Math.floor(eff), L };
 }
 function canResp(k, a, row) {
@@ -140,11 +142,12 @@ function strike(k, a, KL = null) {
     const rc = KN.race(KL, k.hp, k.maxHp, { selfOnly: true, request: a === 'race' });
     if (rc) { lines.push(...rc.lines.map((x) => String(x))); k.hp = rc.heal >= 0 ? Math.min(k.maxHp, k.hp + rc.heal) : Math.max(1, k.hp + rc.heal); }
   }
-  const base = L.pct * LOI_K * k.maxHp * randUniform(0.95, 1.05);
+  const crit = random() < CFG.CRIT_P;   // v22.4.3: lôi có thể giáng chí mạng
+  const base = L.pct * CFG.K * CFG.PCT_MUL * k.maxHp * randUniform(0.95, 1.05) * (crit ? CFG.CRIT_M : 1);
   const red = Math.min(0.5, k.dr + k.kiepRes);
   let dmg = base * (100 / (100 + defPctOf(k, n))) * (1 - red) * (1 - cut);
-  dmg = Math.floor(Math.max(base * MIN_TAKE * (1 - cut * 0.5), dmg)); if (KL) dmg = Math.floor(dmg * KN.takeMult(KL)); dmg = Math.max(1, Math.min(dmg, 9e15));   // v22.0: Hộ Thể (kỹ năng tộc) giảm uy lực lôi
-  lines.push(`⚡ **Đạo ${n}/12 — ${L.name}** giáng xuống: ${fmt(dmg)} sát thương${L.pierce ? ' _(Phá Giáp Thiên Kiếp: bỏ qua 25% phòng ngự)_' : ''}.`);
+  dmg = Math.floor(Math.max(base * CFG.MIN_TAKE * (1 - cut * 0.5), dmg)); if (KL) dmg = Math.floor(dmg * KN.takeMult(KL)); dmg = Math.max(1, Math.min(dmg, 9e15));   // v22.0: Hộ Thể (kỹ năng tộc) giảm uy lực lôi
+  lines.push(`⚡ **Đạo ${n}/12 — ${L.name}** giáng xuống: ${fmt(dmg)} sát thương${crit ? ' 💢 **CHÍ MẠNG THIÊN LÔI!**' : ''}${L.pierce ? ` _(Phá Giáp Thiên Kiếp: bỏ qua ${Math.round(pierceOf(L) * 100)}% phòng ngự)_` : ''}.`);
   if (k.shield > 0) { const ab = Math.min(k.shield, dmg); k.shield -= ab; dmg -= ab; if (ab) lines.push(`🔰 Khiên hấp thụ ${fmt(ab)}.`); }
   if (dmg >= k.hp) {
     if (k.surv > 0) { k.surv -= 1; dmg = k.hp - 1; lines.push('♻️ **Bảo mệnh**: sống sót với 1 sinh mệnh!'); }
@@ -328,7 +331,7 @@ function setHieu(uid, raw) {
 }
 
 module.exports = {
-  LOI_K, GATE_REALM, GATE_STAGE, TIEN_DE, REQ, LOI, STAGE_NAMES, RESP, DAN_ID, DAN_MAX, LOCK_SEC, IDLE_SEC,
-  ensureState, stateRow, passed, kiepOf, whyCannot, reqText, loiPreview, canResp, strike, begin, respond, sweepIdle, giveUp, finish, historyOf, recentWins,
+  GATE_REALM, GATE_STAGE, TIEN_DE, REQ, LOI, STAGE_NAMES, RESP, DAN_ID, DAN_MAX, LOCK_SEC, IDLE_SEC,
+  CFG, ensureState, stateRow, passed, kiepOf, whyCannot, reqText, loiPreview, canResp, strike, begin, respond, sweepIdle, giveUp, finish, historyOf, recentWins,
   chooseDao, upgradeDao, awakenDao, awakenCost, craftBinh, equipBinh, upgradeBinh, binhOf, sanitizeHieu, setHieu, costText, itemName,
 };

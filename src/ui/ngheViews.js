@@ -209,14 +209,19 @@ function viewLs(uid, p) {
 
 // ---------------------------------------------------------------- DÙNG ĐAN
 const LEGACY_PILLS = ['dan_pha_gioi', 'dan_tay_tuy_ts'];
-const pillOwned = (uid) => Inv.list(uid).filter((x) => Dan.isPill(x.id) || LEGACY_PILLS.includes(x.id) || x.item.cat === 'DAN_DUOC');
+const pillOwned = (uid) => Inv.list(uid).filter((x) => Dan.isPill(x.id) || LEGACY_PILLS.includes(x.id) || x.item.cat === 'DAN_DUOC')
+  .map((x, i) => ({ x, i, u: Dan.isPill(x.id) || LEGACY_PILLS.includes(x.id) ? 0 : 1 })).sort((a, b) => a.u - b.u || a.i - b.i).map((o) => o.x);   // v22.4.3: đan dùng được lên trước
 function viewPill(uid, sel = '') {
   const me = Cu.getCultivator(uid); const owned = pillOwned(uid);
   const e = E0('💊 Dùng Đan Dược', 0xe74c3c);
   const act = Dan.activeList(uid);
   e.setDescription(owned.length ? `Chọn đúng viên đang có để xem tác dụng và cắn. Buff **không cộng dồn** — dùng lại cùng loại là làm mới.\nĐan dùng nhiều trong ngày sẽ giảm hiệu lực rồi bị chặn (xem từng loại).` : 'Kho chưa có đan dược. Luyện ở **Đan Sư** hoặc mua ở Cửa Hàng Đan Dược.');
   e.addFields({ name: '✨ Buff đang chạy', value: act.length ? listFit(act.map((b) => `• **${pillByKey(b.key)}** — còn ${fmtT(b.left)}${b.charges ? ` · ${b.charges} lượt` : ''}`), 1000) : 'Không có.' });
-  let pick = null; if (sel) { const [id, q] = sel.split(':'); pick = owned.find((x) => x.id === id && String(x.q) === String(q)) || null; }
+  // v22.4.3: phân trang (Discord chỉ cho 25 lựa chọn/menu — trước đây đan thường mới luyện bị cắt mất khỏi danh sách). `sel` = 'id:q' hoặc '~N' (trang N).
+  const PAGE = 25; const pages = Math.max(1, Math.ceil(owned.length / PAGE)); let page = 0; let selId = sel;
+  if (/^~\d+$/.test(String(sel))) { page = Number(String(sel).slice(1)); selId = ''; }
+  let pick = null; if (selId) { const [id, q] = String(selId).split(':'); const idx = owned.findIndex((x) => x.id === id && String(x.q) === String(q)); if (idx >= 0) { pick = owned[idx]; page = Math.floor(idx / PAGE); } }
+  page = Math.max(0, Math.min(pages - 1, page));
   if (pick) {
     const it = pick.item; const p = C.PILLS[pick.id];
     const txt = Dan.isPill(pick.id) ? Dan.describe(pick.id, pick.q || 2) : (it.desc || '');
@@ -224,8 +229,8 @@ function viewPill(uid, sel = '') {
   }
   const rows = [];
   if (owned.length) {
-    const sm = new StringSelectMenuBuilder().setCustomId(cid(uid, 'psel')).setPlaceholder('Chọn đan dược…');
-    sm.addOptions(owned.slice(0, 25).map((x) => ({ label: `${x.item.name}${x.q ? ` (${I.qName(x.q)})` : ''} ×${x.qty}`.slice(0, 100), value: `${x.id}:${x.q}`, emoji: optEmoji(Emo.item(x.id)), default: !!pick && pick.id === x.id && pick.q === x.q })));
+    const sm = new StringSelectMenuBuilder().setCustomId(cid(uid, 'psel')).setPlaceholder(pages > 1 ? `Chọn đan dược… (trang ${page + 1}/${pages})` : 'Chọn đan dược…');
+    sm.addOptions(owned.slice(page * PAGE, page * PAGE + PAGE).map((x) => ({ label: `${x.item.name}${x.q ? ` (${I.qName(x.q)})` : ''} ×${x.qty}`.slice(0, 100), value: `${x.id}:${x.q}`, emoji: optEmoji(Emo.item(x.id)), default: !!pick && pick.id === x.id && pick.q === x.q })));
     rows.push(rowOf(sm));
   }
   if (pick) {
@@ -233,6 +238,8 @@ function viewPill(uid, sel = '') {
     rows.push(rowOf(btn(cid(uid, 'pu', s, '1'), 'Dùng ×1', '💊', ButtonStyle.Success, !can), btn(cid(uid, 'pu', s, '5'), 'Dùng ×5', '💊', ButtonStyle.Primary, !can || !Dan.isPill(pick.id) || pick.qty < 2),
       btn(cid(uid, 'pu', s, '10'), 'Dùng ×10', '💊', ButtonStyle.Primary, !can || !Dan.isPill(pick.id) || pick.qty < 2), btn(cid(uid, 'v', 'item', s), 'Chi tiết', 'ℹ️')));
   }
+  if (pages > 1) rows.push(rowOf(btn(cid(uid, 'v', 'pill', `~${page - 1}`), '◀ Trang trước', null, ButtonStyle.Secondary, page <= 0), btn(cid(uid, 'v', 'pill', `~${page + 1}`), 'Trang sau ▶', null, ButtonStyle.Secondary, page >= pages - 1)));
+  if (pages > 1) e.setFooter({ text: `Trang ${page + 1}/${pages} · ${owned.length} loại đan trong kho` });
   return shell(uid, 'pill', e, rows);
 }
 
@@ -437,6 +444,7 @@ const H20 = { E0, cid, btn, rowOf, StringSelectMenuBuilder, optEmoji, ButtonStyl
 
 // ---------------------------------------------------------------- bộ dựng trang
 function render(uid, view = 'home', a = '', b = '', note = '') {
+  try { const got = X.collectReady(uid); if (got.length) note = `🔔 **Tự động nhận thành phẩm:**\n${got.join('\n\n')}${note ? `\n\n${note}` : ''}`; } catch (e) { console.error('⚠️ tự nhận thành phẩm:', e.message); }   // v22.4.3
   const [v, p] = String(view).split('.');
   let out;
   switch (v) {

@@ -1,4 +1,8 @@
-# Thiên Tông Bot v22.4.2 — Node.js + discord.js + SQLite (trước đây: "Tiên Giới Bot")
+# Thiên Tông Bot v22.4.4 — Node.js + discord.js + SQLite (trước đây: "Tiên Giới Bot")
+
+> **v22.4.4** — Màn Dùng Đan Dược **phân trang** (trước đây chỉ hiện 25 loại đầu nên đan thường mới luyện bị ẩn) — xem `BAO_CAO_V22_4_4.md`.
+
+> **v22.4.3** — Lôi Kiếp Chứng Đạo nặng hơn (chí mạng, xuyên giáp, tỉ lệ thất bại cao); Thần Giới chưa mở: chặn Phi Thăng + tự hạ người ở Thần Giới về Tiên Giới (có sao lưu); luyện đan/nghề **tự nhận thành phẩm** khi lò xong (xem `BAO_CAO_V22_4_3.md`).
 
 > **v22.4.2** — Combat Engine dùng chung + AI quái/Boss; Bí Cảnh Nhân/Linh Giới đánh theo lượt (thắng mới có thưởng); Phi Thăng Tiên Giới cần Lực Chiến 5 tỷ; sửa EXP luyện đan bị chặn trần + tên buff đan; `/huongdan` đủ 114 lệnh (xem `BAO_CAO_V22_4_2.md`).
 

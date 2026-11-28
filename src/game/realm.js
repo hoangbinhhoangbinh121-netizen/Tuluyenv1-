@@ -81,6 +81,11 @@ const getMult = (table, name) => {
 };
 
 // ---- Thế giới ----
+/** v22.4.3: Thần Giới CHƯA xây xong → mặc định đóng. Bậc thế giới tối đa đang mở = Tiên Giới (2). Admin mở lại: bot_settings `thangioi` = on. */
+const OPEN_WORLD_TIER = 2;
+const thanGioiOpen = () => { try { return String(require('./settings').get('thangioi', 'off')) === 'on'; } catch (_) { return false; } };
+const maxWorldTier = () => (thanGioiOpen() ? K.WORLD_TIERS.length - 1 : OPEN_WORLD_TIER);
+const THAN_GIOI_MSG = '🚧 **Thần Giới chưa mở** — thế giới này vẫn đang được xây dựng. Hiện Tiên Giới là đỉnh cao nhất, chưa thể Phi Thăng lên nữa. Hãy tiếp tục tu luyện, Chứng Đạo và khám phá Bí Cảnh Tiên Giới!';
 const worldTierName = (idx) => K.WORLD_TIERS[Math.max(0, Math.min(idx, K.WORLD_TIERS.length - 1))];
 const worldMult = (wt) => (wt <= 0 ? 1.0 : Math.max(0.35, 1 - wt * 0.15));
 const worldTierFlavor = (wt) => (wt <= 0 ? '' : (K.WORLD_TIER_FLAVOR[wt] || K.WORLD_TIER_FLAVOR[2]));
@@ -91,5 +96,5 @@ const linhphuLabel = (row) => (row.world_tier > 0 ? 'Tiên Phù' : 'Linh Phù');
 
 module.exports = {
   realmSpeedMult, realmDisplay, tuViRequired, tuViRequiredFor, softCap, tienExpMult, tuViRequiredBase, tuViRequiredLegacy, isMajorGate, nextStage, rollWeighted, getMult,
-  worldTierName, worldMult, worldTierFlavor, lenhCol, phuCol, linhgioilenhLabel, linhphuLabel,
+  OPEN_WORLD_TIER, thanGioiOpen, maxWorldTier, THAN_GIOI_MSG, worldTierName, worldMult, worldTierFlavor, lenhCol, phuCol, linhgioilenhLabel, linhphuLabel,
 };

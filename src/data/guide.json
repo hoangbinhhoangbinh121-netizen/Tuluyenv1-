@@ -289,7 +289,7 @@
     "commands": [
       [
         "dieukienphithang",
-        "Checklist điều kiện Phi Thăng. Tiên Giới cần Lực Chiến tối thiểu 5 tỷ (hạ từ 10 tỷ)."
+        "Checklist điều kiện Phi Thăng. Tiên Giới cần Lực Chiến tối thiểu 5 tỷ (hạ từ 10 tỷ). Thần Giới CHƯA mở: không thể Phi Thăng lên nữa, ai ở Thần Giới đã được hạ về Tiên Giới."
       ],
       [
         "vuotthienkiep",
@@ -490,7 +490,7 @@
       ],
       [
         "chungdao",
-        "Chứng Đạo Thành Đế: vượt 12 đạo Đế Kiếp khi đạt Chuẩn Tiên Đế · Viên Mãn (cần Đế Đạo Bản Nguyên ×100, Chứng Nhận ×1, Bất Hủ Đế Cốt ×5, Tiên Tôn Đạo Quả ×10). Sau khi thành Đế mở Đế Đạo, Đế Binh, Đế Hiệu. Nút **Hướng dẫn lụm vật phẩm** trong menu chỉ chỗ nhặt từng món."
+        "Chứng Đạo Thành Đế: vượt 12 đạo Đế Kiếp (v22.4.3: lôi rất đau, có chí mạng, đạo cuối xuyên giáp — thiếu đồ gần như chắc chắn thất bại) khi đạt Chuẩn Tiên Đế · Viên Mãn (cần Đế Đạo Bản Nguyên ×100, Chứng Nhận ×1, Bất Hủ Đế Cốt ×5, Tiên Tôn Đạo Quả ×10). Sau khi thành Đế mở Đế Đạo, Đế Binh, Đế Hiệu. Nút **Hướng dẫn lụm vật phẩm** trong menu chỉ chỗ nhặt từng món."
       ],
       [
         "benmenh",

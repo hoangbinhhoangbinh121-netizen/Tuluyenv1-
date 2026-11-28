@@ -8,7 +8,7 @@ let n = 0; const ok = (c, m) => { assert.ok(c, m); n += 1; };
 const mk = (id, realm = 18, stage = 3, extra = '') => { Cu.createCultivator(id); D.run(`UPDATE cultivators SET realm_index = ?, stage_index = ?, world_tier = 2, thiennhanngusuy_passed = 1, tu_vi = ? ${extra} WHERE user_id = ?`, realm, stage, 9e15, String(id)); return String(id); };
 const give = (u) => { for (const [id, q] of Object.entries(CD.REQ)) Inv.add(u, id, q, { why: 'test' }); };
 // ---- dữ liệu spec
-ok(CD.LOI.length === 12 && CD.LOI.map((l) => Math.round(l.pct * 100)).join() === '8,9,10,11,12,13,14,15,16,18,20,25', '12 đạo lôi đúng % P_HP');
+ok(CD.LOI.length === 12 && CD.LOI.map((l) => Math.round(l.pct * 100)).join() === '8,9,11,12,13,15,16,18,20,23,26,32', '12 đạo lôi đúng % P_HP');
 ok(CD.LOI[11].name === 'Chung Cực Chứng Đạo Lôi' && CD.LOI[11].pierce === 0.25 && CD.LOI[0].pierce === 0, 'đạo 12 phá giáp 25%');
 ok(CD.REQ.tdc19_de_dao_ban_nguyen === 100 && CD.REQ.tdc19_bat_hu_de_cot === 5 && CD.REQ.tdc19_tien_ton_dao_qua === 10 && CD.REQ.tdc19_de_dao_chung_nhan === 1, 'tài nguyên spec');
 // ---- chặn đột phá thường
